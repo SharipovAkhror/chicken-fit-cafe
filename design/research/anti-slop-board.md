@@ -50,7 +50,7 @@ claims:
 
 ## Cull protocol (для владельца)
 
-В галерее `design/assets/micro/gallery-r3.html`:
+В галерее `design/assets/micro/gallery-r5-detail.html` / `gallery-poster.html`:
 
 - **♥ keep** — в shortlist  
 - **~ maybe** — доработать  

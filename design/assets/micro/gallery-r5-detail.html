@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · Gallery R5.1 Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pastry:#fdfcf9; --terra:#c95530; --graph:#28211d; --bg:#f2f0eb; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:Manrope,system-ui,sans-serif; background:var(--bg); color:var(--graph); line-height:1.45; }
+    header { padding:28px 24px 12px; max-width:1200px; margin:0 auto; }
+    h1 { font-family:"Bricolage Grotesque",system-ui,sans-serif; font-size:1.7rem; margin:0 0 8px; letter-spacing:-0.5px; }
+    .meta { opacity:0.75; max-width:72ch; }
+    .note {
+      margin-top:12px; padding:12px 14px; background:#fff; border-radius:12px;
+      border-left:4px solid var(--terra); font-size:0.9rem; max-width:72ch;
+    }
+    section { max-width:1200px; margin:0 auto; padding:20px 24px 8px; }
+    h2 {
+      font-family:"Bricolage Grotesque",system-ui,sans-serif; font-size:1.15rem; margin:0 0 12px;
+      border-bottom:1px solid color-mix(in srgb, var(--graph) 12%, transparent); padding-bottom:8px;
+    }
+    .hint { font-size:0.9rem; opacity:0.65; margin:-4px 0 14px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
+    .card {
+      background:#fff; border-radius:16px; padding:14px;
+      box-shadow:0 1px 0 color-mix(in srgb, var(--graph) 8%, transparent);
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .card img { width:100%; height:auto; display:block; border-radius:12px; background:var(--pastry); }
+    .id { font-size:0.8rem; font-weight:600; }
+    .tag { font-size:0.7rem; opacity:0.55; }
+    .votes { display:flex; gap:6px; }
+    .votes button {
+      flex:1; border:1px solid color-mix(in srgb, var(--graph) 15%, transparent);
+      background:var(--pastry); border-radius:8px; padding:6px 0; cursor:pointer; font:inherit; font-size:0.85rem;
+    }
+    .votes button[data-v="heart"].on { background:var(--terra); color:#fff; border-color:var(--terra); }
+    .votes button[data-v="maybe"].on { background:#e8d9a8; border-color:#c4b078; }
+    .votes button[data-v="kill"].on { background:var(--graph); color:#fff; }
+    .wide { grid-template-columns:1fr; }
+    footer { max-width:1200px; margin:24px auto 48px; padding:0 24px; }
+    #export {
+      width:100%; padding:14px; border:none; border-radius:12px;
+      background:var(--terra); color:#fff; font:inherit; font-weight:600; cursor:pointer;
+    }
+    pre#out { margin-top:12px; padding:12px; background:#fff; border-radius:12px; font-size:0.8rem; white-space:pre-wrap; display:none; }
+    a { color:var(--terra); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>R5.1 — detail pack</h1>
+    <p class="meta">
+      Больше детализации: volume + highlight + crackle + micro (sesame / herb / drip).
+      Метод: <code>design/research/r5-detail-method.md</code>.
+      База flat: <a href="gallery-r5.html">gallery-r5.html</a>.
+    </p>
+    <div class="note">
+      <strong>7 слоёв craft:</strong> silhouette → secondary → volume → highlight → texture → micro → optical mono-check.
+      Не grill. Не AI glow. ≤2 ink + pastry.
+    </div>
+  </header>
+
+  <section>
+    <h2>Detail upgrades (из R5 flat)</h2>
+    <p class="hint">Сравни с flat в gallery-r5 — какой уровень detail держать в системе.</p>
+    <div class="grid" id="detail">
+      <div class="card" data-id="m01d">
+        <img src="r5/marks-detail/m01d-sandwich.svg" alt="m01d"/>
+        <div class="id">m01d sandwich</div>
+        <div class="tag">5 layers · sesame · drip · leaf vein</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m02d">
+        <img src="r5/marks-detail/m02d-bowl.svg" alt="m02d"/>
+        <div class="id">m02d bowl</div>
+        <div class="tag">rice grains · 3 chunks · steam</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m04d">
+        <img src="r5/marks-detail/m04d-piece.svg" alt="m04d"/>
+        <div class="id">m04d piece</div>
+        <div class="tag">karaage edge · crackle net · bone</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m06d">
+        <img src="r5/marks-detail/m06d-box.svg" alt="m06d"/>
+        <div class="id">m06d box</div>
+        <div class="tag">kraft folds · 2 pieces · grain</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m07d">
+        <img src="r5/marks-detail/m07d-strips.svg" alt="m07d"/>
+        <div class="id">m07d strips</div>
+        <div class="tag">jagged fried · grain · herb</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>New detail concepts</h2>
+    <p class="hint">Новые жесты с высокой детализацией. JP karaage · cross-section · wrap.</p>
+    <div class="grid">
+      <div class="card" data-id="m08">
+        <img src="r5/marks-detail/m08-karaage.svg" alt="m08"/>
+        <div class="id">m08 karaage cluster</div>
+        <div class="tag">JP · 3 nuggets · lemon tip</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m09">
+        <img src="r5/marks-detail/m09-cross-section.svg" alt="m09"/>
+        <div class="id">m09 cross-section</div>
+        <div class="tag">разрез · tomato gel · crumb</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="m10">
+        <img src="r5/marks-detail/m10-wrap.svg" alt="m10"/>
+        <div class="id">m10 wrap</div>
+        <div class="tag">takeaway roll · filling end</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Food art (poster language — not logo)</h2>
+    <p class="hint">Mark cartoon OK. Poster = obvious juicy chicken. Full view: <a href="gallery-poster.html">gallery-poster.html</a></p>
+    <div class="grid wide">
+      <div class="card" data-id="fa-hero">
+        <img src="r5/food-art-detail/fa-hero-chicken.svg" alt="hero chicken"/>
+        <div class="id">fa-hero-chicken</div>
+        <div class="tag">волокна · корочка · кость · срез · сок — primary poster</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+      <div class="card" data-id="fa-karaage">
+        <img src="r5/food-art-detail/fa-karaage-plate.svg" alt="karaage plate"/>
+        <div class="id">fa-karaage-plate</div>
+        <div class="tag">alt JP plate</div>
+        <div class="votes"><button data-v="heart">♥</button><button data-v="maybe">~</button><button data-v="kill">×</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Сравнение: flat vs detail</h2>
+    <p class="hint">Один и тот же мотив — уровень detail. Owner: где «достаточно» для mark vs banner.</p>
+    <div class="grid">
+      <div class="card"><img src="r5/marks/m01-sandwich.svg" alt="flat"/><div class="id">m01 flat (R5)</div></div>
+      <div class="card"><img src="r5/marks-detail/m01d-sandwich.svg" alt="detail"/><div class="id">m01d detail</div></div>
+      <div class="card"><img src="r5/marks/m04-piece.svg" alt="flat"/><div class="id">m04 flat</div></div>
+      <div class="card"><img src="r5/marks-detail/m04d-piece.svg" alt="detail"/><div class="id">m04d detail</div></div>
+      <div class="card"><img src="r5/marks/m07-strips.svg" alt="flat"/><div class="id">m07 flat</div></div>
+      <div class="card"><img src="r5/marks-detail/m07d-strips.svg" alt="detail"/><div class="id">m07d detail</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <button id="export" type="button">Export votes (JSON)</button>
+    <pre id="out"></pre>
+  </footer>
+  <script>
+    const votes = {};
+    document.querySelectorAll('.card[data-id]').forEach(card => {
+      card.querySelectorAll('.votes button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.votes button').forEach(b => b.classList.remove('on'));
+          btn.classList.add('on');
+          votes[card.dataset.id] = btn.dataset.v;
+        });
+      });
+    });
+    document.getElementById('export').onclick = () => {
+      const out = document.getElementById('out');
+      out.style.display = 'block';
+      out.textContent = JSON.stringify({ round:'R5.1-detail', at:new Date().toISOString(), votes }, null, 2);
+    };
+  </script>
+</body>
+</html>

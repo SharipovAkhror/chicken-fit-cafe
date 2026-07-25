@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · Gallery R5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pastry: #fdfcf9;
+      --terra: #c95530;
+      --graph: #28211d;
+      --bg: #f5f3ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Manrope, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--graph);
+      line-height: 1.45;
+    }
+    header {
+      padding: 28px 24px 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-family: "Bricolage Grotesque", system-ui, sans-serif;
+      font-size: 1.75rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.5px;
+    }
+    .meta { opacity: 0.75; font-size: 0.95rem; max-width: 72ch; }
+    .reject {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      background: var(--graph);
+      color: var(--pastry);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .fix {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: 12px;
+      border-left: 4px solid var(--terra);
+      font-size: 0.9rem;
+      max-width: 72ch;
+    }
+    .fix li { margin: 4px 0; }
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 24px 8px;
+    }
+    h2 {
+      font-family: "Bricolage Grotesque", system-ui, sans-serif;
+      font-size: 1.2rem;
+      margin: 0 0 12px;
+      border-bottom: 1px solid color-mix(in srgb, var(--graph) 12%, transparent);
+      padding-bottom: 8px;
+    }
+    .hint { font-size: 0.9rem; opacity: 0.65; margin: -4px 0 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .grid-wide {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--graph) 8%, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card img, .card object {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      background: var(--pastry);
+    }
+    .card .id {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .votes { display: flex; gap: 6px; }
+    .votes button {
+      flex: 1;
+      border: 1px solid color-mix(in srgb, var(--graph) 15%, transparent);
+      background: var(--pastry);
+      border-radius: 8px;
+      padding: 6px 0;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+    }
+    .votes button[data-v="heart"].on { background: var(--terra); color: #fff; border-color: var(--terra); }
+    .votes button[data-v="maybe"].on { background: #e8d9a8; border-color: #c4b078; }
+    .votes button[data-v="kill"].on { background: var(--graph); color: #fff; }
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+    footer {
+      max-width: 1200px;
+      margin: 24px auto 48px;
+      padding: 0 24px;
+    }
+    #export {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--terra);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    pre#out {
+      margin-top: 12px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gallery R5 — craft redo after R4 reject</h1>
+    <p class="meta">
+      Owner feedback после R4: фон слишком жёлтый · marks не «курица» ·
+      food art как гриль/табака · strip-иконки неровные · T4 сохранить · K1
+      переделать (KFC-method).
+    </p>
+    <span class="reject">R4 execution REJECT → R5</span>
+    <div class="fix">
+      <strong>Голосуй особенно:</strong>
+      <ol>
+        <li>Какой mark (m01 / m02 / m04 / m06 / m07)</li>
+        <li>T4 ChickenFit vs K1 CHICKEN vs combo</li>
+        <li>Food: JP-drawn vs appetite-stack</li>
+        <li>Banner v1 vs K1</li>
+      </ol>
+    </div>
+  </header>
+
+  <section>
+    <h2>1. Marks (5) — color</h2>
+    <p class="hint">Силуэт «еда из курицы» за 0.3 с. Без crest / samsa. Фон near-white.</p>
+    <div class="grid" id="marks">
+      <div class="card" data-id="m01-sandwich">
+        <img src="r5/marks/m01-sandwich.svg" alt="m01 sandwich" />
+        <div class="id">m01 sandwich</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="m02-bowl">
+        <img src="r5/marks/m02-bowl.svg" alt="m02 bowl" />
+        <div class="id">m02 bowl</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="m04-piece">
+        <img src="r5/marks/m04-piece.svg" alt="m04 piece" />
+        <div class="id">m04 piece (no grill)</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="m06-box">
+        <img src="r5/marks/m06-box.svg" alt="m06 box" />
+        <div class="id">m06 box</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="m07-strips">
+        <img src="r5/marks/m07-strips.svg" alt="m07 strips" />
+        <div class="id">m07 strips</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Marks — mono (silhouette stress)</h2>
+    <p class="hint">1 ink. Если не читается — kill.</p>
+    <div class="grid">
+      <div class="card"><img src="r5/marks/m01-sandwich-mono.svg" alt="m01 mono" /><div class="id">m01 mono</div></div>
+      <div class="card"><img src="r5/marks/m02-bowl-mono.svg" alt="m02 mono" /><div class="id">m02 mono</div></div>
+      <div class="card"><img src="r5/marks/m04-piece-mono.svg" alt="m04 mono" /><div class="id">m04 mono</div></div>
+      <div class="card"><img src="r5/marks/m06-box-mono.svg" alt="m06 mono" /><div class="id">m06 mono</div></div>
+      <div class="card"><img src="r5/marks/m07-strips-mono.svg" alt="m07 mono" /><div class="id">m07 mono</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Wordmarks</h2>
+    <p class="hint">T4 = Bricolage Grotesque (primary). K1 = custom CHICKEN, KFC-method (not clone).</p>
+    <div class="grid grid-wide">
+      <div class="card" data-id="wm-t4">
+        <img src="r5/wordmarks/wm-t4-chickenfit.svg" alt="T4" />
+        <div class="id">T4 ChickenFit (Bricolage)</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="wm-k1">
+        <img src="r5/wordmarks/wm-k1-chicken.svg" alt="K1" />
+        <div class="id">K1 CHICKEN</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="wm-combo">
+        <img src="r5/wordmarks/wm-k1-combo.svg" alt="combo" />
+        <div class="id">K1 + Fit combo</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Lockup</h2>
+    <div class="pair">
+      <div class="card"><img src="r5/lockups/lock-m01-t4.svg" alt="lock light" /><div class="id">m01 + T4 light</div></div>
+      <div class="card"><img src="r5/lockups/lock-m01-t4-dark.svg" alt="lock dark" /><div class="id">m01 + T4 dark</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Poster / food (другой язык, не mark)</h2>
+    <p class="hint">Лого-иконка cartoon OK. Плакат = очевидная сочная курица. Смотри <a href="gallery-poster.html">gallery-poster.html</a>.</p>
+    <div class="grid" style="grid-template-columns:1fr">
+      <div class="card" data-id="fa-hero">
+        <img src="r5/food-art-detail/fa-hero-chicken.svg" alt="hero chicken" />
+        <div class="id">fa-hero-chicken · волокна · корочка · кость · срез</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="banner-poster">
+        <img src="r5/banner/banner-2x1-poster.svg" alt="poster banner" />
+        <div class="id">banner 2×1 poster</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+      <div class="card" data-id="banner-k1">
+        <img src="r5/banner/banner-2x1-k1.svg" alt="banner k1" />
+        <div class="id">banner K1 type test</div>
+        <div class="votes">
+          <button data-v="heart">♥</button>
+          <button data-v="maybe">~</button>
+          <button data-v="kill">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Tokens R5</h2>
+    <div class="grid">
+      <div class="card" style="background:#fdfcf9"><div class="id">pastry #FDFCF9 (near-white)</div></div>
+      <div class="card" style="background:#c95530;color:#fff"><div class="id">terra #C95530</div></div>
+      <div class="card" style="background:#28211d;color:#fff"><div class="id">graphite #28211D</div></div>
+      <div class="card" style="background:#ffffff;border:1px solid #eee"><div class="id">banner white #FFF</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <button id="export" type="button">Export votes (JSON)</button>
+    <pre id="out"></pre>
+    <p class="hint" style="margin-top:16px">Brief: design/research/r5-owner-brief.md · Competitors always-on</p>
+  </footer>
+
+  <script>
+    const votes = {};
+    document.querySelectorAll('.card[data-id]').forEach(card => {
+      const id = card.dataset.id;
+      card.querySelectorAll('.votes button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.votes button').forEach(b => b.classList.remove('on'));
+          btn.classList.add('on');
+          votes[id] = btn.dataset.v;
+        });
+      });
+    });
+    document.getElementById('export').addEventListener('click', () => {
+      const out = document.getElementById('out');
+      out.style.display = 'block';
+      out.textContent = JSON.stringify({ round: 'R5', at: new Date().toISOString(), votes }, null, 2);
+    });
+  </script>
+</body>
+</html>

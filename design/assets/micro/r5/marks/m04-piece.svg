@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- R5 m04 — fried chicken piece (not grill/tabaka): crust waves, juicy form -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Fried chicken piece mark">
+  <rect width="128" height="128" rx="22" fill="#FDFCF9"/>
+  <!-- main piece silhouette (thigh/breast organic) -->
+  <path fill="#C95530" d="
+    M36 78
+    C28 60 34 36 52 26
+    C68 18 88 24 96 40
+    C104 56 98 78 84 90
+    C70 102 48 98 36 78
+    Z"/>
+  <!-- deep crust shade -->
+  <path fill="#A34428" d="
+    M40 80
+    C36 68 40 48 54 38
+    C48 50 48 66 52 80
+    C56 92 68 98 78 94
+    C66 100 48 96 40 80
+    Z"/>
+  <!-- highlight sheen (juicy) -->
+  <path fill="#E07A52" d="
+    M56 36
+    C64 28 80 30 88 42
+    C78 36 66 36 56 42
+    C52 44 54 38 56 36
+    Z"/>
+  <!-- crust crackle — organic waves, NOT parallel grill -->
+  <path fill="none" stroke="#28211D" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.28"
+    d="M48 48 C58 44 72 48 82 56
+       M44 60 C56 54 74 58 86 68
+       M48 74 C60 68 72 72 80 80"/>
+  <!-- bone tip (food cue: this is chicken) -->
+  <path fill="#F5F0E6" d="
+    M84 90
+    C90 96 96 104 94 110
+    C92 114 86 114 84 110
+    C82 106 82 98 84 90
+    Z"/>
+  <ellipse cx="90" cy="110" rx="8" ry="5.5" fill="#EDE6D8"/>
+  <ellipse cx="90" cy="110" rx="3.5" ry="2.2" fill="#FDFCF9"/>
+</svg>

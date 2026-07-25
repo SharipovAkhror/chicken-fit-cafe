@@ -39,8 +39,11 @@ claims:
 
 ## Макеты study
 
-`design/assets/micro/r3/lockups/signage-day.svg`  
-`design/assets/micro/r3/lockups/signage-night.svg`
+Signage day/night SVG (R3) **удалены** с purge — пересобрать после finalist mark.
+
+Актуально: `design/assets/micro/r5/banner/banner-2x1-poster.svg`  
+Hero food: `design/assets/micro/r5/food-art-detail/fa-hero-chicken.svg`  
+Фото фасада: `design/assets/reference/facade/facade-empty.jpg`
 
 ## Ops later
 

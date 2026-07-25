@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- R5.1 m08 NEW — karaage cluster (JP product honesty): 3 irregular nuggets + lemon tip -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Karaage chicken cluster mark">
+  <rect width="128" height="128" rx="20" fill="#FDFCF9"/>
+
+  <!-- nugget back left -->
+  <path fill="#8F3A24" d="
+    M28 70
+    C24 58 28 46 38 40
+    C34 44 36 36 44 36
+    C52 30 64 34 68 46
+    C72 56 66 70 54 76
+    C42 82 32 80 28 70
+    Z"/>
+  <g fill="none" stroke="#5C2818" stroke-width="1" stroke-linecap="round" stroke-opacity="0.3">
+    <path d="M36 52 C44 48 54 52 60 60"/>
+    <path d="M34 62 C44 58 52 62 58 68"/>
+  </g>
+  <g fill="#5C2818" fill-opacity="0.25">
+    <circle cx="44" cy="54" r="1.2"/>
+    <circle cx="52" cy="62" r="1"/>
+  </g>
+
+  <!-- nugget right -->
+  <path fill="#A34428" d="
+    M70 64
+    C68 50 76 40 88 38
+    C84 34 92 32 98 38
+    C106 36 112 46 110 58
+    C108 70 98 80 86 80
+    C74 80 72 72 70 64
+    Z"/>
+  <path fill="#C95530" fill-opacity="0.5" d="M80 48 C86 42 98 44 104 52 C96 46 86 46 80 48 Z"/>
+  <path fill="none" stroke="#5C2818" stroke-width="1" stroke-linecap="round" stroke-opacity="0.3"
+    d="M78 54 C86 50 98 54 106 62"/>
+
+  <!-- hero nugget front center -->
+  <path fill="#C95530" d="
+    M40 78
+    C36 64 44 50 58 46
+    C54 42 62 38 70 42
+    C80 38 92 46 94 60
+    C96 72 88 88 72 94
+    C56 100 44 92 40 78
+    Z"/>
+  <!-- edge bumps karaage -->
+  <path fill="#B84A2A" d="
+    M44 60 C40 58 40 52 46 50 C50 54 48 60 44 60 Z
+    M78 52 C74 48 78 42 84 44 C86 50 82 54 78 52 Z
+    M84 78 C88 76 92 80 90 86 C84 84 82 80 84 78 Z"/>
+  <path fill="#E07A52" d="
+    M54 56
+    C60 48 74 48 84 58
+    C74 52 62 52 56 60
+    C52 62 52 58 54 56
+    Z"/>
+  <g fill="none" stroke="#5C2818" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.32">
+    <path d="M50 64 C60 58 74 60 86 70"/>
+    <path d="M48 76 C60 70 74 72 84 82"/>
+    <path d="M56 58 C64 54 74 56 80 62"/>
+  </g>
+  <g fill="#6B2E1A" fill-opacity="0.3">
+    <circle cx="62" cy="68" r="1.3"/>
+    <circle cx="74" cy="74" r="1.1"/>
+    <circle cx="68" cy="80" r="1.0"/>
+    <circle cx="58" cy="74" r="0.9"/>
+  </g>
+
+  <!-- lemon wedge tip (JP karaage cue — small, not dominant) -->
+  <path fill="#E8C97A" d="
+    M96 88
+    C100 82 110 84 112 92
+    C114 100 106 106 100 102
+    C94 98 94 92 96 88
+    Z"/>
+  <path fill="none" stroke="#C4A84A" stroke-width="0.8" stroke-opacity="0.6"
+    d="M100 90 L106 96 M102 88 L108 94"/>
+
+  <!-- steam -->
+  <path fill="none" stroke="#28211D" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.22"
+    d="M58 30 C56 24 60 20 58 16
+       M70 28 C68 22 72 18 70 14"/>
+</svg>

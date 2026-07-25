@@ -115,8 +115,9 @@ tone of voice.
 
 ## 11. Носители
 
-> AI-концепт-борды (2026-07) **удалены** из repo как non-final. Актуальные
-> микро-сборки: `design/assets/micro/r3/` + `gallery-r3.html`.
+> AI-концепт-борды и R1–R4 reject archives **удалены**. Актуальные
+> микро-сборки: `design/assets/micro/r5/` + `gallery-poster.html` /
+> `gallery-r5-detail.html`.
 
 ### Упаковка
 
@@ -125,9 +126,9 @@ tone of voice.
 
 ### Точка и сервис / вывеска
 
-Пластмассовые объёмные буквы + подсветка; day/night study:
-`design/assets/micro/r3/lockups/signage-*.svg` и
-`design/research/signage-notes.md`.
+Пластмассовые объёмные буквы + подсветка. Баннер 2×1 + hero chicken:
+`design/assets/micro/r5/banner/banner-2x1-poster.svg`. Notes:
+`design/research/signage-notes.md`. Signage day/night SVG — после выбора finalist.
 
 ### Digital
 

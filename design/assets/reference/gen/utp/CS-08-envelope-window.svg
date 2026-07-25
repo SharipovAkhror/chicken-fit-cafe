@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pastry envelope with window cut to burger core -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256">
+  <rect width="128" height="128" fill="#FDFCF9"/>
+  <!-- envelope body -->
+  <path fill="#E8D4B0" d="M24 44l40-20 40 20v48c0 8-12 16-40 16S24 100 24 92z"/>
+  <path fill="#D4BC94" d="M24 44l40 18 40-18v10L64 72 24 54z"/>
+  <!-- window cut (shows inside) -->
+  <path fill="#F5E6D0" d="M42 58h44v36c0 4-8 8-22 8s-22-4-22-8z"/>
+  <!-- burger in window -->
+  <path fill="#C95530" d="M48 64h32v7H48z"/>
+  <path fill="#28211D" d="M46 71h36v12H46z"/>
+  <path fill="none" stroke="#E8D4B0" stroke-width="1" opacity=".5" d="M52 75h24M50 81h28"/>
+  <path fill="#667447" d="M48 83c5-3 10 1 14-1s10 2 14 0v5c-4 1-8-2-14 0s-10 2-14-1z"/>
+  <path fill="#C95530" d="M50 88h28v6H50z"/>
+  <!-- fold lines -->
+  <path fill="none" stroke="#C4A878" stroke-width="1.5" d="M64 24v30M28 48l36 16 36-16"/>
+  <!-- crust texture -->
+  <path fill="none" stroke="#C4A878" stroke-width="1.2" stroke-linecap="round" d="M32 84c4 6 12 10 20 10M96 84c-4 6-12 10-20 10"/>
+</svg>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- R5.1 m06d — open kraft box DETAILED: flaps, score lines, 2 chicken pieces, texture -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Detailed takeaway box with chicken">
+  <rect width="128" height="128" rx="20" fill="#FDFCF9"/>
+
+  <!-- back flap (open) -->
+  <path fill="#E5DAC8" d="
+    M36 46
+    L46 22
+    L82 22
+    L92 46
+    Z"/>
+  <!-- flap crease -->
+  <path fill="none" stroke="#C4B49A" stroke-width="1.2" d="M48 26 L80 26 M50 34 L78 34"/>
+  <!-- side flaps tiny -->
+  <path fill="#D9CDB8" d="M36 46 L28 52 L32 58 L36 50 Z"/>
+  <path fill="#D9CDB8" d="M92 46 L100 52 L96 58 L92 50 Z"/>
+
+  <!-- box outer walls -->
+  <path fill="#C95530" d="
+    M26 50
+    L102 50
+    L96 104
+    L32 104
+    Z"/>
+  <!-- box side bevels -->
+  <path fill="#A34428" d="
+    M26 50 L32 104 L38 104 L32 50 Z
+    M102 50 L96 104 L90 104 L96 50 Z"/>
+  <!-- front lip -->
+  <path fill="#8F3A24" d="
+    M32 98 L96 98 L96 104 L32 104 Z"/>
+
+  <!-- inner floor (kraft darker) -->
+  <path fill="#9A6B3C" d="
+    M38 58
+    L90 58
+    L86 94
+    L42 94
+    Z"/>
+  <!-- floor grain lines (kraft paper) -->
+  <g fill="none" stroke="#7A5530" stroke-width="0.8" stroke-opacity="0.35" stroke-linecap="round">
+    <path d="M44 66 L84 66"/>
+    <path d="M46 76 L82 76"/>
+    <path d="M48 86 L80 86"/>
+  </g>
+
+  <!-- chicken piece 1 (left, dark fried) -->
+  <path fill="#28211D" d="
+    M42 68
+    C40 58 50 52 60 56
+    C68 59 70 70 62 78
+    C54 86 44 80 42 68
+    Z"/>
+  <path fill="#3D342E" d="M46 64 C48 58 58 58 62 64 C56 60 50 60 46 64 Z"/>
+  <path fill="none" stroke="#FDFCF9" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.4"
+    d="M48 66 C54 62 62 64 66 70"/>
+  <g fill="#FDFCF9" fill-opacity="0.2">
+    <circle cx="52" cy="70" r="0.8"/>
+    <circle cx="58" cy="74" r="0.7"/>
+  </g>
+
+  <!-- chicken piece 2 (right, terra) -->
+  <path fill="#C95530" d="
+    M64 66
+    C62 56 74 50 84 56
+    C90 60 88 72 80 78
+    C72 84 66 76 64 66
+    Z"/>
+  <path fill="#E07A52" d="M70 60 C74 54 82 56 84 62 C78 58 72 58 70 60 Z"/>
+  <path fill="none" stroke="#6B2E1A" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.35"
+    d="M68 64 C74 60 80 64 84 70"/>
+
+  <!-- tiny steam from box -->
+  <path fill="none" stroke="#28211D" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.22"
+    d="M56 40 C54 34 58 30 56 26
+       M68 38 C66 32 70 28 68 24"/>
+</svg>

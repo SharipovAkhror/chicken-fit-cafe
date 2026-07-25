@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · Poster hero chicken</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --terra:#c95530; --graph:#28211d; --bg:#f0eeea; }
+    body { margin:0; font-family:Manrope,system-ui,sans-serif; background:var(--bg); color:var(--graph); }
+    header { max-width:1100px; margin:0 auto; padding:28px 20px 8px; }
+    h1 { font-family:"Bricolage Grotesque",system-ui,sans-serif; margin:0 0 8px; font-size:1.6rem; }
+    .meta { opacity:0.75; max-width:70ch; line-height:1.5; }
+    .rule {
+      margin-top:12px; padding:12px 14px; background:#fff; border-radius:12px;
+      border-left:4px solid var(--terra); font-size:0.92rem; max-width:70ch;
+    }
+    section { max-width:1100px; margin:0 auto; padding:16px 20px; }
+    h2 { font-family:"Bricolage Grotesque",system-ui,sans-serif; font-size:1.1rem; }
+    .frame {
+      background:#fff; border-radius:16px; padding:16px;
+      box-shadow:0 1px 0 color-mix(in srgb, var(--graph) 10%, transparent);
+    }
+    .frame img { width:100%; height:auto; display:block; border-radius:8px; }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:720px){ .split{ grid-template-columns:1fr; } }
+    .card { background:#fff; border-radius:14px; padding:12px; }
+    .card img { width:100%; border-radius:10px; background:#fff; }
+    .id { font-size:0.8rem; font-weight:600; margin-top:8px; }
+    .tag { font-size:0.75rem; opacity:0.55; }
+    a { color:var(--terra); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Плакат / баннер — hero-курица</h1>
+    <p class="meta">
+      <strong>Лого-иконка</strong> — можно мультяшно / упрощённо.<br/>
+      <strong>Плакат</strong> — очевидно <em>еда = сочная курица</em>:
+      кость, хрустящая корочка, <em>волокна мяса</em>, срез, сок, порция.
+    </p>
+    <div class="rule">
+      Не путать языки: mark ≠ food-art. Food-art для фасада 2×1 м.
+      Полный hero: <code>r5/food-art-detail/fa-hero-chicken.svg</code>
+    </div>
+  </header>
+
+  <section>
+    <h2>1. Hero chicken (крупно)</h2>
+    <div class="frame">
+      <img src="r5/food-art-detail/fa-hero-chicken.svg" alt="Hero juicy chicken"/>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Баннер 2×1 на фасад</h2>
+    <div class="frame">
+      <img src="r5/banner/banner-2x1-poster.svg" alt="Facade poster banner"/>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Не путать с лого-марками</h2>
+    <p class="meta" style="margin-bottom:12px">Слева — mark (допускаем cartoon). Справа — hero food.</p>
+    <div class="split">
+      <div class="card">
+        <img src="r5/marks-detail/m04d-piece.svg" alt="logo mark"/>
+        <div class="id">Logo mark m04d</div>
+        <div class="tag">упрощённый язык знака</div>
+      </div>
+      <div class="card">
+        <img src="r5/food-art-detail/fa-hero-chicken.svg" alt="hero"/>
+        <div class="id">Poster hero</div>
+        <div class="tag">волокна · корочка · кость · срез</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="meta">Галерея marks: <a href="gallery-r5-detail.html">gallery-r5-detail.html</a> · flat: <a href="gallery-r5.html">gallery-r5.html</a></p>
+  </section>
+</body>
+</html>

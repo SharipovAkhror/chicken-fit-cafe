@@ -58,7 +58,7 @@ Ratio candidate: **1.25** major third from 16.
 
 ## Specimen
 
-Открыть `design/assets/micro/gallery-r3.html` → секция Type.
+Открыть `design/assets/micro/gallery-r5.html` → секция Wordmarks (T4 + K1).
 
 ## Cull
 

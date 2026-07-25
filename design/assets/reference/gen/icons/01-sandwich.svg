@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" fill="#FFFFFF"/>
+  <!-- bottom bun -->
+  <path fill="#C95530" d="M28 78c0 14 16 24 36 24s36-10 36-24v8c0 12-16 20-36 20S28 98 28 86z"/>
+  <!-- chicken -->
+  <path fill="#28211D" d="M32 58c2-8 14-14 32-14s30 6 32 14v18c-2 8-14 14-32 14S34 84 32 76z"/>
+  <path fill="none" stroke="#FDFCF9" stroke-width="1.5" stroke-linecap="round" opacity=".45" d="M44 64c8-2 24-2 36 2M42 72c10-2 26-2 38 2"/>
+  <!-- leaf -->
+  <path fill="#667447" d="M34 52c8-6 16 2 24-2s14 4 24 0l-2 8c-8-4-16 2-24-2s-14 2-20 2z"/>
+  <!-- top bun -->
+  <path fill="#C95530" d="M30 52C30 30 44 18 64 18s34 12 34 34v6c-8-4-20-6-34-6S38 54 30 58z"/>
+  <ellipse cx="48" cy="34" rx="2.4" ry="1.4" fill="#FDFCF9" transform="rotate(-18 48 34)"/>
+  <ellipse cx="64" cy="28" rx="2.5" ry="1.4" fill="#FDFCF9"/>
+  <ellipse cx="78" cy="36" rx="2.3" ry="1.3" fill="#FDFCF9" transform="rotate(16 78 36)"/>
+</svg>

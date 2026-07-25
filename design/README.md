@@ -1,23 +1,30 @@
 # Дизайн
 
-**Режим:** micro R3 — quality over quantity. Не финальный брендбук.
+**Режим:** R5 active — marks + poster hero chicken. Не финальный брендбук.
 
 ## Сейчас
 
-1. **Галерея:** [`assets/micro/gallery-r3.html`](assets/micro/gallery-r3.html)  
-2. Marks / lockups / signage: [`assets/micro/r3/`](assets/micro/r3/)  
-3. Tokens light+dark: [`tokens.css`](tokens.css)  
-4. Сетка / lockup: [`research/grid-and-lockup-standard.md`](research/grid-and-lockup-standard.md)  
-5. Вывеска: [`research/signage-notes.md`](research/signage-notes.md)  
+1. **Плакат / hero-курица:** [`assets/micro/gallery-poster.html`](assets/micro/gallery-poster.html)  
+2. **Marks detail:** [`assets/micro/gallery-r5-detail.html`](assets/micro/gallery-r5-detail.html)  
+3. **Marks flat:** [`assets/micro/gallery-r5.html`](assets/micro/gallery-r5.html)  
+4. Ассеты: [`assets/micro/r5/`](assets/micro/r5/)  
+5. Tokens: [`tokens.css`](tokens.css)  
+6. Detail method: [`research/r5-detail-method.md`](research/r5-detail-method.md)  
+7. Вывеска notes: [`research/signage-notes.md`](research/signage-notes.md)  
 
-## Research
+## Два языка (не путать)
 
-- case-board, anti-slop, type-candidates, color-study, jp-reference-lens  
-- craft-standards, system-map, brandbook-production, canva (optional)  
+| Носитель | Язык |
+| --- | --- |
+| **Logo mark** | упрощённый / «мультяшный» OK — иконка + ChickenFit |
+| **Плакат / баннер фасада** | очевидная **сочная курица**: волокна, корочка, кость, срез |
+
+Hero food: `assets/micro/r5/food-art-detail/fa-hero-chicken.svg`  
+Banner: `assets/micro/r5/banner/banner-2x1-poster.svg`
 
 ## Правила
 
-- С дистанции читается **еда**.  
+- С дистанции на плакате читается **еда = курица**.  
 - Icon + ChickenFit; gap ~8px; optical center.  
 - Max 2 inks в лого; olive не в лого.  
-- Старый bulk (R1/R2 иконки, 3-line logos, AI mock boards) удалён.  
+- R1–R4 bulk / reject archives **удалены**.  

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 120" width="640" height="120" role="img" aria-label="Lockup sandwich + ChickenFit dark">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&amp;display=swap');
+      .wm {
+        font-family: 'Bricolage Grotesque', 'Arial Black', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 52px;
+        letter-spacing: -1.4px;
+      }
+    </style>
+  </defs>
+  <rect width="640" height="120" fill="#12100E"/>
+  <g transform="translate(12 12) scale(0.75)">
+    <path fill="#C95530" d="M28 78 C28 92 42 102 64 102 C86 102 100 92 100 78 L100 86 C100 98 86 108 64 108 C42 108 28 98 28 86 Z"/>
+    <path fill="#FDFCF9" d="M34 62 C36 56 48 52 64 52 C80 52 92 56 94 62 L92 76 C90 80 78 84 64 84 C50 84 38 80 36 76 Z"/>
+    <path fill="#667447" d="M36 56 C44 50 52 58 60 54 C68 50 74 56 82 52 C88 50 92 54 94 56 L92 60 C84 56 76 62 68 58 C60 54 52 60 44 58 C40 57 38 58 36 60 Z"/>
+    <path fill="#C95530" d="M30 56 C30 34 44 22 64 22 C84 22 98 34 98 56 L98 60 C90 56 78 54 64 54 C50 54 38 56 30 60 Z"/>
+  </g>
+  <text x="120" y="76" class="wm">
+    <tspan fill="#FDFCF9">Chicken</tspan><tspan fill="#C95530">Fit</tspan>
+  </text>
+</svg>

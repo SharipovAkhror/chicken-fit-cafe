@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Chicken takeaway box mark mono">
+  <rect width="128" height="128" rx="22" fill="#FDFCF9"/>
+  <path fill="#28211D" d="
+    M34 48 L44 28 L84 28 L94 48 Z
+    M28 50 L100 50 L94 100 L34 100 Z
+    M44 70 C42 60 54 54 64 58 C72 61 74 70 68 76 C60 82 46 80 44 70 Z
+    M66 64 C64 56 76 50 84 56 C88 60 86 68 80 72 C74 76 68 72 66 64 Z"/>
+  <path fill="#FDFCF9" fill-opacity="0.35" d="M36 58 L92 58 L88 92 L40 92 Z"/>
+</svg>

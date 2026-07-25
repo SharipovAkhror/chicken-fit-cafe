@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- R5 m06 — open takeaway box + chicken piece inside -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Chicken takeaway box mark">
+  <rect width="128" height="128" rx="22" fill="#FDFCF9"/>
+  <!-- box back flap -->
+  <path fill="#E8DFD0" d="
+    M34 48
+    L44 28
+    L84 28
+    L94 48
+    Z"/>
+  <!-- box outer -->
+  <path fill="#C95530" d="
+    M28 50
+    L100 50
+    L94 100
+    L34 100
+    Z"/>
+  <!-- box inner floor -->
+  <path fill="#A34428" d="
+    M36 58
+    L92 58
+    L88 92
+    L40 92
+    Z"/>
+  <!-- chicken pieces inside (readable food) -->
+  <path fill="#28211D" d="
+    M44 70
+    C42 60 54 54 64 58
+    C72 61 74 70 68 76
+    C60 82 46 80 44 70
+    Z"/>
+  <path fill="#F5F0E6" d="
+    M66 64
+    C64 56 76 50 84 56
+    C88 60 86 68 80 72
+    C74 76 68 72 66 64
+    Z"/>
+  <!-- lid fold line -->
+  <path fill="none" stroke="#28211D" stroke-width="1.4" stroke-opacity="0.2" stroke-linecap="round"
+    d="M40 50 L48 34 M88 50 L80 34"/>
+</svg>

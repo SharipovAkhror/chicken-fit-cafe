@@ -1,15 +1,15 @@
 /**
- * ChickenFit brand tokens — R3 working
- * Lighter pastry, brighter terracotta for daytime signage.
- * Olive: UI/tags only, not logo.
+ * ChickenFit brand tokens — R5 working
+ * Pastry near-white (R4 #faf7f0 was too yellow — owner).
+ * Brighter terracotta for daytime signage. Olive: UI only, not logo.
  */
 
 :root {
   color-scheme: light;
 
   /* Palette — distribution ~60 / 25 / 10 / 5 */
-  --cf-color-pastry: #faf7f0; /* lightened R3 (was #f3e7d3 → #f7f1e6 → #faf7f0) */
-  --cf-color-terracotta: #c95530; /* brighter R3 for day visibility (was #b94d2f) */
+  --cf-color-pastry: #fdfcf9; /* R5 near-white (was #faf7f0 too yellow) */
+  --cf-color-terracotta: #c95530; /* day visibility */
   --cf-color-graphite: #28211d;
   --cf-color-olive: #667447;
 
@@ -28,8 +28,8 @@
   --cf-signage-glow: #ff6b35;
   --cf-signage-letter: #fff6ec;
 
-  /* Typography shortlist: T2 Syne | T4 Bricolage | T7 Onest — body Manrope/Onest */
-  --cf-font-display: "Syne", "Onest", system-ui, sans-serif;
+  /* Typography: T4 Bricolage primary (owner R4); body Manrope. K1 = custom CHICKEN paths test */
+  --cf-font-display: "Bricolage Grotesque", "Syne", system-ui, sans-serif;
   --cf-font-body: "Manrope", "Onest", system-ui, sans-serif;
 
   --cf-text-display: 3rem;

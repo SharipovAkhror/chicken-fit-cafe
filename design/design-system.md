@@ -27,19 +27,24 @@ claims:
 - Словесный знак: `ChickenFit` (без пробела, заглавные `C` и `F`) — C-022.
 - На светлом фоне (рабочее): `Chicken` — графит, `Fit` — терракота.
 - Смысл `Fit`: «подходит» ритму дня, **не** диетическое обещание.
-- **Primary system R3:** food-mark + wordmark ChickenFit (gap 8px, optical
-  center). Clever-line wordmarks — не в работе. Letter/seal icons — kill.
-- Mark candidates: `design/assets/micro/r3/marks/` (7 детальных).
-- Wordmark type shortlist: **T2 Syne, T4 Bricolage, T7 Onest**.
+- **Primary system R5:** food-mark + wordmark ChickenFit (gap 8px, optical
+  center). Clever-line wordmarks — не в работе. Letter/seal / crest head /
+  samsa — kill. R4 execution — owner reject.
+- Mark candidates: `design/assets/micro/r5/marks/` (5 redraws, chicken-readable).
+- Wordmark type: **T4 Bricolage Grotesque** (owner lock). Test **K1 CHICKEN**
+  (KFC method redo — not clone).
+- Surface: pastry **near-white** `#FDFCF9` (R4 too yellow).
+- **Два языка:** logo mark (упрощённый OK) ≠ poster food-art (очевидная сочная курица).
 - Охранное поле / min-size — после выбора finalist.
 
 ### Ассеты
 
 | Путь | Статус |
 | --- | --- |
-| `design/assets/micro/r3/*` | **active R3** |
-| `design/assets/micro/gallery-r3.html` | отбор |
-| R1/R2 bulk, 3-line logos, AI boards | **deleted** |
+| `design/assets/micro/r5/*` | **active only** |
+| `gallery-poster.html` | hero chicken + banner 2×1 |
+| `gallery-r5.html` / `gallery-r5-detail.html` | отбор marks |
+| R1–R4 archives, AI mock reject | **deleted** |
 
 Запрещено: купола, самолёты, мультяшная курица с глазами, поварские колпаки,
 орнамент, AI-glow, деформация, пятый бренд-цвет.
@@ -48,8 +53,8 @@ claims:
 
 ```yaml
 color:
-  pastry: "#FAF7F0"      # фон 60% (light R3)
-  terracotta: "#C95530"  # бренд 10% (brighter R3, day signage)
+  pastry: "#FDFCF9"      # near-white R5 (was too yellow)
+  terracotta: "#C95530"  # бренд 10% day signage
   graphite: "#28211D"    # текст 25%
   olive: "#667447"       # UI only 5% — не в лого
 dark:
