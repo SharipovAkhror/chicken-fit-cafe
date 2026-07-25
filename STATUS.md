@@ -32,10 +32,13 @@
 
 ### 1. ✅ Remote + harness (2026-07-25)
 
-- Репозиторий: `chicken-fit-cafe`
+- Репозиторий: https://github.com/SharipovAkhror/chicken-fit-cafe
+- Локальный канон: `Documents/GitHub/chicken-fit-cafe` (не `1213`)
 - Vendor-стабы: `CLAUDE.md`, `GEMINI.md`, `GROK.md`, `.github/copilot-instructions.md` → `AGENTS.md`
 - CODEOWNERS: `@SharipovAkhror`
-- CI: `.github/workflows/validate.yml` → `node tools/validate.mjs`
+- Labels GitHub: type/trust/area из `.github/labels.yml`
+- `.gitattributes`: LF для parity validate Windows/CI
+- CI: `.github/workflows/validate.yml` → `node tools/validate.mjs` (зелёный на bootstrap)
 
 ### 2. 🔴 Следующий приоритет — первый цикл issue → PR
 
