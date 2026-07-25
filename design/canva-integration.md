@@ -1,62 +1,155 @@
 ---
-title: "Canva: что реально с Pro и API"
+title: "Canva: могу ли я его использовать и как подключить"
 status: draft
 owner: visual-designer
 updated: 2026-07-25
 sources:
+  - https://www.canva.dev/docs/connect/
   - https://www.canva.dev/docs/connect/authentication/
-  - https://www.canva.com/help/canva-api/
+  - https://www.canva.dev/docs/connect/quickstart/
   - https://www.canva.com/help/brand-kit/
+  - https://www.canva.com/help/brand-kit-builder/
   - SECURITY.md
-  - design/system-map.md
+claims:
+  - C-022
 ---
 
-# Canva Pro и «API-ключ»
+# Canva: правда без маркетинга
 
-## Прямой ответ
+## Одним абзацем
 
-**Просто скинуть «API key» и чтобы я сам зашёл в твой Canva как в аккаунт —
-так не работает.**
+Я **не** сижу в твоём Canva как человек в браузере. У меня нет окна
+редактора Canva «от твоего логина».  
+Зато есть **три рабочих способа** разной силы: (1) я делаю брендбук и
+ассеты здесь → ты кладёшь в Brand Kit; (2) ты даёшь shared-папку / team;
+(3) опционально — Connect API (OAuth), чтобы заливать файлы и создавать
+заготовки дизайнов.  
+**«Просто API-ключ и работай сам в Canva» — так Canva не устроен.**
 
-Canva Connect API использует **OAuth 2.0** (client id + client secret + твой
-логин-consent в браузере), а не пароль и не один вечный ключ «войти и
-редактировать все дизайны».
+---
 
-| Способ | Работает? | Комментарий |
-| --- | --- | --- |
-| Пароль / «зайди в мой Canva» | **Нет** | Небезопасно, не поддерживаем, не в git |
-| Один API key «как OpenAI» | **Нет** (не модель Canva) | Нужен OAuth app |
-| Connect API: Client ID + Secret + OAuth | **Частично** | Нужен Developer Portal, redirect URL, scopes; многие brand-template autofill — **Enterprise** |
-| Invite в team / shared folder Canva Pro | **Да, проще всего** | Ты шаришь папку; я даю макеты/спеки; правки — в UI |
-| Brand Kit вручную из наших файлов | **Да, baseline** | `design/brand-kit/` → ты заливаешь цвета/лого |
-| HTML/PDF брендбук в repo | **Да** | Не зависит от Canva API |
+## Что я могу / не могу
 
-## Если всё же хочешь Connect API
+| | |
+| --- | --- |
+| ❌ Зайти по паролю и двигать слои в редакторе | Нет |
+| ❌ Один API key = полный доступ как у дизайнера в UI | Нет |
+| ✅ Сделать брендбук, лого, токены, PDF/HTML **в репо** | Да, сейчас |
+| ✅ Подготовить пакет для Canva Brand Kit (цвета, SVG, шрифты, правила) | Да |
+| ✅ Описать постранично макет, который ты (или я по API) создаёшь в Canva | Да |
+| ✅ Connect API: upload assets, create design, export (после OAuth) | Да, если настроим |
+| ⚠️ Brand Template Autofill | Часто **Enterprise**, не личный Pro |
+| ✅ Использовать открытые референсы (японский F&B и т.д.) вне Canva | Да |
 
-1. Canva → Developers → создать **integration** (Connect API).
-2. Получить **Client ID** и **Client secret**.
-3. Настроить redirect URL (локальный callback или сервис).
-4. Пройти OAuth (ты жмёшь «Allow» в браузере).
-5. Секреты — **только** в env / secret manager, **никогда** в репозиторий
-   (`SECURITY.md`).
+Официально Connect API: upload assets → create designs for user to edit →
+export back. Это **интеграция**, не замена дизайнера в UI.
 
-Даже после этого я **не** «сижу в Canva как дизайнер-человек» в полном UI.
-API даёт операции: ассеты, дизайны, иногда autofill шаблонов — в рамках
-плана и scopes. Редактирование «как руками в редакторе» API не заменяет.
+---
 
-## Рекомендация для ChickenFit сейчас
+## Что полезно достать из Canva Pro (для нас)
 
-1. **Не** тратить время на API, пока нет утверждённого mark.
-2. После mark: пакет `design/brand-kit/` (цвета + SVG + шрифты).
-3. Ты создаёшь Brand Kit в Pro (5 минут).
-4. Опционально: shared folder «ChickenFit Brand» + invite.
-5. API — только если позже понадобится автоматизация (много шаблонов, n8n).
+| Фича Pro | Польза для ChickenFit |
+| --- | --- |
+| **Brand Kit** | Цвета, лого, шрифты, voice — единая полка |
+| **Brand Kit from PDF** | Залил наш PDF брендбука → Canva вытащит цвета/элементы |
+| **Templates** | Постер, stories, меню, стикер — на наших правилах |
+| **Premium fonts / mockups** | Крафт-мок, фасад, соц. (осторожно с «едовым» клише) |
+| **Export PDF/PNG** | Раздача брендбука и носителей |
+| **Magic / AI inside Canva** | Только mood; финал — craft, не slop |
+| **Team share** | Ты approve, я готовлю файлы в shared folder |
 
-## Чего не присылай в чат/git
+Canva **не** заменяет: стратегию, уникальный mark, типографический характер.
+Он — **сборочный цех и библиотека**, не мозг бренда.
 
-- пароль Canva
-- client secret (если уже создал — rotate, не коммить)
-- recovery codes
+---
 
-Если создашь integration — client id можно обсуждать; secret передавать
-только через безопасный канал и локальный `.env` (в `.gitignore`).
+## Три способа подключения (от простого к сложному)
+
+### Способ 1 — Baseline (рекомендую начать с него) ✅
+
+```
+Я в git: лого / цвета / брендбук PDF или HTML
+    → ты: Brand Kit → upload
+    → ты: «Create design» из Brand Kit
+    → export PDF ↔ repo
+```
+
+**Твои действия:** ничего технического, только решения (какой mark/направление).  
+**Мои:** весь craft + файл «залей вот это в Brand Kit».
+
+Можно ускорить: Canva **Brand Kit Builder** — upload brand guidelines PDF.
+
+### Способ 2 — Shared folder / Team invite ✅✅
+
+1. В Canva создай папку `ChickenFit Brand`.
+2. Invite на email, которым удобно (viewer/editor).
+3. Скажи в чате: «папка расшарена».
+
+Я **по-прежнему** не «живу» в UI, но workflow ясный:
+
+- я кладу в repo готовые SVG/PDF/спеки страниц;
+- ты (или ассистент с доступом) кидаешь в папку;
+- правки по комментариям — ты жмёшь approve.
+
+Это не API, но для брендбука **достаточно и быстрее**, чем OAuth.
+
+### Способ 3 — Canva Connect API (если очень нужно «самому через API»)
+
+Не «ключ в чат». Цепочка:
+
+1. Зайди: [Canva Developers — Connect](https://www.canva.dev/docs/connect/)
+2. **Create integration** (private для себя / team).
+3. Получи **Client ID** + **Client secret**.
+4. Scopes (минимум): `asset:read` `asset:write` `design:meta:read` `design:content:read` `design:content:write` `profile:read` (+ folder если есть).
+5. Redirect URL (для локали часто `http://127.0.0.1:3001/oauth/redirect` — как в starter kit).
+6. Ты один раз жмёшь **Allow** в браузере (OAuth).
+7. Появляются access/refresh tokens → только в **локальный `.env`**, gitignore.
+
+Starter kit: https://github.com/canva-sdks/canva-connect-api-starter-kit  
+
+После этого я *теоретически* могу:
+
+- залить лого/иконки как assets;
+- создать пустой/шаблонный design;
+- запросить export.
+
+Я **не** смогу полноценно «собрать арт-дирекцию слоями как в Figma/Canva UI»
+только через API — сложный layout всё равно в редакторе или в нашем PDF.
+
+**Private integration** в полной мере часто завязан на **Enterprise** team.  
+Public integration — review Canva. Для одного бренда Способ 1–2 почти всегда лучше.
+
+---
+
+## Чего не присылать
+
+- пароль Canva  
+- client secret в issue/PR/git  
+- recovery codes  
+
+Client ID — можно. Secret — только secure channel + `.env`.
+
+---
+
+## Решение для ChickenFit (предложение дизайнера)
+
+| Этап | Инструмент |
+| --- | --- |
+| 1. Позиционирование + необычный референс (JP F&B / craft, не копия) | Research + docs в repo |
+| 2. Mark, type, color lock | Repo craft (SVG, type tests) — **не** Canva AI icons |
+| 3. Brand book 20–30 стр. | HTML→PDF **или** макет-спека под Canva |
+| 4. Brand Kit | Ты upload PDF/ассеты (Способ 1) |
+| 5. Носители на крафте | Canva mockups **после** лого |
+| 6. API | Только если устанем от ручного upload |
+
+**Сейчас подключать API не обязательно.** Подключать имеет смысл, когда
+ассеты уже есть и хочется автозаливки.  
+Сначала — бренд-ядро; Canva — полка и производство макетов.
+
+---
+
+## Что спросить у владельца (только решения)
+
+1. Идём **Способ 1** (я делаю, ты Brand Kit) или сразу **Способ 2** (shared folder)?
+2. API (Способ 3) — **не сейчас** / **настроить позже**?
+3. Брендбук v1: больше **PDF-презентация** или **Canva multi-page** (или оба)?
