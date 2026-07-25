@@ -1,6 +1,6 @@
 ---
 title: "Mark exploration v2 — иконка ChickenFit"
-status: draft
+status: superseded
 owner: visual-designer
 updated: 2026-07-25
 sources:

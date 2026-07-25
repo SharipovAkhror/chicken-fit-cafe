@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" fill="none" role="img">
+  <rect width="200" height="200" fill="#FAF7F0"/>
+  <g transform="translate(36 16) scale(0.5)">
+
+  <!-- bowl body -->
+  <path fill="#C95530" d="
+    M26 62 H102
+    C100 62 96 98 64 108
+    C32 98 28 62 26 62 Z"/>
+  <!-- bowl inner shadow -->
+  <path fill="#A34428" opacity="0.35" d="
+    M32 68 H96
+    C94 68 90 94 64 102
+    C38 94 34 68 32 68 Z"/>
+  <!-- rim -->
+  <ellipse cx="64" cy="60" rx="40" ry="13" fill="#28211D"/>
+  <ellipse cx="64" cy="58" rx="32" ry="9" fill="#FAF7F0"/>
+  <!-- rice mound -->
+  <ellipse cx="64" cy="52" rx="26" ry="12" fill="#FAF7F0"/>
+  <ellipse cx="64" cy="50" rx="22" ry="9" fill="#FAF7F0" stroke="#28211D" stroke-width="0.8" opacity="0.9"/>
+  <!-- chicken pieces on top -->
+  <path fill="#C95530" d="M44 48 C48 40 56 38 62 42 C58 48 52 52 44 48 Z"/>
+  <path fill="#A34428" d="M58 44 C64 36 74 36 80 44 C74 50 66 52 58 44 Z"/>
+  <path fill="#C95530" d="M72 48 C78 42 88 44 90 52 C82 54 76 54 72 48 Z"/>
+  <!-- green accent as herb (tiny, still 2-ink family via graph) -->
+  <path fill="#28211D" d="M50 46 C52 42 54 42 55 46 C53 48 51 48 50 46 Z"/>
+  <path fill="#28211D" d="M68 42 C70 38 73 38 74 42 C72 44 69 44 68 42 Z"/>
+  <!-- steam -->
+  <path fill="none" stroke="#28211D" stroke-width="2.2" stroke-linecap="round" opacity="0.35"
+    d="M50 34 C52 28 56 26 58 30 M64 32 C66 24 70 22 72 28 M76 36 C78 30 82 28 84 32"/>
+  </g>
+  <text x="100" y="168" text-anchor="middle" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5">
+    <tspan fill="#28211D">Chicken</tspan><tspan fill="#C95530">Fit</tspan>
+  </text>
+</svg>

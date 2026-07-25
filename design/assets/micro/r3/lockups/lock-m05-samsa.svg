@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 112" width="420" height="112" fill="none" role="img">
+  <rect width="420" height="112" fill="#FAF7F0"/>
+  <g transform="translate(12 20) scale(0.5625)">
+
+  <!-- triangle body -->
+  <path fill="#C95530" d="M24 100 L64 22 L104 100 Z"/>
+  <!-- inner dough layers -->
+  <path fill="#FAF7F0" d="M40 90 L64 42 L88 90 Z"/>
+  <path fill="#C95530" d="M48 88 L64 52 L80 88 Z"/>
+  <!-- filling window -->
+  <path fill="#28211D" d="M54 82 L64 60 L74 82 Z"/>
+  <!-- crust crimp marks along edges -->
+  <path fill="none" stroke="#A34428" stroke-width="2" stroke-linecap="round" opacity="0.55"
+    d="M32 92 L40 78 M36 96 L46 80 M92 78 L100 92 M82 80 L96 96"/>
+  <!-- top fold notch -->
+  <path fill="#A34428" d="M64 22 L70 36 L64 32 L58 36 Z"/>
+  <!-- steam tiny -->
+  <path fill="none" stroke="#28211D" stroke-width="1.8" stroke-linecap="round" opacity="0.3"
+    d="M64 14 C66 10 70 10 70 14"/>
+  </g>
+  <text x="92" y="72" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="40" font-weight="700" letter-spacing="-1.2">
+    <tspan fill="#28211D">Chicken</tspan><tspan fill="#C95530">Fit</tspan>
+  </text>
+</svg>

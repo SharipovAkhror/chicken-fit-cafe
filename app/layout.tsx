@@ -13,7 +13,7 @@ export const metadata: Metadata = {
         type: 'image/svg+xml',
       },
     ],
-    apple: '/logo-mark.svg',
+    apple: '/icon.svg',
   },
 }
 

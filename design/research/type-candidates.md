@@ -58,8 +58,7 @@ Ratio candidate: **1.25** major third from 16.
 
 ## Specimen
 
-Открыть `design/assets/micro/gallery.html` → секция Type.  
-Живые Google Fonts, не картинки.
+Открыть `design/assets/micro/gallery-r3.html` → секция Type.
 
 ## Cull
 

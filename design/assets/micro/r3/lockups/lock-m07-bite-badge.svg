@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 112" width="420" height="112" fill="none" role="img">
+  <rect width="420" height="112" fill="#FAF7F0"/>
+  <g transform="translate(12 20) scale(0.5625)">
+
+  <circle cx="64" cy="64" r="46" fill="#C95530"/>
+  <!-- bite notch (cookie-style food cue) -->
+  <circle cx="96" cy="40" r="16" fill="#FAF7F0"/>
+  <!-- inner sandwich stack -->
+  <path fill="#FAF7F0" d="
+    M40 50
+    C40 42 50 38 64 38
+    C78 38 88 42 88 50
+    V78
+    C88 86 78 90 64 90
+    C50 90 40 86 40 78 Z"/>
+  <rect x="48" y="52" width="32" height="4" rx="2" fill="#C95530"/>
+  <rect x="48" y="60" width="32" height="10" rx="4" fill="#28211D"/>
+  <rect x="48" y="74" width="32" height="4" rx="2" fill="#C95530"/>
+  <!-- crumb dots -->
+  <circle cx="44" cy="44" r="2" fill="#FAF7F0" opacity="0.8"/>
+  <circle cx="38" cy="52" r="1.5" fill="#FAF7F0" opacity="0.6"/>
+  <circle cx="86" cy="80" r="2" fill="#FAF7F0" opacity="0.5"/>
+  </g>
+  <text x="92" y="72" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="40" font-weight="700" letter-spacing="-1.2">
+    <tspan fill="#28211D">Chicken</tspan><tspan fill="#C95530">Fit</tspan>
+  </text>
+</svg>

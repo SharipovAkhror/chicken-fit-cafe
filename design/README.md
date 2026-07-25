@@ -1,33 +1,23 @@
 # Дизайн
 
-Рабочая область визуальной системы ChickenFit.  
-**Активный режим:** craft identity (mark → brandbook), без AI-slop в финале.
+**Режим:** micro R3 — quality over quantity. Не финальный брендбук.
 
-## Сейчас читать
+## Сейчас
 
-**Режим:** research + micro-assemblies (не финальный брендбук).
+1. **Галерея:** [`assets/micro/gallery-r3.html`](assets/micro/gallery-r3.html)  
+2. Marks / lockups / signage: [`assets/micro/r3/`](assets/micro/r3/)  
+3. Tokens light+dark: [`tokens.css`](tokens.css)  
+4. Сетка / lockup: [`research/grid-and-lockup-standard.md`](research/grid-and-lockup-standard.md)  
+5. Вывеска: [`research/signage-notes.md`](research/signage-notes.md)  
 
-1. **Смотреть R2:** [`assets/micro/gallery-r2.html`](assets/micro/gallery-r2.html)  
-2. Стандарт: [`research/grid-and-lockup-standard.md`](research/grid-and-lockup-standard.md)  
-3. Research boards: case / anti-slop / type / color / jp-lens  
-4. R1 gallery — архив; letter/seal killed  
-5. Canva — optional, отложено  
+## Research
 
-
-## Источник истины
-
-| Документ | Статус | Назначение |
-| --- | --- | --- |
-| [`craft-standards.md`](craft-standards.md) | draft | Правила дизайна v2 |
-| [`mark-exploration-v2.md`](mark-exploration-v2.md) | draft | Выбор mark |
-| [`approved-art-direction.md`](approved-art-direction.md) | approved | Мир (цвета/настроение); **модуль «3 линии» как icon — снят** |
-| [`design-system.md`](design-system.md) | review / partial | Токены ok; logo-mark — ждать v2 |
-| [`tokens.css`](tokens.css) | draft | CSS-токены |
-| [`../brand/BRANDBOOK.md`](../brand/BRANDBOOK.md) | approved* | Контент; визуальный mark устарел до v2 |
+- case-board, anti-slop, type-candidates, color-study, jp-reference-lens  
+- craft-standards, system-map, brandbook-production, canva (optional)  
 
 ## Правила
 
-- Primary mark — из `marks-v2`, не три полоски.
-- Упаковка: сначала бланк с рынка, потом штамп.
-- Брендбук: PDF + Canva Brand Kit (см. production doc).
-- `approved` на лого и брендбук — только владелец.
+- С дистанции читается **еда**.  
+- Icon + ChickenFit; gap ~8px; optical center.  
+- Max 2 inks в лого; olive не в лого.  
+- Старый bulk (R1/R2 иконки, 3-line logos, AI mock boards) удалён.  

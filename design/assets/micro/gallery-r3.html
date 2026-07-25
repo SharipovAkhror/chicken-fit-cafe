@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · R3 quality marks + lockups</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Manrope:wght@400;700&family=Onest:wght@400;700&family=Syne:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pastry: #faf7f0;
+      --terra: #c95530;
+      --graph: #28211d;
+      --paper: #fcfaf6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Manrope, system-ui, sans-serif; background: var(--paper); color: var(--graph); }
+    header, section, nav, footer { max-width: 1040px; margin: 0 auto; padding: 0 18px; }
+    header { padding-top: 28px; }
+    h1 { font-family: Syne, sans-serif; font-size: 1.45rem; margin: 0 0 8px; }
+    h2 { font-family: Syne, sans-serif; font-size: 1.05rem; color: var(--terra); margin: 28px 0 10px; }
+    .lead { opacity: 0.85; max-width: 60ch; font-size: 0.95rem; }
+    .note { background: #fff; border-left: 3px solid var(--terra); padding: 12px 14px; border-radius: 0 12px 12px 0; margin: 14px 0; font-size: 0.9rem; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; position: sticky; top: 0; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); padding: 10px 18px; z-index: 5; }
+    nav a { text-decoration: none; color: var(--graph); background: #fff; border: 1px solid #ddd; padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .card { background: #fff; border-radius: 18px; padding: 12px; border: 1px solid #e8e2d8; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card img { width: 100%; border-radius: 14px; display: block; background: var(--pastry); }
+    .id { font-size: 0.75rem; font-weight: 700; margin-top: 8px; }
+    .sub { font-size: 0.7rem; opacity: 0.6; }
+    .votes { display: flex; gap: 4px; margin-top: 8px; }
+    .votes button { flex: 1; border: 0; border-radius: 8px; padding: 6px 0; cursor: pointer; font-weight: 700; font-size: 0.75rem; }
+    .votes button[data-v="keep"] { background: #d8e8c8; }
+    .votes button[data-v="maybe"] { background: #f3e2b0; }
+    .votes button[data-v="kill"] { background: #f0cfc7; }
+    .card[data-vote="keep"] { outline: 2px solid #667447; }
+    .card[data-vote="maybe"] { outline: 2px solid #c9a227; }
+    .card[data-vote="kill"] { outline: 2px solid #b94d2f; opacity: 0.45; }
+    .wide { background: #fff; border-radius: 16px; padding: 12px; border: 1px solid #e8e2d8; margin-bottom: 12px; }
+    .wide img { width: 100%; height: auto; display: block; border-radius: 10px; }
+    .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .themes { grid-template-columns: 1fr; } }
+    .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+    .sw { width: 110px; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid #e5dfd4; font-size: 0.72rem; }
+    .sw .c { height: 52px; }
+    .sw .t { padding: 8px; }
+    .type-card { background: #fff; border-radius: 16px; padding: 18px; border: 1px solid #e8e2d8; margin-bottom: 10px; }
+    .wm { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 700; letter-spacing: -0.03em; }
+    .fit { color: var(--terra); }
+    .export { background: #fff; border-radius: 12px; padding: 14px; font-family: ui-monospace, monospace; font-size: 0.78rem; white-space: pre-wrap; border: 1px dashed #ccc; }
+    footer { padding: 28px 18px 48px; font-size: 0.8rem; opacity: 0.65; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>R3 · меньше знаков, больше детали</h1>
+    <p class="lead">
+      7 food-marks с детализацией. Без «умных линий». Lockup: icon + ChickenFit,
+      gap 8px, optical center. Light / dark / вывеска. Pastry светлее, terra ярче.
+    </p>
+    <div class="note">
+      <strong>Цель с дистанции:</strong> сразу ясно, что продаём <em>еду</em>.
+      Голосуй за mark + lockup парой. Type: T2 / T4 / T7.
+    </div>
+  </header>
+
+  <nav>
+    <a href="#marks">Marks</a>
+    <a href="#lock">Lockups</a>
+    <a href="#sign">Вывеска</a>
+    <a href="#type">Type</a>
+    <a href="#color">Color</a>
+    <a href="#export">Export</a>
+  </nav>
+
+  <section id="marks">
+    <h2>7 marks · color + mono</h2>
+    <div class="grid" id="marks"></div>
+  </section>
+
+  <section id="lock">
+    <h2>Lockups · light + dark (gap 8px)</h2>
+    <p class="lead">Сравни, какой mark «несёт» слово ChickenFit. Stack — для пакета/аватара.</p>
+    <div id="locks"></div>
+  </section>
+
+  <section id="sign">
+    <h2>Вывеска day / night</h2>
+    <div class="themes">
+      <div class="wide" data-card data-id="signage-day">
+        <img src="r3/lockups/signage-day.svg" alt="signage day" />
+        <div class="id">signage-day · пластик + контраст</div>
+        <div class="votes">
+          <button data-v="keep" data-id="signage-day">♥</button>
+          <button data-v="maybe" data-id="signage-day">~</button>
+          <button data-v="kill" data-id="signage-day">×</button>
+        </div>
+      </div>
+      <div class="wide" data-card data-id="signage-night">
+        <img src="r3/lockups/signage-night.svg" alt="signage night" />
+        <div class="id">signage-night · glow simulation</div>
+        <div class="votes">
+          <button data-v="keep" data-id="signage-night">♥</button>
+          <button data-v="maybe" data-id="signage-night">~</button>
+          <button data-v="kill" data-id="signage-night">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="type">
+    <h2>Type shortlist</h2>
+    <div id="types"></div>
+  </section>
+
+  <section id="color">
+    <h2>Color R3</h2>
+    <div class="swatches">
+      <div class="sw"><div class="c" style="background:#FAF7F0"></div><div class="t"><b>pastry R3</b><br/>#FAF7F0</div></div>
+      <div class="sw"><div class="c" style="background:#F7F1E6"></div><div class="t"><b>R2</b><br/>#F7F1E6</div></div>
+      <div class="sw"><div class="c" style="background:#F3E7D3"></div><div class="t"><b>old</b><br/>#F3E7D3</div></div>
+      <div class="sw"><div class="c" style="background:#C95530"></div><div class="t"><b>terra bright</b><br/>#C95530</div></div>
+      <div class="sw"><div class="c" style="background:#B94D2F"></div><div class="t"><b>terra old</b><br/>#B94D2F</div></div>
+      <div class="sw"><div class="c" style="background:#28211D"></div><div class="t"><b>graphite</b><br/>#28211D</div></div>
+      <div class="sw"><div class="c" style="background:#1a1614"></div><div class="t"><b>dark bg</b><br/>#1A1614</div></div>
+    </div>
+  </section>
+
+  <section id="export">
+    <h2>Export</h2>
+    <div class="export" id="export-box">…</div>
+  </section>
+
+  <footer>R3 · tools/gen-micro-r3.mjs · old R1/R2 assets purged</footer>
+
+  <script>
+    const KEY = "cf-micro-r3";
+    const votes = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const marks = [
+      ["m01-sandwich", "Герой: разрез бургера/самсы — еда с 30м"],
+      ["m02-bowl", "Миска обеда + курица сверху"],
+      ["m03-crest", "Птица, детальнее (не мультик)"],
+      ["m04-fillet", "Филе / стрипс + grill"],
+      ["m05-samsa", "Треугольник слоёной самсы"],
+      ["m06-box", "Короб навынос + peek продукта"],
+      ["m07-bite-badge", "Badge с укусом — app/sticker"],
+    ];
+    const types = [
+      { id: "T2", d: "Syne", b: "Manrope", df: "Syne", bf: "Manrope" },
+      { id: "T4", d: "Bricolage Grotesque", b: "Manrope", df: "Bricolage Grotesque", bf: "Manrope" },
+      { id: "T7", d: "Onest", b: "Onest", df: "Onest", bf: "Onest" },
+    ];
+
+    function voteBtns(id) {
+      return `<div class="votes">
+        <button type="button" data-v="keep" data-id="${id}">♥</button>
+        <button type="button" data-v="maybe" data-id="${id}">~</button>
+        <button type="button" data-v="kill" data-id="${id}">×</button>
+      </div>`;
+    }
+
+    function bind(el) {
+      el.querySelectorAll(".votes button").forEach((b) => {
+        b.onclick = () => {
+          votes[b.dataset.id] = b.dataset.v;
+          localStorage.setItem(KEY, JSON.stringify(votes));
+          b.closest("[data-card]").dataset.vote = b.dataset.v;
+          exp();
+        };
+      });
+    }
+
+    const mg = document.getElementById("marks");
+    marks.forEach(([id, sub]) => {
+      const a = document.createElement("article");
+      a.className = "card";
+      a.dataset.card = "1";
+      a.dataset.id = id;
+      if (votes[id]) a.dataset.vote = votes[id];
+      a.innerHTML = `
+        <div class="pair">
+          <img src="r3/marks/${id}.svg" alt="${id}" />
+          <img src="r3/marks/${id}-mono.svg" alt="${id} mono" />
+        </div>
+        <div class="id">${id}</div>
+        <div class="sub">${sub}</div>
+        ${voteBtns(id)}`;
+      mg.appendChild(a);
+    });
+    bind(mg);
+
+    const lg = document.getElementById("locks");
+    marks.forEach(([id]) => {
+      const w = document.createElement("div");
+      w.className = "wide";
+      w.dataset.card = "1";
+      w.dataset.id = "lock-" + id;
+      if (votes["lock-" + id]) w.dataset.vote = votes["lock-" + id];
+      w.innerHTML = `
+        <div class="themes">
+          <img src="r3/lockups/lock-${id}.svg" alt="lock light" />
+          <img src="r3/lockups/lock-${id}-dark.svg" alt="lock dark" />
+        </div>
+        <div class="id">lock ${id} · light / dark</div>
+        ${voteBtns("lock-" + id)}
+        <div style="margin-top:8px">
+          <img src="r3/lockups/stack-${id}.svg" alt="stack" style="max-width:160px;border-radius:12px;border:1px solid #eee" />
+          <div class="sub">stacked</div>
+        </div>`;
+      lg.appendChild(w);
+    });
+    bind(lg);
+    bind(document.getElementById("sign"));
+
+    const tg = document.getElementById("types");
+    types.forEach((t) => {
+      const a = document.createElement("article");
+      a.className = "type-card";
+      a.dataset.card = "1";
+      a.dataset.id = "type:" + t.id;
+      if (votes["type:" + t.id]) a.dataset.vote = votes["type:" + t.id];
+      a.innerHTML = `
+        <div class="id">${t.id} · ${t.d} + ${t.b}</div>
+        <div class="wm" style="font-family:'${t.df}',sans-serif">Chicken<span class="fit">Fit</span></div>
+        <div style="font-family:'${t.bf}',sans-serif;opacity:.9">Сытный обед · слои · курица · Самарканд</div>
+        ${voteBtns("type:" + t.id)}`;
+      tg.appendChild(a);
+    });
+    bind(tg);
+
+    function exp() {
+      const g = (v) => Object.entries(votes).filter(([, x]) => x === v).map(([k]) => k);
+      document.getElementById("export-box").textContent =
+        `MICRO R3 VOTES\nkeep: ${g("keep").join(", ") || "—"}\nmaybe: ${g("maybe").join(", ") || "—"}\nkill: ${g("kill").join(", ") || "—"}`;
+    }
+    exp();
+  </script>
+</body>
+</html>

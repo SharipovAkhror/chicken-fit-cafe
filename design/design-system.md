@@ -27,19 +27,19 @@ claims:
 - Словесный знак: `ChickenFit` (без пробела, заглавные `C` и `F`) — C-022.
 - На светлом фоне (рабочее): `Chicken` — графит, `Fit` — терракота.
 - Смысл `Fit`: «подходит» ритму дня, **не** диетическое обещание.
-- **Primary mark — в выборе v2** (`design/assets/marks-v2/`, M1–M4).  
-  Три горизонтальные полоски и CF-mark из pack v1 **отклонены** как иконка
-  (feedback владельца 2026-07-25). Не использовать для social avatar.
-- Wordmark-шрифт: TBD (Unbounded — кандидат, не locked).
-- Охранное поле и min-size — зафиксируем после утверждения mark.
+- **Primary system R3:** food-mark + wordmark ChickenFit (gap 8px, optical
+  center). Clever-line wordmarks — не в работе. Letter/seal icons — kill.
+- Mark candidates: `design/assets/micro/r3/marks/` (7 детальных).
+- Wordmark type shortlist: **T2 Syne, T4 Bricolage, T7 Onest**.
+- Охранное поле / min-size — после выбора finalist.
 
 ### Ассеты
 
 | Путь | Статус |
 | --- | --- |
-| `design/assets/marks-v2/*` | **active exploration** |
-| `design/assets/logo-*.svg` (3 lines) | superseded for mark role |
-| `design/assets/social-avatar.svg` | reject — заменить выбранным mark |
+| `design/assets/micro/r3/*` | **active R3** |
+| `design/assets/micro/gallery-r3.html` | отбор |
+| R1/R2 bulk, 3-line logos, AI boards | **deleted** |
 
 Запрещено: купола, самолёты, мультяшная курица с глазами, поварские колпаки,
 орнамент, AI-glow, деформация, пятый бренд-цвет.
@@ -48,10 +48,13 @@ claims:
 
 ```yaml
 color:
-  pastry: "#F3E7D3"      # фон 60%
-  terracotta: "#B94D2F"  # бренд 10%
+  pastry: "#FAF7F0"      # фон 60% (light R3)
+  terracotta: "#C95530"  # бренд 10% (brighter R3, day signage)
   graphite: "#28211D"    # текст 25%
-  olive: "#667447"       # свежесть 5%
+  olive: "#667447"       # UI only 5% — не в лого
+dark:
+  bg: "#1A1614"
+  brand: "#E06A42"
 ```
 
 Digital-токены: [`design/tokens.css`](tokens.css).

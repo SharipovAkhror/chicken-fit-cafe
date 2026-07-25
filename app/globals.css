@@ -49,14 +49,14 @@
 :root {
   color-scheme: light;
   /* ChickenFit semantic mapping → shadcn tokens */
-  --background: var(--cf-color-pastry);
-  --foreground: var(--cf-color-graphite);
-  --card: var(--cf-color-pastry);
-  --card-foreground: var(--cf-color-graphite);
-  --popover: var(--cf-color-pastry);
-  --popover-foreground: var(--cf-color-graphite);
-  --primary: var(--cf-color-terracotta);
-  --primary-foreground: var(--cf-color-pastry);
+  --background: var(--cf-bg);
+  --foreground: var(--cf-text);
+  --card: var(--cf-surface);
+  --card-foreground: var(--cf-on-surface);
+  --popover: var(--cf-surface);
+  --popover-foreground: var(--cf-on-surface);
+  --primary: var(--cf-brand);
+  --primary-foreground: var(--cf-on-brand);
   --secondary: color-mix(in srgb, var(--cf-color-graphite) 8%, var(--cf-color-pastry));
   --secondary-foreground: var(--cf-color-graphite);
   --muted: color-mix(in srgb, var(--cf-color-graphite) 6%, var(--cf-color-pastry));

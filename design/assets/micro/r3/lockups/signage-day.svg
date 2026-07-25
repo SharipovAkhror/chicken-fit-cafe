@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none" role="img">
-  <rect width="128" height="128" rx="28" fill="#FAF7F0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" width="640" height="160" fill="none" role="img">
+  <rect width="640" height="160" fill="#28211D"/>
+  <g transform="translate(24 32) scale(0.75)">
 
   <!-- outer bun shell -->
   <path fill="#C95530" d="
@@ -44,4 +45,8 @@
     C88 92 76 94 64 94 C52 94 40 92 34 88 Z"/>
   <!-- drip sauce hint -->
   <path fill="#A34428" d="M70 84 C72 90 74 94 72 98 C70 96 68 90 70 84 Z"/>
+  </g>
+  <text x="140" y="100" font-family="Arial Black, Helvetica Neue, sans-serif" font-size="64" font-weight="700" letter-spacing="-2">
+    <tspan fill="#FAF7F0">Chicken</tspan><tspan fill="#C95530">Fit</tspan>
+  </text>
 </svg>
