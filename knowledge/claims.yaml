@@ -236,6 +236,17 @@ claims:
     verified_by: project-owner
     verified_at: "2026-07-25"
     notes: "Agent harness: AGENTS.md + vendor-стабы + STATUS.md + CI validate."
+
+  - id: C-022
+    statement: "Утверждённое имя бренда — ChickenFit (без пробела); Fit трактуется как «подходит» ритму дня, а не как диетическое обещание."
+    area: brand
+    status: confirmed
+    source: "brand/BRANDBOOK.md — решение владельца, зафиксированное в брендбуке v1 (2026-07-24)."
+    owner: brand-strategist
+    verification_method: "Запись в approved brandbook; при сомнении — повторное подтверждение владельцем в PR."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Не путать с отклонённой старой айдентикой C-008: имя возвращено с новым смыслом Fit внутри мира «Слой + Гостеприимство» (C-020). Юридическая/доменная проверка — отдельная задача."
 allowed_areas:
   - governance
   - strategy

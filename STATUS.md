@@ -13,7 +13,8 @@
 
 | | |
 |---|---|
-| **Фаза** | Этап 0 — ОС проекта (публикация + harness) |
+| **Фаза** | Дизайн-система v1 (после арт-дирекции) |
+| **Активная роль** | `visual-designer` |
 | **Северная звезда** | Проверяемый запуск fast-casual кафе (куриное ядро, «бургер-самса») у аэропорта Самарканда |
 | **Источник истины** | Этот git-репозиторий + GitHub issues/PR |
 | **Remote** | `origin` → `SharipovAkhror/chicken-fit-cafe` |
@@ -27,34 +28,48 @@
 - Позиционирование: **современный локальный сытный обед Самарканда** (C-019)
 - Визуальный мир: **слои A + характер C** (C-020)
 - 6 AI-ролей, русский язык, claims/ADR (C-009…C-011)
+- Harness remote: **ADR-003 / C-021** (готово)
+
+## Готово по дизайну (не переделывать)
+
+| Артефакт | Статус | Путь |
+|---|---|---|
+| Три визуальных направления | approved | `design/visual-directions.md` |
+| Арт-дирекция «Слой + Гостеприимство» | approved | `design/approved-art-direction.md` |
+| Брендбук v1 (ChickenFit) | approved | `brand/BRANDBOOK.md` |
+| Концепт-борды / упаковка / вывеска | draft-assets | `design/assets/*.png` |
+| Стратегия бренда | approved | `brand/brand-strategy.md` |
 
 ## OPEN — handoff
 
-### 1. ✅ Remote + harness (2026-07-25)
+### 1. 🟡 Issue #1 — design pack v1 (ветка `feat/1-design-pack-v1`)
 
-- Репозиторий: https://github.com/SharipovAkhror/chicken-fit-cafe
-- Локальный канон: `Documents/GitHub/chicken-fit-cafe` (не `1213`)
-- Vendor-стабы: `CLAUDE.md`, `GEMINI.md`, `GROK.md`, `.github/copilot-instructions.md` → `AGENTS.md`
-- CODEOWNERS: `@SharipovAkhror`
-- Labels GitHub: type/trust/area из `.github/labels.yml`
-- `.gitattributes`: LF для parity validate Windows/CI
-- CI: `.github/workflows/validate.yml` → `node tools/validate.mjs` (зелёный на bootstrap)
+https://github.com/SharipovAkhror/chicken-fit-cafe/issues/1
 
-### 2. 🔴 Следующий приоритет — первый цикл issue → PR
+В работе / в PR:
 
-1. Создать issue по шаблону (например fact-check или research).
-2. Ветка `type/issue-id-short-description`.
-3. PR + зелёный CI + human approval.
+1. Векторный логотип ChickenFit + mono + mark CF + favicon + social.
+2. `design/design-system.md` синхронизирован (без placeholder `BRAND`).
+3. Claim **C-022** (имя ChickenFit).
+4. `design/tokens.css` + маппинг в `app/globals.css` + preview `app/page.tsx`.
 
-### 3. Этап 1 — верификация бизнеса
+Остаётся на human review: `approved` дизайн-системы, обводка Unbounded→path, PNG batch, доменная/юр. проверка имени.
 
-- CustDev / полевая проверка C-004…C-007 (needs-verification)
-- Уточнение помещения у аэропорта
-- Продуктовые тесты способа приготовления курицы (C-018)
+### 2. Следом (не блокирует pack v1)
+
+- Товарное имя флагманского продукта (бургер-самса).
+- Проверка шрифтов Unbounded/Manrope на узбекскую латиницу + кириллицу.
+- CustDev / полевая проверка C-004…C-007 (Этап 1).
+- Продуктовые тесты курицы (C-018).
+
+### 3. Этап 0 harness — ✅
+
+Remote, vendor-стабы, CODEOWNERS, labels, CI validate — закрыто (ADR-003).
 
 ## Запреты (коротко)
 
 - Архив `archive/gemini/` — только гипотезы, не факты
-- AI не переводит критичное в `approved`
+- AI не переводит критичное в `approved` (имя, финальный логотип, бренд → human)
 - Секреты, ПДн, токены — не в git
-- Push/публикация/оплата/договор — только с явным «да» владельца (кроме уже согласованного ведения этого remote)
+- Не копировать старую айдентику (C-008 = rejected); ChickenFit в брендбуке — **новое** решение с переопределением «Fit = подходит», не диета
+- Push/оплата/договор — только с явным «да» владельца (кроме согласованного ведения remote)

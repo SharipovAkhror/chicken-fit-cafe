@@ -1,0 +1,65 @@
+/**
+ * ChickenFit brand tokens v1
+ * Source: design/approved-art-direction.md, brand/BRANDBOOK.md, design/design-system.md
+ * Do not add a fifth brand color or gradients.
+ */
+
+:root {
+  /* Palette — distribution 60 / 25 / 10 / 5 */
+  --cf-color-pastry: #f3e7d3;
+  --cf-color-terracotta: #b94d2f;
+  --cf-color-graphite: #28211d;
+  --cf-color-olive: #667447;
+
+  /* Semantic aliases */
+  --cf-bg: var(--cf-color-pastry);
+  --cf-brand: var(--cf-color-terracotta);
+  --cf-text: var(--cf-color-graphite);
+  --cf-accent-info: var(--cf-color-olive);
+  --cf-surface: var(--cf-color-pastry);
+  --cf-on-brand: var(--cf-color-pastry);
+  --cf-on-surface: var(--cf-color-graphite);
+  --cf-border: color-mix(in srgb, var(--cf-color-graphite) 18%, transparent);
+
+  /* Typography */
+  --cf-font-display: "Unbounded", system-ui, sans-serif;
+  --cf-font-body: "Manrope", system-ui, sans-serif;
+
+  /* Type scale */
+  --cf-text-display: 3rem; /* 48 */
+  --cf-text-h1: 2.25rem; /* 36 */
+  --cf-text-h2: 1.75rem; /* 28 */
+  --cf-text-h3: 1.25rem; /* 20 */
+  --cf-text-body: 1rem; /* 16 */
+  --cf-text-label: 0.875rem; /* 14 */
+  --cf-text-caption: 0.875rem; /* 14 min */
+
+  --cf-leading-display: 3.25rem;
+  --cf-leading-h1: 2.625rem;
+  --cf-leading-h2: 2.125rem;
+  --cf-leading-h3: 1.625rem;
+  --cf-leading-body: 1.5rem;
+  --cf-leading-label: 1.25rem;
+
+  /* Space (8-base) */
+  --cf-space-1: 0.5rem; /* 8 */
+  --cf-space-2: 1rem; /* 16 */
+  --cf-space-3: 1.5rem; /* 24 */
+  --cf-space-4: 2rem; /* 32 */
+  --cf-space-5: 3rem; /* 48 */
+
+  /* Radius */
+  --cf-radius-sm: 0.5rem; /* 8 */
+  --cf-radius-md: 1rem; /* 16 */
+  --cf-radius-lg: 1.5rem; /* 24 */
+
+  /* Layer module */
+  --cf-layer-shift: 14%;
+  --cf-layer-gap: 0.5rem;
+  --cf-layer-min-print: 24mm;
+  --cf-layer-min-digital: 48px;
+
+  /* Focus */
+  --cf-focus-ring: 2px solid var(--cf-color-graphite);
+  --cf-focus-offset: 2px;
+}

@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+@import '../design/tokens.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,30 +48,31 @@
 
 :root {
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* ChickenFit semantic mapping → shadcn tokens */
+  --background: var(--cf-color-pastry);
+  --foreground: var(--cf-color-graphite);
+  --card: var(--cf-color-pastry);
+  --card-foreground: var(--cf-color-graphite);
+  --popover: var(--cf-color-pastry);
+  --popover-foreground: var(--cf-color-graphite);
+  --primary: var(--cf-color-terracotta);
+  --primary-foreground: var(--cf-color-pastry);
+  --secondary: color-mix(in srgb, var(--cf-color-graphite) 8%, var(--cf-color-pastry));
+  --secondary-foreground: var(--cf-color-graphite);
+  --muted: color-mix(in srgb, var(--cf-color-graphite) 6%, var(--cf-color-pastry));
+  --muted-foreground: color-mix(in srgb, var(--cf-color-graphite) 65%, var(--cf-color-pastry));
+  --accent: color-mix(in srgb, var(--cf-color-olive) 18%, var(--cf-color-pastry));
+  --accent-foreground: var(--cf-color-graphite);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --border: color-mix(in srgb, var(--cf-color-graphite) 18%, transparent);
+  --input: color-mix(in srgb, var(--cf-color-graphite) 18%, transparent);
+  --ring: var(--cf-color-graphite);
+  --chart-1: var(--cf-color-terracotta);
+  --chart-2: var(--cf-color-olive);
+  --chart-3: var(--cf-color-graphite);
+  --chart-4: color-mix(in srgb, var(--cf-color-terracotta) 60%, var(--cf-color-pastry));
+  --chart-5: color-mix(in srgb, var(--cf-color-olive) 60%, var(--cf-color-pastry));
+  --radius: 1rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
