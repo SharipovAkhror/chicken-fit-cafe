@@ -35,17 +35,18 @@
 
 ## OPEN — design (порядок студии)
 
-### 1. 🔴 Сейчас — только изучение (owner: no generate)
+### 1. 🔴 Сейчас — research + micro-assemblies R1 (cull cycle)
 
-Владелец: **не генерировать сразу**; Canva-решение отложено; можно без Canva.
+**Не финал.** Много черновиков → keep / maybe / kill.
 
-Читать:
+| Что | Где |
+|---|---|
+| **Галерея (открой в браузере)** | `design/assets/micro/gallery.html` |
+| 27 mark micro (семьи A–G) | `design/assets/micro/marks/` |
+| Case board / anti-slop / type / color | `design/research/` |
+| Журнал раунда | `design/research/micro-assembly-log.md` |
 
-- `design/research/canva-role-and-craft-stack.md` — роль Canva + стек без него  
-- `design/research/jp-reference-lens.md` — JP-линза (метод, не копия)  
-- `design/system-map.md` — ядро vs носители  
-
-Marks v2 / pack v1 — **не на утверждении**; иконки не зашли → freeze до research.
+Действие владельца: пройти gallery → ♥ ~ × → прислать export votes.
 
 ### 2. Потом (после research + выбор характера)
 

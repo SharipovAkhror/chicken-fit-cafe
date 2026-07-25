@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · Micro-assemblies R1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;600&family=Manrope:wght@400;600;700&family=Onest:wght@400;700&family=Outfit:wght@400;700&family=Source+Sans+3:wght@400;600&family=Syne:wght@700&family=Unbounded:wght@600;700&family=Literata:opsz,wght@7..72,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pastry: #f3e7d3;
+      --terra: #b94d2f;
+      --graph: #28211d;
+      --olive: #667447;
+      --paper: #faf6ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Manrope, system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--graph);
+      line-height: 1.45;
+    }
+    header {
+      padding: 32px 24px 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header h1 {
+      font-family: Unbounded, sans-serif;
+      font-size: 1.6rem;
+      margin: 0 0 8px;
+    }
+    header p { margin: 0 0 8px; max-width: 62ch; opacity: 0.88; }
+    .meta { font-size: 0.85rem; opacity: 0.7; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 24px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, var(--paper) 92%, transparent);
+      backdrop-filter: blur(8px);
+      z-index: 5;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--graph);
+      border: 1px solid color-mix(in srgb, var(--graph) 18%, transparent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: #fff;
+    }
+    nav a:hover { border-color: var(--terra); color: var(--terra); }
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 24px 48px;
+    }
+    section h2 {
+      font-family: Unbounded, sans-serif;
+      font-size: 1.15rem;
+      margin: 24px 0 8px;
+      color: var(--terra);
+    }
+    section .lead { margin: 0 0 20px; opacity: 0.85; max-width: 60ch; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filters button {
+      border: 1px solid color-mix(in srgb, var(--graph) 20%, transparent);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.8rem;
+    }
+    .filters button.active {
+      background: var(--graph);
+      color: var(--pastry);
+      border-color: var(--graph);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid color-mix(in srgb, var(--graph) 10%, transparent);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card img, .card object {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: var(--pastry);
+    }
+    .card .id {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .card .fam { font-size: 0.68rem; opacity: 0.65; }
+    .votes {
+      display: flex;
+      gap: 4px;
+    }
+    .votes button {
+      flex: 1;
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 0;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #eee;
+    }
+    .votes button[data-v="keep"] { background: #d8e8c8; }
+    .votes button[data-v="maybe"] { background: #f3e2b0; }
+    .votes button[data-v="kill"] { background: #f0cfc7; }
+    .card[data-vote="keep"] { outline: 2px solid #667447; }
+    .card[data-vote="maybe"] { outline: 2px solid #c9a227; }
+    .card[data-vote="kill"] { outline: 2px solid #b94d2f; opacity: 0.55; }
+    .type-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .type-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      border: 1px solid color-mix(in srgb, var(--graph) 10%, transparent);
+    }
+    .type-card .tid { font-size: 0.75rem; font-weight: 700; color: var(--terra); }
+    .type-card .wm {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      margin: 8px 0 4px;
+      letter-spacing: -0.03em;
+    }
+    .type-card .wm .fit { color: var(--terra); }
+    .type-card .body { font-size: 1rem; max-width: 48ch; opacity: 0.9; }
+    .type-card .meta { font-size: 0.8rem; opacity: 0.65; margin-top: 8px; }
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .swatch {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--graph) 12%, transparent);
+      background: #fff;
+    }
+    .swatch .chip { height: 72px; }
+    .swatch .info { padding: 10px; font-size: 0.78rem; }
+    .swatch code { font-size: 0.72rem; opacity: 0.7; }
+    .export {
+      margin-top: 16px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 14px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      border: 1px dashed color-mix(in srgb, var(--graph) 25%, transparent);
+    }
+    footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 48px;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Micro-assemblies · Round 1</h1>
+    <p>
+      Исследовательская галерея: 27 mark-жестов, 8 type-пар, цвет.
+      Это <strong>не финал</strong>. Жми keep / maybe / kill — голоса
+      сохраняются в этом браузере. Скопируй итог внизу и пришли.
+    </p>
+    <p class="meta">ChickenFit · visual-designer · research-only · 2026-07-25</p>
+  </header>
+
+  <nav>
+    <a href="#marks">Marks</a>
+    <a href="#type">Type</a>
+    <a href="#color">Color</a>
+    <a href="#export">Export votes</a>
+  </nav>
+
+  <section id="marks">
+    <h2>Marks · 27 micro</h2>
+    <p class="lead">
+      Семьи A–G из case-board. Смотри 5–10 минут. Не ищи «идеал» —
+      отмечай, что цепляет. × можно щедро.
+    </p>
+    <div class="filters" id="fam-filters"></div>
+    <div class="grid" id="mark-grid"></div>
+  </section>
+
+  <section id="type">
+    <h2>Type · 8 pairs</h2>
+    <p class="lead">ChickenFit wordmark + строка меню. Кириллица в body где шрифт умеет.</p>
+    <div class="type-grid" id="type-grid"></div>
+  </section>
+
+  <section id="color">
+    <h2>Color · core + variations</h2>
+    <p class="lead">Core оставлен. V1–V6 — микро-сдвиги для глаз на pastry.</p>
+    <h3 style="font-size:0.95rem;margin:16px 0 8px">Core</h3>
+    <div class="swatches" id="core-swatches"></div>
+    <h3 style="font-size:0.95rem;margin:24px 0 8px">Variations</h3>
+    <div class="swatches" id="var-swatches"></div>
+  </section>
+
+  <section id="export">
+    <h2>Export votes</h2>
+    <p class="lead">После просмотра — скопируй блок и пришли в чат.</p>
+    <div class="export" id="export-box">votes will appear here…</div>
+  </section>
+
+  <footer>
+    Sources: design/research/* · catalog.json · gen-micro-marks.mjs
+  </footer>
+
+  <script>
+    const catalog = [
+      ["a01-layer-arc","A · Product"],
+      ["a02-wedge","A · Product"],
+      ["a03-stack-soft","A · Product"],
+      ["a04-cutaway","A · Product"],
+      ["a05-fold","A · Product"],
+      ["b01-bowl-steam","B · Bowl"],
+      ["b02-donburi","B · Bowl"],
+      ["b03-tray","B · Bowl"],
+      ["c01-crest-min","C · Bird"],
+      ["c02-side-profile","C · Bird"],
+      ["c03-comb-only","C · Bird"],
+      ["c04-abstract-wing","C · Bird"],
+      ["d01-c-ring","D · Letter"],
+      ["d02-cf-lock","D · Letter"],
+      ["d03-c-stamp","D · Letter"],
+      ["d04-word-stack","D · Letter"],
+      ["e01-enso-bite","E · Seal"],
+      ["e02-square-seal","E · Seal"],
+      ["e03-double-ring","E · Seal"],
+      ["e04-badge","E · Seal"],
+      ["f01-fillet","F · Strip"],
+      ["f02-three-strips","F · Strip"],
+      ["f03-grill","F · Strip"],
+      ["g01-sun-layer","G · Hybrid"],
+      ["g02-arch-gate","G · Hybrid"],
+      ["g03-grain","G · Hybrid"],
+      ["g04-hand-stamp","G · Hybrid"],
+    ];
+
+    const storageKey = "cf-micro-r1-votes";
+    const votes = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+    const fams = [...new Set(catalog.map((c) => c[1]))];
+    const filters = document.getElementById("fam-filters");
+    let activeFam = "ALL";
+
+    function renderFilters() {
+      filters.innerHTML = "";
+      ["ALL", ...fams].forEach((f) => {
+        const b = document.createElement("button");
+        b.textContent = f === "ALL" ? "Все" : f;
+        b.className = f === activeFam ? "active" : "";
+        b.onclick = () => { activeFam = f; renderFilters(); renderMarks(); };
+        filters.appendChild(b);
+      });
+    }
+
+    function renderMarks() {
+      const grid = document.getElementById("mark-grid");
+      grid.innerHTML = "";
+      catalog.filter((c) => activeFam === "ALL" || c[1] === activeFam).forEach(([id, fam]) => {
+        const card = document.createElement("article");
+        card.className = "card";
+        card.dataset.id = id;
+        if (votes[id]) card.dataset.vote = votes[id];
+        card.innerHTML = `
+          <img src="marks/${id}.svg" alt="${id}" width="128" height="128" />
+          <div class="id">${id}</div>
+          <div class="fam">${fam}</div>
+          <div class="votes">
+            <button type="button" data-v="keep">♥</button>
+            <button type="button" data-v="maybe">~</button>
+            <button type="button" data-v="kill">×</button>
+          </div>`;
+        card.querySelectorAll(".votes button").forEach((btn) => {
+          btn.onclick = () => {
+            votes[id] = btn.dataset.v;
+            localStorage.setItem(storageKey, JSON.stringify(votes));
+            card.dataset.vote = btn.dataset.v;
+            renderExport();
+          };
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    const typePairs = [
+      { id: "T1", display: "Unbounded", body: "Manrope", dcss: "'Unbounded'", bcss: "'Manrope'", note: "Старый baseline — геометрия + human" },
+      { id: "T2", display: "Syne", body: "Manrope", dcss: "'Syne'", bcss: "'Manrope'", note: "Чуть страннее, modern" },
+      { id: "T3", display: "Outfit", body: "Source Sans 3", dcss: "'Outfit'", bcss: "'Source Sans 3'", note: "Urban clean" },
+      { id: "T4", display: "Bricolage Grotesque", body: "Manrope", dcss: "'Bricolage Grotesque'", bcss: "'Manrope'", note: "Craft character" },
+      { id: "T5", display: "Literata", body: "Manrope", dcss: "'Literata'", bcss: "'Manrope'", note: "Теплее, пекарня×кафе" },
+      { id: "T6", display: "Outfit", body: "IBM Plex Sans", dcss: "'Outfit'", bcss: "'IBM Plex Sans'", note: "Строже / system" },
+      { id: "T7", display: "Onest", body: "Onest", dcss: "'Onest'", bcss: "'Onest'", note: "RU-friendly single family" },
+      { id: "T8", display: "Unbounded", body: "IBM Plex Sans", dcss: "'Unbounded'", bcss: "'IBM Plex Sans'", note: "Display sharp + body system" },
+    ];
+
+    function renderType() {
+      const box = document.getElementById("type-grid");
+      box.innerHTML = typePairs.map((t) => `
+        <article class="type-card" data-id="${t.id}">
+          <div class="tid">${t.id} · ${t.display} + ${t.body}</div>
+          <div class="wm" style="font-family:${t.dcss},sans-serif;font-weight:700">
+            Chicken<span class="fit">Fit</span>
+          </div>
+          <div class="body" style="font-family:${t.bcss},sans-serif">
+            Современный локальный сытный обед Самарканда. Слои, курица, без фольклора.
+            Бургер-самса · 15 мин · зал / навынос / доставка.
+          </div>
+          <div class="meta">${t.note}</div>
+          <div class="votes" style="margin-top:10px;max-width:220px">
+            <button type="button" data-v="keep" data-type="${t.id}">♥</button>
+            <button type="button" data-v="maybe" data-type="${t.id}">~</button>
+            <button type="button" data-v="kill" data-type="${t.id}">×</button>
+          </div>
+        </article>`).join("");
+      box.querySelectorAll(".votes button").forEach((btn) => {
+        btn.onclick = () => {
+          votes["type:" + btn.dataset.type] = btn.dataset.v;
+          localStorage.setItem(storageKey, JSON.stringify(votes));
+          btn.closest(".type-card").dataset.vote = btn.dataset.v;
+          renderExport();
+        };
+      });
+    }
+
+    const core = [
+      ["pastry", "#F3E7D3", "фон 60%"],
+      ["graphite", "#28211D", "текст 25%"],
+      ["terracotta", "#B94D2F", "бренд 10%"],
+      ["olive", "#667447", "акцент 5%"],
+    ];
+    const vars = [
+      ["V1 terra lighter", "#C45A38"],
+      ["V2 terra deeper", "#A33F26"],
+      ["V3 pastry dough", "#EFE2CC"],
+      ["V4 graphite hard", "#1F1A17"],
+      ["V5 no olive", "#B94D2F"],
+      ["V6 olive muted", "#5C6B3A"],
+    ];
+
+    function swatch(name, hex, role) {
+      return `<div class="swatch"><div class="chip" style="background:${hex}"></div>
+        <div class="info"><strong>${name}</strong><br/><code>${hex}</code><br/>${role || ""}</div></div>`;
+    }
+
+    function renderColor() {
+      document.getElementById("core-swatches").innerHTML = core.map((c) => swatch(...c)).join("");
+      document.getElementById("var-swatches").innerHTML = vars.map((v) => swatch(v[0], v[1], "test")).join("");
+    }
+
+    function renderExport() {
+      const keep = Object.entries(votes).filter(([, v]) => v === "keep").map(([k]) => k);
+      const maybe = Object.entries(votes).filter(([, v]) => v === "maybe").map(([k]) => k);
+      const kill = Object.entries(votes).filter(([, v]) => v === "kill").map(([k]) => k);
+      document.getElementById("export-box").textContent =
+        `MICRO R1 VOTES\nkeep: ${keep.join(", ") || "—"}\nmaybe: ${maybe.join(", ") || "—"}\nkill: ${kill.join(", ") || "—"}`;
+    }
+
+    renderFilters();
+    renderMarks();
+    renderType();
+    renderColor();
+    renderExport();
+  </script>
+</body>
+</html>

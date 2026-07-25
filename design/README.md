@@ -5,12 +5,12 @@
 
 ## Сейчас читать
 
-**Режим:** research-only — без генерации лого/брендбука, пока владелец не скажет.
+**Режим:** research + micro-assemblies (не финальный брендбук).
 
-1. [`research/canva-role-and-craft-stack.md`](research/canva-role-and-craft-stack.md) — Canva optional  
-2. [`research/jp-reference-lens.md`](research/jp-reference-lens.md) — JP-метод  
-3. [`system-map.md`](system-map.md) · [`craft-standards.md`](craft-standards.md)  
-4. Marks v2 / packaging — **frozen** до конца research  
+1. **Смотреть:** [`assets/micro/gallery.html`](assets/micro/gallery.html) — marks / type / color + голосование  
+2. Research: [`research/case-board.md`](research/case-board.md), [`anti-slop-board.md`](research/anti-slop-board.md), [`type-candidates.md`](research/type-candidates.md), [`color-study.md`](research/color-study.md), [`jp-reference-lens.md`](research/jp-reference-lens.md)  
+3. [`research/micro-assembly-log.md`](research/micro-assembly-log.md) — журнал R1  
+4. Canva — optional, отложено  
 
 
 ## Источник истины
