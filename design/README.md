@@ -5,11 +5,13 @@
 
 ## Сейчас читать
 
-1. [`system-map.md`](system-map.md) — Brand Kit vs упаковка vs брендбук  
-2. [`craft-standards.md`](craft-standards.md) — anti-slop  
-3. [`mark-exploration-v2.md`](mark-exploration-v2.md) + [`compare.html`](assets/marks-v2/compare.html)  
-4. [`packaging-blanks.md`](packaging-blanks.md) — крафт default; box/wrap later  
-5. [`brandbook-production.md`](brandbook-production.md) · [`canva-integration.md`](canva-integration.md)  
+**Режим:** research-only — без генерации лого/брендбука, пока владелец не скажет.
+
+1. [`research/canva-role-and-craft-stack.md`](research/canva-role-and-craft-stack.md) — Canva optional  
+2. [`research/jp-reference-lens.md`](research/jp-reference-lens.md) — JP-метод  
+3. [`system-map.md`](system-map.md) · [`craft-standards.md`](craft-standards.md)  
+4. Marks v2 / packaging — **frozen** до конца research  
+
 
 ## Источник истины
 

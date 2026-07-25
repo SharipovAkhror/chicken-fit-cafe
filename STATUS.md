@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| **Фаза** | Brand identity craft — mark → brandbook |
+| **Фаза** | **Research-only** (без генерации лого/брендбука) |
 | **Активная роль** | `visual-designer` |
 | **Северная звезда** | Fast-casual у аэропорта Самарканда; курица + бургер-самса |
 | **Remote** | `origin` → `SharipovAkhror/chicken-fit-cafe` |
@@ -35,24 +35,30 @@
 
 ## OPEN — design (порядок студии)
 
-### 1. 🔴 Сейчас — выбор mark M1–M4 (v2.1)
+### 1. 🔴 Сейчас — только изучение (owner: no generate)
 
-- `design/assets/marks-v2/compare.html` — все 4 иконки, color + mono  
-- Карта слоёв: `design/system-map.md` (Brand Kit ≠ упаковка)  
-- Canva API: `design/canva-integration.md` — «просто API key» **не** даёт вход в аккаунт
+Владелец: **не генерировать сразу**; Canva-решение отложено; можно без Canva.
 
-### 2. После mark → Brand Kit core
+Читать:
 
-1. Доводка знака → wordmark → lockup → social  
-2. Цвета + шрифты в Canva Brand Kit  
-3. Носители (стикер, постер, баннер)  
-4. Brandbook PDF  
+- `design/research/canva-role-and-craft-stack.md` — роль Canva + стек без него  
+- `design/research/jp-reference-lens.md` — JP-линза (метод, не копия)  
+- `design/system-map.md` — ядро vs носители  
 
-### 3. Упаковка — слой Application, не сейчас
+Marks v2 / pack v1 — **не на утверждении**; иконки не зашли → freeze до research.
 
-- Материал: **крафт** (working default)
-- Коробка vs wrap: **решим после mark**
-- Брендинг — стоп до лого
+### 2. Потом (после research + выбор характера)
+
+1. Направления вкуса J1–J4 → выбор владельца  
+2. Mark + type + color lock  
+3. Brandbook  
+4. Крафт-носители  
+5. Canva — опционально  
+
+### 3. Упаковка / Canva — не сейчас
+
+- Крафт default; box/wrap later  
+- Canva: **решение не принимаем**; проект идёт без него
 
 ### 4. Снято / не использовать как финал
 
