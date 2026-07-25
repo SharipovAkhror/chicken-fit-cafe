@@ -7,10 +7,11 @@
 
 **Режим:** research + micro-assemblies (не финальный брендбук).
 
-1. **Смотреть:** [`assets/micro/gallery.html`](assets/micro/gallery.html) — marks / type / color + голосование  
-2. Research: [`research/case-board.md`](research/case-board.md), [`anti-slop-board.md`](research/anti-slop-board.md), [`type-candidates.md`](research/type-candidates.md), [`color-study.md`](research/color-study.md), [`jp-reference-lens.md`](research/jp-reference-lens.md)  
-3. [`research/micro-assembly-log.md`](research/micro-assembly-log.md) — журнал R1  
-4. Canva — optional, отложено  
+1. **Смотреть R2:** [`assets/micro/gallery-r2.html`](assets/micro/gallery-r2.html)  
+2. Стандарт: [`research/grid-and-lockup-standard.md`](research/grid-and-lockup-standard.md)  
+3. Research boards: case / anti-slop / type / color / jp-lens  
+4. R1 gallery — архив; letter/seal killed  
+5. Canva — optional, отложено  
 
 
 ## Источник истины

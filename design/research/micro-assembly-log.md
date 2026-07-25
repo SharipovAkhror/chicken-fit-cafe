@@ -54,14 +54,28 @@ claims:
 - Social CF-avatar pack v1  
 - AI packaging as spec  
 
-## Round 2 (после твоих keep)
+## Round 2 (после feedback)
 
-- Удвоим только keep-семьи  
-- Mono + 16px stress test  
-- 3 lockup с wordmark ChickenFit  
-- Убьём half maybe  
+| Feedback | Сделано |
+| --- | --- |
+| Letter + seal фигня | Families D/E **killed** |
+| Передумать icons | 18 marks A/B/C/F/G на 8px grid, max 2 ink |
+| T2 T4 T7 | shortlist only in gallery-r2 |
+| Colors keep + pastry lighter | `#F7F1E6`, olive out of logo |
+| Rainbow | marks 1–2 colors only |
+| Icon+text / Amazon-style | lockups L1 + wordmark clever W01–W05 |
+| Grid standard | `grid-and-lockup-standard.md` |
+
+**Галерея R2:** `design/assets/micro/gallery-r2.html`
+
+## Round 3 (после R2 votes)
+
+- Outline real T2/T4/T7 in wordmarks (not Arial placeholder)  
+- 16px + kraft mono stress  
+- 2–3 finalist systems only  
+- Cyrillic menu strip  
 
 ## Ценность этапа
 
 Не «получить лого».  
-Получить **карту вкуса владельца** на реальных пятнах, не на словах.
+Получить **карту вкуса** + архитектуру (mark / word / lockup / clever).

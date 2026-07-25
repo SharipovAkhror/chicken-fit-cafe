@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChickenFit · Micro R2 (grid · lockup · clever)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Manrope:wght@400;600;700&family=Onest:wght@400;700&family=Syne:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pastry: #f7f1e6;
+      --terra: #b94d2f;
+      --graph: #28211d;
+      --paper: #fbf8f2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Manrope, system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--graph);
+      line-height: 1.45;
+    }
+    header, section, footer, nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    header { padding-top: 28px; padding-bottom: 8px; }
+    h1 { font-family: Syne, sans-serif; font-size: 1.5rem; margin: 0 0 8px; }
+    h2 { font-family: Syne, sans-serif; font-size: 1.1rem; color: var(--terra); margin: 28px 0 8px; }
+    .lead { opacity: 0.85; max-width: 62ch; margin: 0 0 12px; }
+    .note {
+      background: #fff;
+      border-left: 3px solid var(--terra);
+      padding: 12px 14px;
+      border-radius: 0 12px 12px 0;
+      font-size: 0.9rem;
+      margin: 12px 0 20px;
+    }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      position: sticky; top: 0; z-index: 5;
+      background: color-mix(in srgb, var(--paper) 90%, transparent);
+      backdrop-filter: blur(8px);
+      padding-top: 8px; padding-bottom: 12px;
+    }
+    nav a {
+      text-decoration: none; color: var(--graph); background: #fff;
+      border: 1px solid color-mix(in srgb, var(--graph) 15%, transparent);
+      padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #fff; border-radius: 16px; padding: 10px;
+      border: 1px solid color-mix(in srgb, var(--graph) 10%, transparent);
+    }
+    .card img { width: 100%; aspect-ratio: 1; border-radius: 12px; display: block; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .id { font-size: 0.68rem; font-weight: 700; margin-top: 6px; }
+    .sub { font-size: 0.65rem; opacity: 0.6; }
+    .votes { display: flex; gap: 4px; margin-top: 6px; }
+    .votes button {
+      flex: 1; border: 0; border-radius: 8px; padding: 5px 0; cursor: pointer;
+      font-size: 0.72rem; font-weight: 700; background: #eee;
+    }
+    .votes button[data-v="keep"] { background: #d8e8c8; }
+    .votes button[data-v="maybe"] { background: #f3e2b0; }
+    .votes button[data-v="kill"] { background: #f0cfc7; }
+    .card[data-vote="keep"] { outline: 2px solid #667447; }
+    .card[data-vote="maybe"] { outline: 2px solid #c9a227; }
+    .card[data-vote="kill"] { outline: 2px solid #b94d2f; opacity: 0.5; }
+    .wide-grid {
+      display: grid; gap: 12px;
+    }
+    .wide {
+      background: #fff; border-radius: 16px; padding: 12px;
+      border: 1px solid color-mix(in srgb, var(--graph) 10%, transparent);
+    }
+    .wide img { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--pastry); }
+    .type-row {
+      display: grid; gap: 12px;
+    }
+    .type-card {
+      background: #fff; border-radius: 16px; padding: 20px;
+      border: 1px solid color-mix(in srgb, var(--graph) 10%, transparent);
+    }
+    .type-card .wm {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 6px 0;
+    }
+    .type-card .fit { color: var(--terra); }
+    .type-card .body { font-size: 1rem; opacity: 0.9; max-width: 48ch; }
+    .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+    .sw { width: 100px; border-radius: 12px; overflow: hidden; background: #fff;
+      border: 1px solid color-mix(in srgb, var(--graph) 12%, transparent); font-size: 0.72rem; }
+    .sw .c { height: 56px; }
+    .sw .t { padding: 8px; }
+    .export {
+      background: #fff; border-radius: 12px; padding: 14px;
+      font-family: ui-monospace, monospace; font-size: 0.78rem;
+      white-space: pre-wrap;
+      border: 1px dashed color-mix(in srgb, var(--graph) 25%, transparent);
+    }
+    footer { padding: 24px 20px 48px; font-size: 0.8rem; opacity: 0.65; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Micro R2 · grid · lockup · clever</h1>
+    <p class="lead">
+      R1 letter/seal убиты. Marks пересобраны на сетке 8px, max 2 краски.
+      Pastry светлее <code>#F7F1E6</code>. Type shortlist: T2 / T4 / T7.
+      Смотри mark+mono, clever wordmark, lockups — не только иконку.
+    </p>
+    <div class="note">
+      <strong>Что ещё смотрим:</strong> L1 icon+word · L3 clever wordmark (как FedEx/Amazon — смысл в буквах, не «стрелка ради стрелки») · mono/kraft · 3 type · не 4-цветная радуга в лого.
+    </div>
+  </header>
+
+  <nav>
+    <a href="#marks">Marks</a>
+    <a href="#word">Clever word</a>
+    <a href="#lock">Lockups</a>
+    <a href="#type">Type T2/T4/T7</a>
+    <a href="#color">Color</a>
+    <a href="#export">Export</a>
+  </nav>
+
+  <section id="marks">
+    <h2>Marks A/B/C/F/G · color + mono</h2>
+    <p class="lead">Каждая пара: слева цвет (terra+graph), справа mono. Olive в лого нет.</p>
+    <div class="grid" id="mark-grid"></div>
+  </section>
+
+  <section id="word">
+    <h2>Clever wordmark (W) · структура</h2>
+    <p class="lead">
+      Placeholder type (Arial Black) — только чтобы видеть <em>жест</em>.
+      Финальные буквы = T2/T4/T7. Смыслы: arc under Fit, layer cut, n|F gap, soft underlines.
+    </p>
+    <div class="wide-grid" id="word-grid"></div>
+  </section>
+
+  <section id="lock">
+    <h2>Lockups L1 · mark + ChickenFit</h2>
+    <p class="lead">Иконка и текст вместе. Gap ≈ 16px на сетке. Выбирай связку, не «иконку в вакууме».</p>
+    <div class="wide-grid" id="lock-grid"></div>
+  </section>
+
+  <section id="type">
+    <h2>Type shortlist only</h2>
+    <div class="type-row" id="type-grid"></div>
+  </section>
+
+  <section id="color">
+    <h2>Color · core keep + pastry lighter</h2>
+    <div class="swatches">
+      <div class="sw"><div class="c" style="background:#F7F1E6"></div><div class="t"><b>pastry light</b><br/>#F7F1E6<br/>NEW working</div></div>
+      <div class="sw"><div class="c" style="background:#F3E7D3"></div><div class="t"><b>pastry old</b><br/>#F3E7D3</div></div>
+      <div class="sw"><div class="c" style="background:#B94D2F"></div><div class="t"><b>terracotta</b><br/>#B94D2F</div></div>
+      <div class="sw"><div class="c" style="background:#28211D"></div><div class="t"><b>graphite</b><br/>#28211D</div></div>
+      <div class="sw"><div class="c" style="background:#667447"></div><div class="t"><b>olive</b><br/>#667447<br/>не в лого</div></div>
+    </div>
+  </section>
+
+  <section id="export">
+    <h2>Export votes</h2>
+    <p class="lead">♥ ~ × на marks / word / lock / type → скопируй блок.</p>
+    <div class="export" id="export-box">…</div>
+  </section>
+
+  <footer>
+    research: design/research/grid-and-lockup-standard.md · generator: tools/gen-micro-r2.mjs
+  </footer>
+
+  <script>
+    const marks = [
+      "a01-bite-shell","a02-wedge-clean","a03-soft-stack","a04-cut-pie","a05-fold-packet",
+      "b01-bowl","b02-bowl-flat","b03-tray-simple",
+      "c01-crest","c02-profile","c03-comb-circle","c04-wing",
+      "f01-fillet","f02-one-strip","f03-grill-min",
+      "g01-sun-cut","g02-arch","g03-seed",
+    ];
+    const words = ["w01-plain","w02-fit-arc","w03-layer-bar","w04-nF-gap","w05-underline-shift"];
+    const locks = [
+      "l1-a01-bite-shell","l1-a04-cut-pie","l1-b01-bowl","l1-c01-crest",
+      "l1-f01-fillet","l1-g01-sun-cut","l1-g03-seed",
+    ];
+    const types = [
+      { id: "T2", d: "Syne", b: "Manrope", df: "'Syne'", bf: "'Manrope'", n: "modern odd" },
+      { id: "T4", d: "Bricolage Grotesque", b: "Manrope", df: "'Bricolage Grotesque'", bf: "'Manrope'", n: "craft" },
+      { id: "T7", d: "Onest", b: "Onest", df: "'Onest'", bf: "'Onest'", n: "RU single family" },
+    ];
+
+    const KEY = "cf-micro-r2-votes";
+    const votes = JSON.parse(localStorage.getItem(KEY) || "{}");
+
+    function voteUI(id) {
+      return `<div class="votes">
+        <button type="button" data-id="${id}" data-v="keep">♥</button>
+        <button type="button" data-id="${id}" data-v="maybe">~</button>
+        <button type="button" data-id="${id}" data-v="kill">×</button>
+      </div>`;
+    }
+
+    function bindVotes(root) {
+      root.querySelectorAll(".votes button").forEach((btn) => {
+        btn.onclick = () => {
+          votes[btn.dataset.id] = btn.dataset.v;
+          localStorage.setItem(KEY, JSON.stringify(votes));
+          btn.closest("[data-card]").dataset.vote = btn.dataset.v;
+          exportVotes();
+        };
+      });
+    }
+
+    const mg = document.getElementById("mark-grid");
+    marks.forEach((id) => {
+      const el = document.createElement("article");
+      el.className = "card";
+      el.dataset.card = "1";
+      el.dataset.vote = votes[id] || "";
+      el.innerHTML = `
+        <div class="pair">
+          <img src="r2/marks/${id}.svg" alt="${id}" />
+          <img src="r2/marks/${id}-mono.svg" alt="${id} mono" />
+        </div>
+        <div class="id">${id}</div>
+        <div class="sub">color · mono</div>
+        ${voteUI(id)}`;
+      mg.appendChild(el);
+    });
+    bindVotes(mg);
+
+    const wg = document.getElementById("word-grid");
+    words.forEach((id) => {
+      const el = document.createElement("article");
+      el.className = "wide";
+      el.dataset.card = "1";
+      el.dataset.vote = votes[id] || "";
+      el.innerHTML = `
+        <img src="r2/wordmarks/${id}.svg" alt="${id}" />
+        <div class="id">${id}</div>
+        ${voteUI(id)}`;
+      wg.appendChild(el);
+    });
+    bindVotes(wg);
+
+    const lg = document.getElementById("lock-grid");
+    locks.forEach((id) => {
+      const el = document.createElement("article");
+      el.className = "wide";
+      el.dataset.card = "1";
+      el.dataset.vote = votes[id] || "";
+      el.innerHTML = `
+        <img src="r2/lockups/${id}.svg" alt="${id}" />
+        <div class="id">${id}</div>
+        ${voteUI(id)}`;
+      lg.appendChild(el);
+    });
+    bindVotes(lg);
+
+    const tg = document.getElementById("type-grid");
+    types.forEach((t) => {
+      const el = document.createElement("article");
+      el.className = "type-card";
+      el.dataset.card = "1";
+      el.dataset.vote = votes["type:" + t.id] || "";
+      el.innerHTML = `
+        <div class="id">${t.id} · ${t.d} + ${t.b}</div>
+        <div class="wm" style="font-family:${t.df},sans-serif">Chicken<span class="fit">Fit</span></div>
+        <div class="body" style="font-family:${t.bf},sans-serif">
+          Современный локальный сытный обед. Слои · курица · Самарканд. Без фольклора.
+        </div>
+        <div class="sub">${t.n}</div>
+        ${voteUI("type:" + t.id)}`;
+      tg.appendChild(el);
+    });
+    bindVotes(tg);
+
+    function exportVotes() {
+      const g = (v) => Object.entries(votes).filter(([, x]) => x === v).map(([k]) => k);
+      document.getElementById("export-box").textContent =
+        `MICRO R2 VOTES\nkeep: ${g("keep").join(", ") || "—"}\nmaybe: ${g("maybe").join(", ") || "—"}\nkill: ${g("kill").join(", ") || "—"}`;
+    }
+    exportVotes();
+  </script>
+</body>
+</html>

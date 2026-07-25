@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
+  <rect width="128" height="128" rx="28" fill="#F7F1E6"/>
+
+  <!-- three bars = product stack, SAME ink, not rainbow -->
+  <rect x="36" y="32" width="56" height="16" rx="8" fill="#28211D"/>
+  <rect x="32" y="56" width="64" height="16" rx="8" fill="#28211D" opacity="0.85"/>
+  <rect x="36" y="80" width="56" height="16" rx="8" fill="#28211D"/>
+</svg>

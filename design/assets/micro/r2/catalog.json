@@ -1,0 +1,245 @@
+{
+  "pastry": "#F7F1E6",
+  "terra": "#B94D2F",
+  "graph": "#28211D",
+  "gridUnit": 8,
+  "killedFamilies": [
+    "D-letter",
+    "E-seal"
+  ],
+  "typeShortlist": [
+    "T2",
+    "T4",
+    "T7"
+  ],
+  "items": [
+    {
+      "id": "a01-bite-shell",
+      "family": "a",
+      "files": [
+        "r2/marks/a01-bite-shell.svg",
+        "r2/marks/a01-bite-shell-mono.svg"
+      ]
+    },
+    {
+      "id": "a02-wedge-clean",
+      "family": "a",
+      "files": [
+        "r2/marks/a02-wedge-clean.svg",
+        "r2/marks/a02-wedge-clean-mono.svg"
+      ]
+    },
+    {
+      "id": "a03-soft-stack",
+      "family": "a",
+      "files": [
+        "r2/marks/a03-soft-stack.svg",
+        "r2/marks/a03-soft-stack-mono.svg"
+      ]
+    },
+    {
+      "id": "a04-cut-pie",
+      "family": "a",
+      "files": [
+        "r2/marks/a04-cut-pie.svg",
+        "r2/marks/a04-cut-pie-mono.svg"
+      ]
+    },
+    {
+      "id": "a05-fold-packet",
+      "family": "a",
+      "files": [
+        "r2/marks/a05-fold-packet.svg",
+        "r2/marks/a05-fold-packet-mono.svg"
+      ]
+    },
+    {
+      "id": "b01-bowl",
+      "family": "b",
+      "files": [
+        "r2/marks/b01-bowl.svg",
+        "r2/marks/b01-bowl-mono.svg"
+      ]
+    },
+    {
+      "id": "b02-bowl-flat",
+      "family": "b",
+      "files": [
+        "r2/marks/b02-bowl-flat.svg",
+        "r2/marks/b02-bowl-flat-mono.svg"
+      ]
+    },
+    {
+      "id": "b03-tray-simple",
+      "family": "b",
+      "files": [
+        "r2/marks/b03-tray-simple.svg",
+        "r2/marks/b03-tray-simple-mono.svg"
+      ]
+    },
+    {
+      "id": "c01-crest",
+      "family": "c",
+      "files": [
+        "r2/marks/c01-crest.svg",
+        "r2/marks/c01-crest-mono.svg"
+      ]
+    },
+    {
+      "id": "c02-profile",
+      "family": "c",
+      "files": [
+        "r2/marks/c02-profile.svg",
+        "r2/marks/c02-profile-mono.svg"
+      ]
+    },
+    {
+      "id": "c03-comb-circle",
+      "family": "c",
+      "files": [
+        "r2/marks/c03-comb-circle.svg",
+        "r2/marks/c03-comb-circle-mono.svg"
+      ]
+    },
+    {
+      "id": "c04-wing",
+      "family": "c",
+      "files": [
+        "r2/marks/c04-wing.svg",
+        "r2/marks/c04-wing-mono.svg"
+      ]
+    },
+    {
+      "id": "f01-fillet",
+      "family": "f",
+      "files": [
+        "r2/marks/f01-fillet.svg",
+        "r2/marks/f01-fillet-mono.svg"
+      ]
+    },
+    {
+      "id": "f02-one-strip",
+      "family": "f",
+      "files": [
+        "r2/marks/f02-one-strip.svg",
+        "r2/marks/f02-one-strip-mono.svg"
+      ]
+    },
+    {
+      "id": "f03-grill-min",
+      "family": "f",
+      "files": [
+        "r2/marks/f03-grill-min.svg",
+        "r2/marks/f03-grill-min-mono.svg"
+      ]
+    },
+    {
+      "id": "g01-sun-cut",
+      "family": "g",
+      "files": [
+        "r2/marks/g01-sun-cut.svg",
+        "r2/marks/g01-sun-cut-mono.svg"
+      ]
+    },
+    {
+      "id": "g02-arch",
+      "family": "g",
+      "files": [
+        "r2/marks/g02-arch.svg",
+        "r2/marks/g02-arch-mono.svg"
+      ]
+    },
+    {
+      "id": "g03-seed",
+      "family": "g",
+      "files": [
+        "r2/marks/g03-seed.svg",
+        "r2/marks/g03-seed-mono.svg"
+      ]
+    },
+    {
+      "id": "w01-plain",
+      "family": "W",
+      "files": [
+        "r2/wordmarks/w01-plain.svg"
+      ]
+    },
+    {
+      "id": "w02-fit-arc",
+      "family": "W",
+      "files": [
+        "r2/wordmarks/w02-fit-arc.svg"
+      ]
+    },
+    {
+      "id": "w03-layer-bar",
+      "family": "W",
+      "files": [
+        "r2/wordmarks/w03-layer-bar.svg"
+      ]
+    },
+    {
+      "id": "w04-nF-gap",
+      "family": "W",
+      "files": [
+        "r2/wordmarks/w04-nF-gap.svg"
+      ]
+    },
+    {
+      "id": "w05-underline-shift",
+      "family": "W",
+      "files": [
+        "r2/wordmarks/w05-underline-shift.svg"
+      ]
+    },
+    {
+      "id": "l1-a01-bite-shell",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-a01-bite-shell.svg"
+      ]
+    },
+    {
+      "id": "l1-a04-cut-pie",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-a04-cut-pie.svg"
+      ]
+    },
+    {
+      "id": "l1-b01-bowl",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-b01-bowl.svg"
+      ]
+    },
+    {
+      "id": "l1-c01-crest",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-c01-crest.svg"
+      ]
+    },
+    {
+      "id": "l1-f01-fillet",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-f01-fillet.svg"
+      ]
+    },
+    {
+      "id": "l1-g01-sun-cut",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-g01-sun-cut.svg"
+      ]
+    },
+    {
+      "id": "l1-g03-seed",
+      "family": "L1",
+      "files": [
+        "r2/lockups/l1-g03-seed.svg"
+      ]
+    }
+  ]
+}

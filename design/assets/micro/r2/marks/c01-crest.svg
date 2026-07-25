@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
+  <rect width="128" height="128" rx="28" fill="#F7F1E6"/>
+
+  <path fill="#B94D2F" d="
+    M36 84
+    C36 56 52 40 72 40
+    C84 40 94 48 98 60
+    C90 56 82 56 76 60
+    C86 64 92 74 92 86
+    C92 100 78 108 60 108
+    C44 108 36 98 36 84 Z"/>
+  <path fill="#B94D2F" d="M70 40 C72 28 78 20 86 16 C80 26 78 34 76 40 Z"/>
+  <path fill="#B94D2F" d="M78 42 C84 30 94 24 104 22 C96 32 92 38 88 44 Z"/>
+  <path fill="#28211D" d="M98 62 L116 70 L98 78 Z"/>
+</svg>

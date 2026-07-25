@@ -35,18 +35,20 @@
 
 ## OPEN — design (порядок студии)
 
-### 1. 🔴 Сейчас — research + micro-assemblies R1 (cull cycle)
+### 1. 🔴 Сейчас — micro R2 (после cull feedback)
 
-**Не финал.** Много черновиков → keep / maybe / kill.
+**Не финал.** Letter/seal убиты. Сетка 8px · lockups · clever wordmark.
 
 | Что | Где |
 |---|---|
-| **Галерея (открой в браузере)** | `design/assets/micro/gallery.html` |
-| 27 mark micro (семьи A–G) | `design/assets/micro/marks/` |
-| Case board / anti-slop / type / color | `design/research/` |
-| Журнал раунда | `design/research/micro-assembly-log.md` |
+| **Галерея R2** | `design/assets/micro/gallery-r2.html` |
+| Marks + mono | `design/assets/micro/r2/marks/` |
+| Lockups / wordmarks | `r2/lockups/`, `r2/wordmarks/` |
+| Стандарт сетки | `design/research/grid-and-lockup-standard.md` |
+| Type keep | **T2, T4, T7** |
+| Color | core + pastry **#F7F1E6** lighter |
 
-Действие владельца: пройти gallery → ♥ ~ × → прислать export votes.
+Действие: gallery-r2 → ♥ ~ × → export votes.
 
 ### 2. Потом (после research + выбор характера)
 

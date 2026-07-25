@@ -20,7 +20,8 @@ claims:
 
 | Token | HEX | Роль | 60/25/10/5 |
 | --- | --- | --- | --- |
-| pastry | `#F3E7D3` | бумага, фон | 60 |
+| pastry | `#F7F1E6` | бумага, фон (lightened R2) | 60 |
+| pastry-old | `#F3E7D3` | архив сравнения | — |
 | graphite | `#28211D` | текст, mono | 25 |
 | terracotta | `#B94D2F` | бренд, CTA | 10 |
 | olive | `#667447` | свежесть, редкий акцент | 5 |
@@ -31,7 +32,8 @@ claims:
 | --- | --- | --- |
 | V1 | terracotta → `#C45A38` (светлее) | мягче на крафте |
 | V2 | terracotta → `#A33F26` (глубже) | ближе JP seal red-brown |
-| V3 | pastry → `#EFE2CC` | чуть «тестовее» |
+| V3 | pastry → `#EFE2CC` | темнее (отклонено: владелец хотел светлее) |
+| V3b | pastry → `#F7F1E6` | **принято working** — светлее старого |
 | V4 | graphite → `#1F1A17` | жёстче контраст |
 | V5 | drop olive | 3-color system как KOISI spirit |
 | V6 | olive → `#5C6B3A` | менее «диета» |

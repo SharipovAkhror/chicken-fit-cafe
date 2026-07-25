@@ -6,7 +6,8 @@
 
 :root {
   /* Palette — distribution 60 / 25 / 10 / 5 */
-  --cf-color-pastry: #f3e7d3;
+  /* pastry lightened R2 working — was #f3e7d3 */
+  --cf-color-pastry: #f7f1e6;
   --cf-color-terracotta: #b94d2f;
   --cf-color-graphite: #28211d;
   --cf-color-olive: #667447;

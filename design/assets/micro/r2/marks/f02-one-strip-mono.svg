@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img">
+  <rect width="128" height="128" rx="28" fill="#F7F1E6"/>
+
+  <path fill="#28211D" d="
+    M40 40
+    C56 28 80 28 96 48
+    C104 58 100 80 84 92
+    C68 104 48 100 40 84
+    C32 68 32 52 40 40 Z"/>
+  <path fill="#F7F1E6" d="
+    M56 56
+    C64 50 76 52 82 62
+    C86 70 82 80 72 84
+    C62 88 52 82 50 72
+    C48 64 50 58 56 56 Z"/>
+</svg>
