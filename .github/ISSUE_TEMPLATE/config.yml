@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Правила ОС проекта
+    url: https://github.com/OWNER/REPO/blob/main/AGENTS.md
+    about: Прочитайте правила для людей и AI-ролей перед созданием задачи.

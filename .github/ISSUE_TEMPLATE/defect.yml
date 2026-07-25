@@ -1,0 +1,34 @@
+name: Дефект
+description: Ошибка в ОС, документе, данных или продукте
+title: "[Дефект]: "
+labels: ["type:defect"]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Что происходит
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Как воспроизвести
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Критичность
+      options: [critical, high, medium, low]
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Затронутые пути/claims

@@ -1,0 +1,40 @@
+name: Проверка факта
+description: Подтверждение или отклонение claim
+title: "[Факт]: C-"
+labels: ["type:fact-check", "trust:needs-verification"]
+body:
+  - type: input
+    id: claim
+    attributes:
+      label: Claim ID
+      placeholder: C-001
+    validations:
+      required: true
+  - type: textarea
+    id: statement
+    attributes:
+      label: Проверяемое утверждение
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Метод проверки
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Требуемые доказательства
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Предварительный результат
+      options:
+        - needs-verification
+        - confirmed
+        - rejected
+    validations:
+      required: true

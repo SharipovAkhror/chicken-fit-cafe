@@ -1,0 +1,248 @@
+schema_version: 1
+last_updated: "2026-07-25"
+owner: system-architect
+allowed_statuses:
+  - confirmed
+  - needs-verification
+  - rejected
+claims:
+  - id: C-001
+    statement: "Проект относится к заведению формата fast-casual."
+    area: strategy
+    status: confirmed
+    source: "Прямое подтверждение владельца проекта в стартовом интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Формат подтверждён независимо от архива Gemini."
+
+  - id: C-002
+    statement: "Первая точка планируется у аэропорта Самарканда."
+    area: operations
+    status: confirmed
+    source: "Прямое подтверждение владельца проекта в стартовом интервью 2026-07-24."
+    owner: operations-manager
+    verification_method: "Интервью с владельцем проекта; конкретный объект и договор аренды проверяются отдельно."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Подтверждена целевая зона, но не конкретное помещение."
+
+  - id: C-003
+    statement: "Продуктовое ядро строится вокруг курицы; ключевая продуктовая идея — гибрид бургера и самсы в слоёном тесте."
+    area: strategy
+    status: confirmed
+    source: "Прямое подтверждение владельца проекта в стартовом интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Рабочее описательное название — «бургер-самса»; финальное товарное название ещё не выбрано."
+
+  - id: C-004
+    statement: "Проект предполагает отказ от открытого фритюра."
+    area: operations
+    status: needs-verification
+    source: "archive/gemini/1_OPERATIONS_DUMP.md#2-продуктовая-матрица-и-кулинарная-технология"
+    owner: operations-manager
+    verification_method: "Подтверждение технологом и спецификацией оборудования."
+    verified_by: null
+    verified_at: null
+    notes: null
+
+  - id: C-005
+    statement: "B2B-доставка корпоративных обедов входит в модель выручки."
+    area: strategy
+    status: needs-verification
+    source: "archive/gemini/1_OPERATIONS_DUMP.md#3-модель-b2b-дистрибуции-обедов-корпоративный-сегмент"
+    owner: financial-analyst
+    verification_method: "CustDev минимум с пятью потенциальными корпоративными клиентами."
+    verified_by: null
+    verified_at: null
+    notes: null
+
+  - id: C-006
+    statement: "Целевой food cost составляет 30–35 процентов выручки."
+    area: finance
+    status: needs-verification
+    source: "archive/gemini/1_OPERATIONS_DUMP.md#4-экономический-каркас-и-ценообразование"
+    owner: financial-analyst
+    verification_method: "Техкарты, предложения поставщиков и финансовая модель."
+    verified_by: null
+    verified_at: null
+    notes: "Целевое значение из старого AI-вывода; не бюджет."
+
+  - id: C-007
+    statement: "QR-заказ и кухонный экран входят в предполагаемый клиентский процесс."
+    area: product
+    status: needs-verification
+    source: "archive/gemini/1_OPERATIONS_DUMP.md#5-цифровизация-и-сервисный-процесс"
+    owner: product-developer
+    verification_method: "Service blueprint, интервью с операциями и утверждённая спецификация MVP."
+    verified_by: null
+    verified_at: null
+    notes: null
+
+  - id: C-008
+    statement: "Название, логотип, цветовая палитра и шрифтовая пара из старого бренд-ДНК утверждены."
+    area: brand
+    status: rejected
+    source: "archive/gemini/2_BRAND_DNA.md"
+    owner: brand-strategist
+    verification_method: "Решение владельца проекта начать бренд-процесс заново."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Материал сохранён только как исторический черновик."
+
+  - id: C-009
+    statement: "Основной язык проектной документации — русский."
+    area: governance
+    status: confirmed
+    source: "Решение владельца проекта в сессии планирования 2026-07-24."
+    owner: system-architect
+    verification_method: "Прямой выбор владельца проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Технические термины допустимы на английском."
+
+  - id: C-010
+    statement: "GitHub и файлы являются рабочим интерфейсом ОС проекта v1."
+    area: governance
+    status: confirmed
+    source: "Решение владельца проекта в сессии планирования 2026-07-24."
+    owner: system-architect
+    verification_method: "Прямой выбор владельца проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Без веб-панели агентов. Remote опубликован 2026-07-25 (см. C-021, ADR-003)."
+
+  - id: C-011
+    statement: "Ядро v1 включает шесть AI-ролей."
+    area: governance
+    status: confirmed
+    source: "Решение владельца проекта в сессии планирования 2026-07-24."
+    owner: system-architect
+    verification_method: "Прямой выбор владельца проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Системный архитектор, бренд-стратег, визуальный дизайнер, операционный менеджер, финансовый аналитик, продуктовый разработчик."
+
+  - id: C-012
+    statement: "Приоритетная аудитория — сотрудники крупных компаний и местные жители."
+    area: strategy
+    status: confirmed
+    source: "Прямое подтверждение владельца проекта в бренд-интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Конкретные сегменты, потребности и частота покупки требуют CustDev."
+
+  - id: C-013
+    statement: "На старте обязательны зал, продажа навынос и доставка."
+    area: operations
+    status: confirmed
+    source: "Прямое подтверждение владельца проекта в бренд-интервью 2026-07-24."
+    owner: operations-manager
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Операционная и финансовая реализуемость одновременного запуска ещё не проверена."
+
+  - id: C-014
+    statement: "Желаемый характер бренда — современный локальный, без автоматического наследования старой айдентики."
+    area: brand
+    status: confirmed
+    source: "Прямой выбор владельца проекта в бренд-интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Конкретные визуальные и вербальные признаки ещё предстоит разработать."
+
+  - id: C-015
+    statement: "Целевой ценовой уровень основного продукта — доступный средний."
+    area: finance
+    status: confirmed
+    source: "Прямой выбор владельца проекта в бренд-интервью 2026-07-24."
+    owner: financial-analyst
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Абсолютная цена определяется после расчёта себестоимости и исследования конкурентов."
+
+  - id: C-016
+    statement: "Локальность бренда должна выражаться через гордость за современный Самарканд и характер гостеприимного сервиса."
+    area: brand
+    status: confirmed
+    source: "Прямой выбор владельца проекта в бренд-интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Не использовать фольклорные клише; конкретные проявления предстоит разработать и проверить."
+
+  - id: C-017
+    statement: "Основной сценарий покупки ключевого продукта — сытный обед."
+    area: strategy
+    status: confirmed
+    source: "Прямой выбор владельца проекта в бренд-интервью 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Интервью с владельцем проекта."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Требует проверки с целевой аудиторией."
+
+  - id: C-018
+    statement: "Способ приготовления и формат курицы в ключевом продукте должны быть выбраны через продуктовые тесты."
+    area: product
+    status: confirmed
+    source: "Решение владельца проекта в бренд-интервью 2026-07-24."
+    owner: product-developer
+    verification_method: "Сравнительная дегустация прототипов."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Не фиксировать хрустящее филе, рубленую начинку или гриль до теста."
+
+  - id: C-019
+    statement: "Утверждённая основа позиционирования — современный локальный сытный обед Самарканда; гибрид самсы и бургера выступает ключевым отличием."
+    area: brand
+    status: confirmed
+    source: "Прямой выбор владельца проекта 2026-07-24."
+    owner: brand-strategist
+    verification_method: "Выбор одного из трёх предложенных направлений позиционирования."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Рыночную силу формулировки необходимо проверить через CustDev, но направление утверждено для нейминга и дизайна."
+
+  - id: C-020
+    statement: "Утверждённый визуальный мир объединяет продуктовые слои направления A и гостеприимный человеческий характер направления C."
+    area: design
+    status: confirmed
+    source: "Прямой выбор владельца проекта 2026-07-24."
+    owner: visual-designer
+    verification_method: "Выбор визуального направления из концептуального обзора."
+    verified_by: project-owner
+    verified_at: "2026-07-24"
+    notes: "Рабочая система должна использовать сокращённую палитру и не смешивать все акценты двух исходных направлений."
+
+  - id: C-021
+    statement: "Канонический удалённый репозиторий проекта — github.com/SharipovAkhror/chicken-fit-cafe; локальная папка клона — chicken-fit-cafe."
+    area: governance
+    status: confirmed
+    source: "Прямое поручение владельца проекта 2026-07-25; репозиторий создан владельцем."
+    owner: system-architect
+    verification_method: "Существование remote и решение владельца (ADR-003)."
+    verified_by: project-owner
+    verified_at: "2026-07-25"
+    notes: "Agent harness: AGENTS.md + vendor-стабы + STATUS.md + CI validate."
+allowed_areas:
+  - governance
+  - strategy
+  - brand
+  - design
+  - operations
+  - finance
+  - product
+  - security
+  - knowledge

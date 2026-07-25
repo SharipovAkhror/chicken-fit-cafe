@@ -1,0 +1,55 @@
+name: Задача
+description: Рабочая задача для роли
+title: "[Задача]: "
+labels: ["type:task", "trust:needs-verification"]
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Ответственная роль
+      options:
+        - system-architect
+        - brand-strategist
+        - visual-designer
+        - operations-manager
+        - financial-analyst
+        - product-developer
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Цель
+      description: Что должно измениться и зачем.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Обязательные входы
+      description: Документы/факты и их статусы. Укажите пути.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Проверяемые условия готовности.
+    validations:
+      required: true
+  - type: textarea
+    id: outputs
+    attributes:
+      label: Ожидаемые артефакты
+      description: Какие файлы/пути будут созданы или изменены.
+    validations:
+      required: true
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Проверка перед стартом
+      options:
+        - label: Обязательные входы имеют статус approved или задача помечена как исследование.
+          required: true
+        - label: Задача не требует необратимых действий без утверждения человека.
+          required: true

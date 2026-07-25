@@ -1,0 +1,34 @@
+name: Решение
+description: Значимое решение, требующее ADR
+title: "[Решение]: "
+labels: ["type:decision", "needs-human-approval"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Контекст
+      description: Почему решение необходимо сейчас.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Рассмотренные варианты
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Влияние и области
+      description: Какие области, бюджет, риски и необратимость затронуты.
+    validations:
+      required: true
+  - type: checkboxes
+    id: approval
+    attributes:
+      label: Требования
+      options:
+        - label: Будет создан ADR в decisions/.
+          required: true
+        - label: Требуется утверждение владельца проекта.
+          required: true

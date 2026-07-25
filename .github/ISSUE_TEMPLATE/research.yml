@@ -1,0 +1,32 @@
+name: Исследование
+description: Сбор данных и проверка гипотез
+title: "[Исследование]: "
+labels: ["type:research", "trust:needs-verification"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Исследовательский вопрос
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Гипотеза
+      description: Явно помечается как непроверенная.
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Метод и источники
+      description: Как будет проверяться и на каких данных.
+    validations:
+      required: true
+  - type: textarea
+    id: claims
+    attributes:
+      label: Затрагиваемые утверждения
+      description: ID из knowledge/claims.yaml или пометка «новые».
+    validations:
+      required: true

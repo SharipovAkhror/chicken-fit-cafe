@@ -1,0 +1,34 @@
+name: Validate Project OS
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate structure, metadata, links and claims
+        run: node tools/validate.mjs
+
+      - name: Check archive is read-only in pull requests
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -q '^archive/gemini/'; then
+            echo "archive/gemini is immutable. Add a new working artifact instead."
+            exit 1
+          fi
