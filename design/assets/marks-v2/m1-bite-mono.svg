@@ -1,17 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ChickenFit mark M1 mono">
-  <title>M1 — Разрез mono</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="M1 mono">
+  <title>M1 mono</title>
   <path fill="#28211D" fill-rule="evenodd" d="
-    M30 38
-    C30 26 42 18 64 18
-    C86 18 98 26 98 38
-    V90
-    C98 102 86 110 64 110
-    C42 110 30 102 30 90
+    M36 40
+    C36 28 48 20 64 20
+    C80 20 92 28 92 40
+    V86
+    C92 98 80 106 64 106
+    C48 106 36 98 36 86
     Z
-    M42 44 H86 V52 H42 Z
-    M42 60 H86 V68 H42 Z
-    M64 76
-    A18 8 0 1 1 64 92
-    A18 8 0 1 1 64 76
+    M46 36 H82 V43 H46 Z
+    M46 50 H82 V57 H46 Z
+    M48 68
+    h32
+    a9 9 0 0 1 0 18
+    h-32
+    a9 9 0 0 1 0 -18
     Z"/>
 </svg>

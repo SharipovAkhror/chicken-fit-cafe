@@ -35,28 +35,24 @@
 
 ## OPEN — design (порядок студии)
 
-### 1. 🔴 Сейчас — выбор mark M1–M4
+### 1. 🔴 Сейчас — выбор mark M1–M4 (v2.1)
 
-Файлы: `design/assets/marks-v2/` + `compare.html`  
-Док: `design/mark-exploration-v2.md`  
-Стандарты: `design/craft-standards.md`
+- `design/assets/marks-v2/compare.html` — все 4 иконки, color + mono  
+- Карта слоёв: `design/system-map.md` (Brand Kit ≠ упаковка)  
+- Canva API: `design/canva-integration.md` — «просто API key» **не** даёт вход в аккаунт
 
-Владелец выбирает **одно** primary (и опц. secondary).
+### 2. После mark → Brand Kit core
 
-### 2. После mark
+1. Доводка знака → wordmark → lockup → social  
+2. Цвета + шрифты в Canva Brand Kit  
+3. Носители (стикер, постер, баннер)  
+4. Brandbook PDF  
 
-1. Доводка знака (1c / 2c / reverse, clear space)
-2. Wordmark + тест шрифтов (не только Unbounded)
-3. Lockup
-4. Social avatar = mark (не коллаж)
-5. Стикеры / постеры / баннеры
-6. Brandbook PDF 20–30 стр. + Canva Brand Kit  
-   → `design/brandbook-production.md`
+### 3. Упаковка — слой Application, не сейчас
 
-### 3. Упаковка параллельно (без лого)
-
-- `design/packaging-blanks.md` — SKU к утверждению (OSQ, top-box, guneshprint)
-- Брендинг бланков — **стоп** до mark+wordmark
+- Материал: **крафт** (working default)
+- Коробка vs wrap: **решим после mark**
+- Брендинг — стоп до лого
 
 ### 4. Снято / не использовать как финал
 

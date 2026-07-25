@@ -1,20 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ChickenFit mark M3 Strip">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="M3 Strip">
   <title>M3 — Стрипс</title>
-  <rect width="128" height="128" rx="28" fill="#F3E7D3"/>
-  <circle cx="64" cy="64" r="46" fill="none" stroke="#28211D" stroke-width="6"/>
-  <!-- Single fillet / strip — one gesture -->
+  <rect width="128" height="128" rx="32" fill="#F3E7D3"/>
+  <circle cx="64" cy="64" r="44" stroke="#28211D" stroke-width="7" fill="none"/>
+  <!-- Single fillet — organic but controlled, one shape -->
   <path fill="#B94D2F" d="
-    M40 78
-    C36 70 38 52 48 42
-    C58 32 74 30 84 38
-    C94 46 96 60 90 72
-    C84 84 70 90 58 88
-    C50 86 42 84 40 78
-    Z
-    M52 70
-    C58 74 70 74 78 66
-    C82 60 80 52 74 48
-    C66 42 56 44 52 52
-    C48 60 48 66 52 70
+    M42 82
+    C38 74 40 54 50 44
+    C58 36 72 34 82 42
+    C92 50 94 64 88 76
+    C82 88 68 94 56 90
+    C48 87 44 86 42 82
+    Z"/>
+  <!-- Inner highlight cut for depth without slop -->
+  <path fill="#F3E7D3" d="
+    M54 72
+    C58 76 70 76 76 68
+    C80 62 78 54 72 50
+    C66 46 58 48 54 54
+    C50 60 50 68 54 72
     Z"/>
 </svg>

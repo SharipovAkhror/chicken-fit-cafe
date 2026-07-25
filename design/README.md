@@ -5,11 +5,11 @@
 
 ## Сейчас читать
 
-1. [`craft-standards.md`](craft-standards.md) — anti-slop, порядок работ  
-2. [`mark-exploration-v2.md`](mark-exploration-v2.md) — 4 иконки  
-3. [`assets/marks-v2/compare.html`](assets/marks-v2/compare.html) — визуальное сравнение  
-4. [`packaging-blanks.md`](packaging-blanks.md) — белые бланки UZ  
-5. [`brandbook-production.md`](brandbook-production.md) — PDF + Canva  
+1. [`system-map.md`](system-map.md) — Brand Kit vs упаковка vs брендбук  
+2. [`craft-standards.md`](craft-standards.md) — anti-slop  
+3. [`mark-exploration-v2.md`](mark-exploration-v2.md) + [`compare.html`](assets/marks-v2/compare.html)  
+4. [`packaging-blanks.md`](packaging-blanks.md) — крафт default; box/wrap later  
+5. [`brandbook-production.md`](brandbook-production.md) · [`canva-integration.md`](canva-integration.md)  
 
 ## Источник истины
 
