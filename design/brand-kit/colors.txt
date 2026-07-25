@@ -1,0 +1,13 @@
+ChickenFit Brand Kit — colors (Canva Pro)
+Source: design/approved-art-direction.md
+Status: working — mark TBD
+
+Pastry (background 60%)     #F3E7D3
+Graphite (text 25%)         #28211D
+Terracotta (brand 10%)      #B94D2F
+Olive (freshness 5%)        #667447
+
+Canva Brand Kit setup:
+1. Brand → Brand Kit → Colors
+2. Add the four HEX above with names
+3. Do not add extra accent colors without ADR

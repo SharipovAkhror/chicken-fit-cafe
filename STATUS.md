@@ -4,8 +4,8 @@
 **Репозиторий:** https://github.com/SharipovAkhror/chicken-fit-cafe  
 **Локальный путь (канон):** `Documents/GitHub/chicken-fit-cafe`
 
-> **Новому агенту:** начни с этого файла → `AGENTS.md` → `strategy/project-map.md` → `knowledge/claims.yaml`.  
-> Не полагайся на память прошлой сессии. Не повторяй уже сделанное.
+> **Новому агенту:** этот файл → `AGENTS.md` → `strategy/project-map.md` → `knowledge/claims.yaml`.  
+> Сейчас активна **только роль visual-designer**. Не генерировать AI-slop как финал.
 
 ---
 
@@ -13,63 +13,64 @@
 
 | | |
 |---|---|
-| **Фаза** | Дизайн-система v1 (после арт-дирекции) |
+| **Фаза** | Brand identity craft — mark → brandbook |
 | **Активная роль** | `visual-designer` |
-| **Северная звезда** | Проверяемый запуск fast-casual кафе (куриное ядро, «бургер-самса») у аэропорта Самарканда |
-| **Источник истины** | Этот git-репозиторий + GitHub issues/PR |
+| **Северная звезда** | Fast-casual у аэропорта Самарканда; курица + бургер-самса |
 | **Remote** | `origin` → `SharipovAkhror/chicken-fit-cafe` |
 
-## Подтверждённое ядро (не перепроверять без причины)
+## Feedback владельца (2026-07-25) — обязательно
 
-- Формат: **fast-casual** (C-001)
-- Зона: **аэропорт Самарканда** (C-002; конкретное помещение — нет)
-- Продукт: **курица + гибрид бургер/самса** (C-003)
-- Каналы старта: **зал + навынос + доставка** (C-013)
-- Позиционирование: **современный локальный сытный обед Самарканда** (C-019)
-- Визуальный мир: **слои A + характер C** (C-020)
-- 6 AI-ролей, русский язык, claims/ADR (C-009…C-011)
-- Harness remote: **ADR-003 / C-021** (готово)
+- Ассеты pack v1 / AI-борды: «прикольно, но видно, что AI» → **не финал**.
+- **Три полоски как иконка / social avatar — reject.**
+- Цвета (терракота, pastry, тёплый «жёлтый» свет) — **примерно ok**, держим.
+- Упаковка: не fancy mockups, а **простые картонные бланки** (реальные UZ/СНГ), белые/крафт → утверждение → потом лого.
+- Логотип: wordmark ChickenFit ок как имя; **нужна своя иконка** (курица / bowl / strips / product).
+- Цель: **брендбук** (PDF + Canva) + постеры, баннеры, наклейки.
+- Canva Pro у владельца — Brand Kit вручную; полный API autofill = Enterprise.
 
-## Готово по дизайну (не переделывать)
+## Подтверждённое ядро
 
-| Артефакт | Статус | Путь |
-|---|---|---|
-| Три визуальных направления | approved | `design/visual-directions.md` |
-| Арт-дирекция «Слой + Гостеприимство» | approved | `design/approved-art-direction.md` |
-| Брендбук v1 (ChickenFit) | approved | `brand/BRANDBOOK.md` |
-| Концепт-борды / упаковка / вывеска | draft-assets | `design/assets/*.png` |
-| Стратегия бренда | approved | `brand/brand-strategy.md` |
+- C-001…C-003, C-012…C-017, C-019, C-020, C-021, C-022 (имя ChickenFit)
+- Harness ADR-003 готов
 
-## OPEN — handoff
+## OPEN — design (порядок студии)
 
-### 1. 🟡 Issue #1 — design pack v1 (ветка `feat/1-design-pack-v1`)
+### 1. 🔴 Сейчас — выбор mark M1–M4
 
-https://github.com/SharipovAkhror/chicken-fit-cafe/issues/1
+Файлы: `design/assets/marks-v2/` + `compare.html`  
+Док: `design/mark-exploration-v2.md`  
+Стандарты: `design/craft-standards.md`
 
-В работе / в PR:
+Владелец выбирает **одно** primary (и опц. secondary).
 
-1. Векторный логотип ChickenFit + mono + mark CF + favicon + social.
-2. `design/design-system.md` синхронизирован (без placeholder `BRAND`).
-3. Claim **C-022** (имя ChickenFit).
-4. `design/tokens.css` + маппинг в `app/globals.css` + preview `app/page.tsx`.
+### 2. После mark
 
-Остаётся на human review: `approved` дизайн-системы, обводка Unbounded→path, PNG batch, доменная/юр. проверка имени.
+1. Доводка знака (1c / 2c / reverse, clear space)
+2. Wordmark + тест шрифтов (не только Unbounded)
+3. Lockup
+4. Social avatar = mark (не коллаж)
+5. Стикеры / постеры / баннеры
+6. Brandbook PDF 20–30 стр. + Canva Brand Kit  
+   → `design/brandbook-production.md`
 
-### 2. Следом (не блокирует pack v1)
+### 3. Упаковка параллельно (без лого)
 
-- Товарное имя флагманского продукта (бургер-самса).
-- Проверка шрифтов Unbounded/Manrope на узбекскую латиницу + кириллицу.
-- CustDev / полевая проверка C-004…C-007 (Этап 1).
-- Продуктовые тесты курицы (C-018).
+- `design/packaging-blanks.md` — SKU к утверждению (OSQ, top-box, guneshprint)
+- Брендинг бланков — **стоп** до mark+wordmark
 
-### 3. Этап 0 harness — ✅
+### 4. Снято / не использовать как финал
 
-Remote, vendor-стабы, CODEOWNERS, labels, CI validate — закрыто (ADR-003).
+| Артефакт | Статус |
+|---|---|
+| `logo-mark.svg` / social с 3 полосками | reject as primary |
+| `packaging-system.png` AI board | mood only, не spec |
+| design pack v1 three-line module as icon | superseded by marks-v2 |
 
-## Запреты (коротко)
+PR #2 (design pack v1) — пересобрать под craft pivot или закрыть частичным.
 
-- Архив `archive/gemini/` — только гипотезы, не факты
-- AI не переводит критичное в `approved` (имя, финальный логотип, бренд → human)
-- Секреты, ПДн, токены — не в git
-- Не копировать старую айдентику (C-008 = rejected); ChickenFit в брендбуке — **новое** решение с переопределением «Fit = подходит», не диета
-- Push/оплата/договор — только с явным «да» владельца (кроме согласованного ведения remote)
+## Запреты
+
+- Архив Gemini — не факты
+- AI не `approved` на имя/лого/бренд
+- Секреты не в git
+- Не штамповать «три полоски» обратно без ADR

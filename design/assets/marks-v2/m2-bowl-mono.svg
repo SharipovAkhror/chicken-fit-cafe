@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ChickenFit mark M2 mono">
+  <title>M2 — Миска mono</title>
+  <path fill="#28211D" d="
+    M24 58 H104
+    C104 58 100 100 64 100
+    C28 100 24 58 24 58 Z
+    M22 56
+    A42 13 0 1 1 106 56
+    A42 13 0 1 1 22 56 Z
+    M44 52
+    C48 34 56 28 64 28
+    C72 28 80 34 84 52
+    C76 46 68 44 64 44
+    C60 44 52 46 44 52 Z"/>
+</svg>

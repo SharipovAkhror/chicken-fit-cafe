@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ChickenFit mark M2 Bowl">
+  <title>M2 — Миска обеда</title>
+  <rect width="128" height="128" rx="28" fill="#F3E7D3"/>
+  <!-- Bowl body -->
+  <path fill="#B94D2F" d="
+    M24 58
+    H104
+    C104 58 100 98 64 98
+    C28 98 24 58 24 58
+    Z"/>
+  <!-- Rim -->
+  <ellipse cx="64" cy="56" rx="42" ry="12" fill="#28211D"/>
+  <ellipse cx="64" cy="54" rx="34" ry="8" fill="#F3E7D3"/>
+  <!-- Product peak (chicken strip suggestion) -->
+  <path fill="#B94D2F" d="
+    M44 52
+    C48 36 56 30 64 30
+    C72 30 80 36 84 52
+    C76 46 68 44 64 44
+    C60 44 52 46 44 52
+    Z"/>
+</svg>
