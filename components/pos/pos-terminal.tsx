@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import Link from 'next/link'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
 import {
@@ -25,6 +26,7 @@ import {
   type OrderType,
   type PaymentMethod,
 } from '@/lib/orders'
+import { useTheme } from '@/lib/theme'
 import { MenuGrid } from './menu-grid'
 import { CartPanel } from './cart-panel'
 import { ReceiptPrint, ReceiptModal, type ReceiptProps } from './receipt-print'
@@ -81,6 +83,7 @@ function getInitialCategories(): CategoryData[] {
 }
 
 export function PosTerminal() {
+  const { isDark, toggleTheme } = useTheme()
   const [categories, setCategories] = useState<CategoryData[]>(getInitialCategories)
   const [activeTab, setActiveTab] = useState<'pos' | 'orders' | 'shift' | 'menu' | 'qr'>('pos')
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? 'chicken')
@@ -113,6 +116,11 @@ export function PosTerminal() {
 
   useEffect(() => {
     reloadOrders()
+    // Периодическая фоновая синхронизация заказов каждые 10 секунд
+    const interval = setInterval(() => {
+      reloadOrders()
+    }, 10000)
+    return () => clearInterval(interval)
   }, [reloadOrders])
 
   // Сохранение изменений меню в локальное хранилище
@@ -343,27 +351,40 @@ export function PosTerminal() {
 
   return (
     <>
-      <div className="flex h-screen flex-col bg-zinc-950 text-white print:hidden">
-        {/* Верхняя панель и навигация */}
-        <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-2.5 sm:px-6">
+      <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white print:hidden transition-colors duration-200">
+        {/* Верхняя навигационная панель админки */}
+        <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/80 px-3 py-2.5 sm:px-6 backdrop-blur shadow-xs">
+          {/* Левая часть: кнопка назад и логотип */}
           <div className="flex items-center gap-3">
-            <h1 className="text-base sm:text-lg font-black tracking-tight">
-              Chicken<span className="text-amber-400">Fit</span>
-            </h1>
-            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
-              Касса & Управление
-            </span>
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-black transition shadow-xs"
+              title="Вернуться к гостевому меню"
+            >
+              <span>←</span>
+              <span className="hidden sm:inline">В меню</span>
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-black tracking-tight">
+                Chicken<span className="text-amber-500">Fit</span>
+              </h1>
+              <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Смена открыта
+              </span>
+            </div>
           </div>
 
-          {/* Вкладки админки */}
+          {/* Центральная часть: Вкладки админки */}
           <nav className="flex gap-1 overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
               className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'pos'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  ? 'bg-amber-500 text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               🛒 Касса
@@ -374,10 +395,10 @@ export function PosTerminal() {
                 setActiveTab('orders')
                 reloadOrders()
               }}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer relative ${
                 activeTab === 'orders'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  ? 'bg-amber-500 text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               📋 Заказы ({todayOrders.length})
@@ -390,8 +411,8 @@ export function PosTerminal() {
               }}
               className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'shift'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  ? 'bg-amber-500 text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               📊 Смена
@@ -401,8 +422,8 @@ export function PosTerminal() {
               onClick={() => setActiveTab('menu')}
               className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'menu'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  ? 'bg-amber-500 text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               🍱 Меню
@@ -412,13 +433,25 @@ export function PosTerminal() {
               onClick={() => setActiveTab('qr')}
               className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'qr'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  ? 'bg-amber-500 text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               📱 QR & Столы
             </button>
           </nav>
+
+          {/* Правая часть: переключатель темы */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex items-center justify-center size-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-200 transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
+              title={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
+          </div>
         </header>
 
         {/* Главная рабочая область */}
@@ -436,7 +469,7 @@ export function PosTerminal() {
               </div>
 
               {/* Панель оформления и корзины (на ПК справа, на мобильных в виде шторки) */}
-              <aside className="hidden lg:block w-full lg:w-[26rem] xl:w-[28rem] shrink-0 border-l border-white/10 p-3 sm:p-5 overflow-y-auto">
+              <aside className="hidden lg:block w-full lg:w-[26rem] xl:w-[28rem] shrink-0 border-l border-zinc-200 dark:border-zinc-800 p-3 sm:p-5 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950">
                 <CartPanel
                   items={cart}
                   orderNumber={orderNumber}
@@ -469,8 +502,8 @@ export function PosTerminal() {
 
               {/* Мобильная всплывающая корзина */}
               {showMobileCart && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm lg:hidden">
-                  <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 border-t border-white/10 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm lg:hidden">
+                  <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white dark:bg-zinc-950 p-4 border-t border-zinc-200 dark:border-zinc-800 shadow-2xl">
                     <CartPanel
                       items={cart}
                       orderNumber={orderNumber}
@@ -510,7 +543,7 @@ export function PosTerminal() {
                   <button
                     type="button"
                     onClick={() => setShowMobileCart(true)}
-                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-3.5 text-black font-bold shadow-2xl shadow-amber-500/30 active:scale-98 transition"
+                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-4 text-black font-extrabold shadow-2xl shadow-amber-500/30 active:scale-98 transition"
                   >
                     <div className="flex items-center gap-2">
                       <span className="flex size-7 items-center justify-center rounded-xl bg-black text-amber-400 text-xs font-black">

@@ -18,10 +18,12 @@ import {
   type Locale,
 } from '@/lib/i18n'
 import { getMenu, getLiveMenu, t, type Menu } from '@/lib/menu'
+import { useTheme } from '@/lib/theme'
 
 const EAGER_IMAGES = 4
 
 export function MenuPage({ locale }: { locale: Locale }) {
+  const { isDark, toggleTheme } = useTheme()
   const [menu, setMenu] = useState<Menu>(getMenu)
   const [activeCategory, setActiveCategory] = useState<string>('')
   const ui = UI[locale]
@@ -84,7 +86,7 @@ export function MenuPage({ locale }: { locale: Locale }) {
   }, [categories, activeCategory])
 
   return (
-    <main lang={locale} className="min-h-screen bg-background text-foreground selection:bg-amber-500/30">
+    <main lang={locale} className="min-h-screen bg-background text-foreground selection:bg-amber-500/30 transition-colors duration-200">
       {/* Верхняя панель сайта */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur sticky top-0 z-50">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-8">
@@ -105,7 +107,7 @@ export function MenuPage({ locale }: { locale: Locale }) {
             </div>
           </Link>
 
-          {/* Правая часть: кнопка Кассы и языки */}
+          {/* Правая часть: кнопка Кассы, переключатель темы и языки */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Кнопка входа в админку / кассу для директора и кассира */}
             <Link
@@ -116,6 +118,16 @@ export function MenuPage({ locale }: { locale: Locale }) {
               <span>🔐</span>
               <span className="hidden sm:inline">Касса / Админ</span>
             </Link>
+
+            {/* Переключатель темы (светлая / тёмная) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex items-center justify-center size-8 rounded-xl border border-border bg-secondary text-xs text-foreground transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
+              title={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
 
             {/* Языковой переключатель */}
             <nav aria-label="Language" className="flex shrink-0 gap-0.5 rounded-xl bg-secondary/80 p-1">
