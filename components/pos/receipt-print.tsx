@@ -13,6 +13,11 @@ type Props = {
   tableNumber?: string
   customerPhone?: string
   deliveryAddress?: string
+  subtotal?: number
+  discountAmount?: number
+  discountPercent?: number
+  deliveryFee?: number
+  total?: number
   paymentMethod?: PaymentMethod
   cashReceived?: number
   changeAmount?: number
@@ -30,11 +35,18 @@ export function ReceiptPrint({
   tableNumber,
   customerPhone,
   deliveryAddress,
+  subtotal: propSubtotal,
+  discountAmount = 0,
+  discountPercent,
+  deliveryFee = 0,
+  total: propTotal,
   paymentMethod = 'cash',
   cashReceived,
   changeAmount,
 }: Props) {
-  const total = cartTotal(items)
+  const calculatedSubtotal = cartTotal(items)
+  const subtotal = propSubtotal ?? calculatedSubtotal
+  const total = propTotal ?? (subtotal - discountAmount + deliveryFee)
 
   const orderTypeLabel =
     orderType === 'dine_in'
@@ -49,7 +61,7 @@ export function ReceiptPrint({
         {/* Заголовок заведения */}
         <div className="receipt-header">
           <div className="receipt-logo">ChickenFit</div>
-          <div className="receipt-sub">Кафе домашней кухни · Самарканд</div>
+          <div className="receipt-sub">Кафе вкусной курочки · Самарканд</div>
         </div>
 
         <div className="receipt-divider" />
@@ -97,6 +109,28 @@ export function ReceiptPrint({
             ))}
           </tbody>
         </table>
+
+        {/* Скидка и доставка если есть */}
+        {(discountAmount > 0 || deliveryFee > 0) && (
+          <div className="receipt-breakdown" style={{ marginTop: '4px', fontSize: '11px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Подытог:</span>
+              <span>{receiptPrice(subtotal)} сум</span>
+            </div>
+            {discountAmount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                <span>Скидка {discountPercent ? `(${discountPercent}%)` : ''}:</span>
+                <span>-{receiptPrice(discountAmount)} сум</span>
+              </div>
+            )}
+            {deliveryFee > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Доставка:</span>
+                <span>+{receiptPrice(deliveryFee)} сум</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="receipt-divider receipt-divider--bold" />
 

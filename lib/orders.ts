@@ -14,6 +14,10 @@ export type Order = {
   customerPhone?: string
   deliveryAddress?: string
   items: CartItem[]
+  subtotal?: number
+  discountPercent?: number
+  discountAmount?: number
+  deliveryFee?: number
   total: number
   paymentMethod: PaymentMethod
   cashReceived?: number
@@ -51,6 +55,10 @@ export async function createOrder(data: {
   customerPhone?: string
   deliveryAddress?: string
   items: CartItem[]
+  subtotal?: number
+  discountPercent?: number
+  discountAmount?: number
+  deliveryFee?: number
   total: number
   paymentMethod: PaymentMethod
   cashReceived?: number
@@ -65,6 +73,10 @@ export async function createOrder(data: {
     customerPhone: data.customerPhone || undefined,
     deliveryAddress: data.deliveryAddress || undefined,
     items: data.items,
+    subtotal: data.subtotal,
+    discountPercent: data.discountPercent,
+    discountAmount: data.discountAmount,
+    deliveryFee: data.deliveryFee,
     total: data.total,
     paymentMethod: data.paymentMethod,
     cashReceived: data.cashReceived,
