@@ -238,7 +238,7 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
 
             {/* Подвал карточки */}
             <p className="mt-4 text-[10px] font-medium text-zinc-400">
-              ChickenFit · Самарканд · {currentUrl.replace(/^https?:\/\//, '')}
+              ChickenFit · Самарканд, ул. Ибн Сина 136 · Тел: 93-380-2002
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
             <button
               type="button"
               onClick={() => handleDownloadSvg(table, currentUrl)}
-              className="rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20 cursor-pointer"
+              className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-800 dark:text-white transition hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer shadow-xs"
             >
               📥 Скачать SVG QR
             </button>

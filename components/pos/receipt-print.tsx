@@ -61,8 +61,9 @@ export function ReceiptPrint({
         {/* Заголовок заведения */}
         <div className="receipt-header">
           <div className="receipt-logo">CHICKENFIT</div>
-          <div className="receipt-sub">Кафе сочной курочки и выпечки</div>
-          <div className="receipt-sub">г. Самарканд · Тел: +998 (90) 123-45-67</div>
+          <div className="receipt-sub">Вкусно · Полезно · По-домашнему</div>
+          <div className="receipt-sub">Самарканд, ул. Ибн Сина 136 (аэропорт)</div>
+          <div className="receipt-sub">Тел: 93-380-2002 · @ChickenFit</div>
         </div>
 
         <div className="receipt-divider" />
@@ -156,7 +157,7 @@ export function ReceiptPrint({
         {/* Подвал чека */}
         <div className="receipt-footer">
           <div>Приятного аппетита! Ждем вас снова!</div>
-          <div className="receipt-url">ChickenFit Samarkand</div>
+          <div className="receipt-url">Бесплатная доставка до 1 км · 93-380-2002</div>
         </div>
       </div>
     </div>
@@ -185,8 +186,8 @@ export function ReceiptModal({
         {/* Заголовок */}
         <div className="text-center border-b border-zinc-200 pb-3">
           <div className="text-2xl font-black tracking-wider text-black">CHICKENFIT</div>
-          <p className="text-xs text-zinc-500 font-medium">Кафе вкусной курочки и выпечки</p>
-          <p className="text-[11px] text-zinc-400">г. Самарканд · +998 (90) 123-45-67</p>
+          <p className="text-xs text-zinc-500 font-semibold">Вкусно · Полезно · По-домашнему</p>
+          <p className="text-[11px] text-zinc-400 mt-0.5">Самарканд, ул. Ибн Сина 136 · 93-380-2002</p>
         </div>
 
         {/* Мета-информация */}

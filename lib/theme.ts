@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
 
-const THEME_KEY = 'chickenfit_theme_v1'
+const THEME_KEY = 'chickenfit_theme_v2'
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
     try {
@@ -16,11 +16,9 @@ export function useTheme() {
         setTheme(saved)
         applyTheme(saved)
       } else {
-        // Default to dark for premium look, or check system
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        const initial = prefersDark ? 'dark' : 'light'
-        setTheme(initial)
-        applyTheme(initial)
+        // Default to clean, minimalist Light theme as requested
+        setTheme('light')
+        applyTheme('light')
       }
     } catch {}
   }, [])
