@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState, useMemo } from 'react'
+import { createOrder } from '@/lib/orders'
+import { nextOrderNumber, receiptDateTime } from '@/lib/receipt'
 
 export type ViewItem = {
   id: string
@@ -75,9 +77,27 @@ export function MenuBoard({
   const [openItem, setOpenItem] = useState<ViewItem | null>(null)
   const [guestCart, setGuestCart] = useState<Record<string, number>>({})
   const [showCartDrawer, setShowCartDrawer] = useState(false)
+  const [selectedTable, setSelectedTable] = useState('1')
+  const [orderSuccess, setOrderSuccess] = useState<{
+    orderNumber: string
+    table: string
+    total: number
+    items: Array<{ name: string; qty: number; price: number }>
+    time: string
+  } | null>(null)
+
   const close = useCallback(() => setOpenItem(null), [])
 
-  // Поиск всех элементов по id
+  // Чтение параметра стола из URL (?table=2)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const t = params.get('table')
+      if (t) setSelectedTable(t)
+    }
+  }, [])
+
+  // Карта всех блюд
   const allItemsMap = useMemo(() => {
     const map: Record<string, ViewItem> = {}
     categories.forEach((cat) => {
@@ -130,13 +150,49 @@ export function MenuBoard({
     })
   }
 
+  // Отправка заказа прямо на кассу и официанту
+  async function handleSendOrderToPOS() {
+    if (cartEntries.length === 0) return
+
+    const num = nextOrderNumber()
+    const dt = receiptDateTime()
+    const orderItems = cartEntries.map((e) => ({
+      id: e.item.id,
+      name: e.item.name,
+      price: e.item.rawPrice,
+      originalPrice: e.item.rawPrice,
+      qty: e.qty,
+    }))
+
+    await createOrder({
+      orderNumber: num,
+      type: 'dine_in',
+      tableNumber: selectedTable,
+      items: orderItems,
+      total: totalCartSum,
+      paymentMethod: 'cash',
+    })
+
+    setOrderSuccess({
+      orderNumber: num,
+      table: selectedTable,
+      total: totalCartSum,
+      items: orderItems.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
+      time: dt,
+    })
+
+    setGuestCart({})
+    setShowCartDrawer(false)
+  }
+
   useEffect(() => {
-    if (!openItem && !showCartDrawer) return
+    if (!openItem && !showCartDrawer && !orderSuccess) return
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         close()
         setShowCartDrawer(false)
+        setOrderSuccess(null)
       }
     }
     const previousOverflow = document.body.style.overflow
@@ -147,7 +203,7 @@ export function MenuBoard({
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [openItem, showCartDrawer, close])
+  }, [openItem, showCartDrawer, orderSuccess, close])
 
   return (
     <>
@@ -208,7 +264,7 @@ export function MenuBoard({
                           )}
                         </div>
 
-                        {/* Кнопка добавления в заказ (как в Яндекс.Еда / Uzum Tezkor) */}
+                        {/* Кнопка быстрого добавления в корзину */}
                         {item.available && (
                           <div onClick={(e) => e.stopPropagation()}>
                             {inCart === 0 ? (
@@ -259,7 +315,7 @@ export function MenuBoard({
         </section>
       ))}
 
-      {/* Модалка просмотра карточки блюда */}
+      {/* Модалка подробного просмотра карточки блюда */}
       {openItem && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
@@ -376,7 +432,7 @@ export function MenuBoard({
               <span className="flex size-7 items-center justify-center rounded-xl bg-black text-amber-400 text-xs font-black">
                 {totalItemsCount}
               </span>
-              <span className="text-sm sm:text-base">Ваш выбор</span>
+              <span className="text-sm sm:text-base">Ваш заказ (Стол №{selectedTable})</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base sm:text-lg">{formatNum(totalCartSum)} сум</span>
@@ -386,7 +442,7 @@ export function MenuBoard({
         </div>
       )}
 
-      {/* Шторка просмотра выбранного заказа гостем */}
+      {/* Шторка оформления заказа гостем */}
       {showCartDrawer && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
@@ -398,7 +454,7 @@ export function MenuBoard({
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🛍️</span>
+                <span className="text-xl">🍗</span>
                 <h3 className="text-lg font-black">Ваш заказ</h3>
                 <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                   {totalItemsCount} шт
@@ -413,10 +469,33 @@ export function MenuBoard({
               </button>
             </div>
 
+            {/* Выбор стола */}
+            <div className="pt-3 pb-1">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-xs font-bold text-muted-foreground">Номер вашего стола:</span>
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {['1', '2', '3', '4', '5', '6', '7', '8', 'Бар'].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setSelectedTable(num)}
+                    className={`min-w-8 h-8 rounded-xl text-xs font-bold transition shrink-0 ${
+                      selectedTable === num
+                        ? 'bg-amber-500 text-black shadow'
+                        : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Список выбранных блюд */}
-            <div className="my-4 flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="my-3 flex-1 space-y-2.5 overflow-y-auto pr-1">
               {cartEntries.map(({ item, qty }) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/30 p-3">
+                <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/40 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-sm truncate">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{formatNum(item.rawPrice * qty)} сум</p>
@@ -442,10 +521,10 @@ export function MenuBoard({
               ))}
             </div>
 
-            {/* Итого и кнопки */}
+            {/* Итого и отправка заказа на кассу */}
             <div className="border-t border-border pt-3 space-y-3">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm font-bold text-muted-foreground">ИТОГО:</span>
+                <span className="text-sm font-bold text-muted-foreground">ИТОГО К ОПЛАТЕ:</span>
                 <span className="text-2xl font-black text-amber-500">{formatNum(totalCartSum)} сум</span>
               </div>
 
@@ -459,16 +538,64 @@ export function MenuBoard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    alert(`Заказ на сумму ${formatNum(totalCartSum)} сум собран!\nПокажите официанту или оформите на кассе.`)
-                    setShowCartDrawer(false)
-                  }}
-                  className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-black text-black transition hover:bg-amber-400 active:scale-98 shadow"
+                  onClick={handleSendOrderToPOS}
+                  className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-black text-black transition hover:bg-amber-400 active:scale-98 shadow-lg shadow-amber-500/20"
                 >
-                  Показать официанту / на кассе
+                  🔔 Отправить заказ на кассу (Стол №{selectedTable})
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Экран подтверждения отправленного заказа */}
+      {orderSuccess && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          onClick={() => setOrderSuccess(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-card border border-border p-6 shadow-2xl text-foreground space-y-4"
+          >
+            <div className="text-center space-y-2">
+              <div className="flex size-16 mx-auto items-center justify-center rounded-2xl bg-emerald-500/20 text-3xl">
+                ✅
+              </div>
+              <h3 className="text-2xl font-black text-foreground">Заказ принят!</h3>
+              <p className="text-sm text-muted-foreground">
+                Заказ отправлен на кассу. Официант уже готовит чек и подходит к столу №{orderSuccess.table}.
+              </p>
+            </div>
+
+            {/* Электронный чек на экране телефона гостя */}
+            <div className="rounded-2xl border border-border bg-secondary/30 p-4 space-y-2.5 font-mono text-xs">
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="font-bold">ChickenFit · Стол №{orderSuccess.table}</span>
+                <span className="text-amber-500 font-bold">{orderSuccess.orderNumber}</span>
+              </div>
+              <div className="space-y-1.5 py-1">
+                {orderSuccess.items.map((it, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span>{it.name} × {it.qty}</span>
+                    <span>{formatNum(it.price * it.qty)} сум</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between border-t border-border pt-2 text-sm font-black text-amber-500">
+                <span>ИТОГО:</span>
+                <span>{formatNum(orderSuccess.total)} сум</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setOrderSuccess(null)}
+              className="w-full rounded-2xl bg-amber-500 py-3.5 text-sm font-black text-black shadow transition hover:bg-amber-400"
+            >
+              Отлично, спасибо!
+            </button>
           </div>
         </div>
       )}

@@ -27,7 +27,7 @@ import {
 } from '@/lib/orders'
 import { MenuGrid } from './menu-grid'
 import { CartPanel } from './cart-panel'
-import { ReceiptPrint } from './receipt-print'
+import { ReceiptPrint, ReceiptModal, type ReceiptProps } from './receipt-print'
 import { OrdersHistory } from './orders-history'
 import { ShiftReport } from './shift-report'
 import { MenuManager } from './menu-manager'
@@ -98,28 +98,13 @@ export function PosTerminal() {
   const [customDiscount, setCustomDiscount] = useState<number>(0)
   const [deliveryFee, setDeliveryFee] = useState<number>(0)
   const [showMobileCart, setShowMobileCart] = useState<boolean>(false)
+  const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false)
 
   // История заказов за сегодня
   const [todayOrders, setTodayOrders] = useState<Order[]>([])
 
   // Данные для печати текущего чека
-  const [receiptData, setReceiptData] = useState<{
-    items: CartItem[]
-    orderNumber: string
-    dateTime: string
-    orderType: OrderType
-    tableNumber?: string
-    customerPhone?: string
-    deliveryAddress?: string
-    subtotal: number
-    discountAmount: number
-    discountPercent?: number
-    deliveryFee: number
-    total: number
-    paymentMethod: PaymentMethod
-    cashReceived?: number
-    changeAmount?: number
-  } | null>(null)
+  const [receiptData, setReceiptData] = useState<ReceiptProps | null>(null)
 
   const reloadOrders = useCallback(async () => {
     const orders = await fetchTodayOrders()
@@ -194,6 +179,24 @@ export function PosTerminal() {
     const finalTotal = Math.max(0, subtotal - totalDiscount + activeDelivery)
     const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
 
+    const rData: ReceiptProps = {
+      items: [...cart],
+      orderNumber: num,
+      dateTime: dt,
+      orderType,
+      tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+      customerPhone: orderType === 'delivery' ? customerPhone : undefined,
+      deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+      subtotal,
+      discountAmount: totalDiscount,
+      discountPercent: discountPercent > 0 ? discountPercent : undefined,
+      deliveryFee: activeDelivery,
+      total: finalTotal,
+      paymentMethod,
+      cashReceived: paymentMethod === 'cash' ? (cashReceived || finalTotal) : undefined,
+      changeAmount: paymentMethod === 'cash' ? change : undefined,
+    }
+
     // 1. Сохраняем заказ в базу / локальное хранилище
     await createOrder({
       orderNumber: num,
@@ -212,24 +215,9 @@ export function PosTerminal() {
       changeAmount: paymentMethod === 'cash' ? change : undefined,
     })
 
-    // 2. Формируем данные чека
-    setReceiptData({
-      items: [...cart],
-      orderNumber: num,
-      dateTime: dt,
-      orderType,
-      tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
-      customerPhone: orderType === 'delivery' ? customerPhone : undefined,
-      deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
-      subtotal,
-      discountAmount: totalDiscount,
-      discountPercent: discountPercent > 0 ? discountPercent : undefined,
-      deliveryFee: activeDelivery,
-      total: finalTotal,
-      paymentMethod,
-      cashReceived: paymentMethod === 'cash' ? (cashReceived || finalTotal) : undefined,
-      changeAmount: paymentMethod === 'cash' ? change : undefined,
-    })
+    // 2. Формируем данные чека и открываем экран
+    setReceiptData(rData)
+    setShowReceiptModal(true)
 
     // 3. Открываем окно печати чека
     requestAnimationFrame(() => {
@@ -261,7 +249,7 @@ export function PosTerminal() {
 
   // Повторная печать чека из истории
   const handleReprint = useCallback((order: Order) => {
-    setReceiptData({
+    const rData: ReceiptProps = {
       items: order.items,
       orderNumber: order.orderNumber,
       dateTime: receiptDateTime(),
@@ -277,7 +265,10 @@ export function PosTerminal() {
       paymentMethod: order.paymentMethod,
       cashReceived: order.cashReceived,
       changeAmount: order.changeAmount,
-    })
+    }
+
+    setReceiptData(rData)
+    setShowReceiptModal(true)
 
     requestAnimationFrame(() => {
       window.print()
@@ -571,6 +562,15 @@ export function PosTerminal() {
           )}
         </div>
       </div>
+
+      {/* Экранный модальный предпросмотр чека */}
+      {showReceiptModal && receiptData && (
+        <ReceiptModal
+          data={receiptData}
+          onClose={() => setShowReceiptModal(false)}
+          onPrint={() => window.print()}
+        />
+      )}
 
       {/* Чек для печати на термопринтере */}
       {receiptData && (
