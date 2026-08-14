@@ -88,7 +88,7 @@ for (const file of markdownFiles) {
   const rel = relative(root, file).replaceAll("\\", "/")
   if (!artifactRoots.some((prefix) => rel.startsWith(prefix)) || exemptNames.has(file.split(/[\\/]/).at(-1))) continue
 
-  const content = readFileSync(file, "utf8")
+  const content = readFileSync(file, "utf8").replaceAll("\r\n", "\n")
   const match = content.match(/^---\n([\s\S]*?)\n---\n/)
   if (!match) {
     fail(`${rel}: отсутствует YAML front matter`)

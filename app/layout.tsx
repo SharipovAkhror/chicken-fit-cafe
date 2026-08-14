@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ChickenFit — design system',
+  title: 'ChickenFit — меню',
   description:
-    'Современный локальный сытный обед Самарканда. Design system preview.',
+    'Меню ChickenFit: курица в слоёном тесте. Самарканд.',
   icons: {
     icon: [
       {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#F3E7D3',
+  themeColor: '#FDFCF9',
 }
 
 export default function RootLayout({
@@ -27,8 +27,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // class="light" отключает серую dark-схему из globals.css: меню всегда в палитре бренда
   return (
-    <html lang="ru">
+    <html lang="ru" className="light">
       <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

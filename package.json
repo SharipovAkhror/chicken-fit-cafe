@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node tools/validate-menu.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
-    "validate:os": "node tools/validate.mjs"
+    "validate:os": "node tools/validate.mjs",
+    "validate:menu": "node tools/validate-menu.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@supabase/supabase-js": "^2.112.3",
     "@vercel/analytics": "1.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

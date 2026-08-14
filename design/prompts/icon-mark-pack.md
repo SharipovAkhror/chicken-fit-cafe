@@ -2,15 +2,16 @@
 title: "Mark icon prompts ×8"
 status: draft
 owner: visual-designer
-updated: 2026-07-26
+updated: 2026-08-14
+sources:
+  - design/prompts/README.md
+  - brand/BRANDBOOK.md
 ---
 
 # ChickenFit mark icons — gen pack
 
-Квадрат 1:1. Grok Imagine / этот чат (`image_gen`).  
+Квадрат 1:1. Grok Imagine / `image_gen`.  
 Цвета: terracotta `#C95530`, graphite `#28211D`. Без текста.
-
-Генерация в сессии: `design/assets/reference/gen/icons/`
 
 | # | ID | Мотив |
 |---|-----|--------|

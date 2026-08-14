@@ -163,3 +163,125 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Receipt (hidden on screen, visible only on print) ───────── */
+
+.receipt-hidden {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 80mm;
+  overflow: hidden;
+}
+
+.receipt {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #000;
+  background: #fff;
+  padding: 4mm 2mm;
+}
+
+.receipt-header {
+  text-align: center;
+  margin-bottom: 2mm;
+}
+
+.receipt-logo {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.receipt-sub {
+  font-size: 10px;
+  color: #555;
+}
+
+.receipt-divider {
+  border-top: 1px dashed #999;
+  margin: 2mm 0;
+}
+
+.receipt-divider--bold {
+  border-top: 2px solid #000;
+}
+
+.receipt-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.receipt-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.receipt-item-name {
+  text-align: left;
+  padding: 1mm 0;
+  font-size: 12px;
+}
+
+.receipt-item-qty {
+  font-weight: normal;
+  color: #555;
+}
+
+.receipt-item-price {
+  text-align: right;
+  white-space: nowrap;
+  padding: 1mm 0;
+  font-size: 12px;
+}
+
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 1mm 0;
+}
+
+.receipt-footer {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 3mm;
+}
+
+.receipt-url {
+  font-weight: bold;
+  margin-top: 1mm;
+}
+
+/* ── Print: show only receipt ────────────────────────────────── */
+
+@media print {
+  /* Hide everything */
+  body > * {
+    display: none !important;
+  }
+
+  /* Show receipt */
+  #receipt-print-area {
+    display: block !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://chickenfit.uz/content/menu.schema.json",
+  "title": "ChickenFit — меню",
+  "description": "Единственный источник истины для QR-меню. Правится вручную; проверяется tools/validate-menu.mjs на каждой сборке.",
+  "type": "object",
+  "required": ["updated", "currency", "cafe", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Дата последнего изменения меню, YYYY-MM-DD."
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["UZS"],
+      "description": "Валюта цен. Цены хранятся целым числом в сумах."
+    },
+    "cafe": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "tagline": { "$ref": "#/definitions/localized" }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/category" }
+    }
+  },
+  "definitions": {
+    "localized": {
+      "description": "Либо одна строка на все языки, либо объект с ru (обязателен) и опциональными uz/en. Пустой uz/en подставляется из ru.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "required": ["ru"],
+          "additionalProperties": false,
+          "properties": {
+            "ru": { "type": "string", "minLength": 1 },
+            "uz": { "type": "string" },
+            "en": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "category": {
+      "type": "object",
+      "required": ["id", "title", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Латиница, kebab-case. Уникален в пределах меню."
+        },
+        "title": { "$ref": "#/definitions/localized" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/item" }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "name", "price"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Латиница, kebab-case. Уникален в пределах всего меню."
+        },
+        "name": { "$ref": "#/definitions/localized" },
+        "description": {
+          "$ref": "#/definitions/localized",
+          "description": "Состав блюда. Необязательно, но желательно."
+        },
+        "price": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Целое число в сумах, без пробелов и знаков. 45000 → «45 000 сум»."
+        },
+        "image": {
+          "type": "string",
+          "description": "Путь от корня сайта, например /menu/samsa-burger-classic.webp. Пустая строка — покажем плашку с логотипом."
+        },
+        "available": {
+          "type": "boolean",
+          "default": true,
+          "description": "false — позиция остаётся в меню, но помечена «нет в наличии»."
+        },
+        "kcal": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Необязательно. Показывается только если указано."
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Необязательно, вес порции в граммах. Показывается только если указано."
+        }
+      }
+    }
+  }
+}

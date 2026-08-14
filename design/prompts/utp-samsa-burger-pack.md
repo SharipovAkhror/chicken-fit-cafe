@@ -2,10 +2,9 @@
 title: "UTP pack — бургер в самса-тесте (cross-section)"
 status: draft
 owner: visual-designer
-updated: 2026-07-26
+updated: 2026-08-14
 sources:
-  - knowledge/claims.yaml # C-003
-  - brand/brand-strategy.md
+  - knowledge/claims.yaml
   - brand/BRANDBOOK.md
 claims:
   - C-003
@@ -25,12 +24,7 @@ claims:
 2. Hero 2:1 — H-01, H-02  
 3. Owner ♥/~×  
 
-## Outputs
-
-`design/assets/reference/gen/utp/`
-
 ## Ready prompts (paste into web Grok Imagine)
 
 See agent synthesis 2026-07-26 — CS-01..08 and H-01/H-02 in chat + plan subagent.
-For reliable Imagine results use **grok.com** web Imagine (TUI image_gen currently returns unrelated landscapes under rate/load).
-
+For reliable Imagine results use **grok.com** web Imagine.

@@ -24,6 +24,9 @@ jobs:
       - name: Validate structure, metadata, links and claims
         run: node tools/validate.mjs
 
+      - name: Validate QR menu content
+        run: node tools/validate-menu.mjs
+
       - name: Check archive is read-only in pull requests
         if: github.event_name == 'pull_request'
         shell: bash

@@ -1,6 +1,6 @@
 # Chicken Fit Cafe — статус проекта
 
-**Обновлено:** 2026-07-26 · **Владелец:** SharipovAkhror  
+**Обновлено:** 2026-08-05 · **Владелец:** SharipovAkhror  
 **Репозиторий:** https://github.com/SharipovAkhror/chicken-fit-cafe  
 **Локальный путь (канон):** `Documents/GitHub/chicken-fit-cafe`
 
@@ -20,6 +20,19 @@
 | **Prompts** | `design/prompts/utp-samsa-burger-pack.md` |
 | **Remote** | `origin` → `SharipovAkhror/chicken-fit-cafe` |
 | **Ветка** | `feat/1-design-pack-v1` |
+
+## QR-меню (2026-08-05)
+
+Сайт-меню, которое гость открывает по QR со стола. Только просмотр: фото, название,
+цена, состав. Код готов и собирается, ждёт домен и реальные позиции.
+
+| | |
+|---|---|
+| Правка меню | `content/menu.json` → [инструкция](content/README.md) |
+| Решение | [ADR-004](decisions/ADR-004-qr-menu-mvp.md) · спека: [product/specification.md](product/specification.md) |
+| Маршруты | `/` (ru), `/uz`, `/en` — статика, без базы и бэкенда |
+| Защита | `npm run validate:menu` перед сборкой: битый JSON не доедет до гостей |
+| Открыто | домен · хостинг (Vercel Hobby ≠ коммерция) · реальные цены · фото · генерация QR |
 
 ## Два языка (owner 2026-07-25)
 

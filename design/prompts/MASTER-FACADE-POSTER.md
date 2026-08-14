@@ -4,9 +4,7 @@ status: draft
 owner: system-architect
 updated: 2026-07-25
 sources:
-  - design/research/r5-owner-brief.md
-  - design/research/competitor-reference-board.md
-  - design/tokens.css
+  - brand/BRANDBOOK.md
   - STATUS.md
 claims:
   - C-019

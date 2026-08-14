@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChickenFit Logo Variants — Version 3</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Clash+Grotesk:wght@700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Satoshi:wght@700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F8F4F0;
+      color: #28211D;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-family: 'Clash Grotesk', sans-serif;
+      font-size: 42px;
+      text-align: center;
+      margin-bottom: 60px;
+      color: #B94D2F;
+    }
+
+    .variants-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .variant-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .variant-header {
+      padding: 20px 24px;
+      background: #F8F4F0;
+      border-bottom: 1px solid #E8E0D8;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .logo-preview {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #F8F4F0 0%, #F3E7D3 100%);
+      position: relative;
+    }
+
+    .logo-preview svg {
+      max-width: 100%;
+      max-height: 160px;
+    }
+
+    .actions {
+      padding: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #B94D2F;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #9C3A1F;
+    }
+
+    .info {
+      font-size: 13px;
+      color: #667447;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 80px;
+      color: #667447;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ChickenFit Logo Variants — Version 3</h1>
+
+    <div class="variants-grid">
+
+      <!-- 8 вариантов -->
+      <div class="variant-card">
+        <div class="variant-header">Вариант 1 — Horizontal Clash Grotesk 900</div>
+        <div class="logo-preview">
+          <svg width="420" height="180" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="420" height="180" fill="#F8F4F0"/>
+            <text x="80" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#28211D" letter-spacing="-3px">Chicken</text>
+            <text x="285" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#B94D2F" letter-spacing="-3px">Fit</text>
+            <line x1="70" y1="140" x2="265" y2="140" stroke="#B94D2F" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Clash Grotesk 900</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 2 — Monogram Satoshi 900</div>
+        <div class="logo-preview">
+          <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="200" height="200" fill="#F8F4F0"/>
+            <text x="75" y="130" font-family="Satoshi" font-size="165" font-weight="900" fill="#B94D2F" letter-spacing="-10px">CF</text>
+            <line x1="45" y1="155" x2="155" y2="155" stroke="#28211D" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Satoshi 900 • Monogram</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 3 — Stacked</div>
+        <div class="logo-preview">
+          <svg width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="200" height="220" fill="#F8F4F0"/>
+            <text x="85" y="140" font-family="Clash Grotesk" font-size="95" font-weight="900" fill="#28211D" letter-spacing="-2px">Chicken</text>
+            <text x="85" y="195" font-family="Clash Grotesk" font-size="95" font-weight="900" fill="#B94D2F" letter-spacing="-2px">Fit</text>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Stacked</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 4 — С векторным элементом</div>
+        <div class="logo-preview">
+          <svg width="420" height="180" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="420" height="180" fill="#F8F4F0"/>
+            <text x="90" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#28211D" letter-spacing="-3px">Chicken</text>
+            <text x="290" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#B94D2F" letter-spacing="-3px">Fit</text>
+            <path d="M75 145 Q85 155 105 145 Q120 140 135 145 Q150 155 175 145" stroke="#B94D2F" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">С векторным элементом</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 5 — Monogram + текст</div>
+        <div class="logo-preview">
+          <svg width="250" height="180" viewBox="0 0 250 180" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="250" height="180" fill="#F8F4F0"/>
+            <text x="65" y="125" font-family="Satoshi" font-size="125" font-weight="900" fill="#B94D2F" letter-spacing="-8px">CF</text>
+            <text x="130" y="125" font-family="Clash Grotesk" font-size="78" font-weight="700" fill="#28211D" letter-spacing="-1px">Chicken</text>
+            <text x="130" y="165" font-family="Clash Grotesk" font-size="78" font-weight="700" fill="#B94D2F" letter-spacing="-1px">Fit</text>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Monogram + текст</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 6 — Vertical</div>
+        <div class="logo-preview">
+          <svg width="180" height="240" viewBox="0 0 180 240" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="180" height="240" fill="#F8F4F0"/>
+            <text x="85" y="130" font-family="Clash Grotesk" font-size="88" font-weight="900" fill="#28211D" letter-spacing="-2px">Chicken</text>
+            <text x="85" y="190" font-family="Clash Grotesk" font-size="88" font-weight="900" fill="#B94D2F" letter-spacing="-2px">Fit</text>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Vertical</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 7 — Compact CF</div>
+        <div class="logo-preview">
+          <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="160" height="160" fill="#F8F4F0"/>
+            <text x="55" y="115" font-family="Satoshi" font-size="135" font-weight="900" fill="#B94D2F" letter-spacing="-10px">CF</text>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">Compact Monogram</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-header">Вариант 8 — With layer element</div>
+        <div class="logo-preview">
+          <svg width="420" height="180" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="420" height="180" fill="#F8F4F0"/>
+            <text x="80" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#28211D" letter-spacing="-3px">Chicken</text>
+            <text x="285" y="125" font-family="Clash Grotesk" font-size="115" font-weight="900" fill="#B94D2F" letter-spacing="-3px">Fit</text>
+            <path d="M70 140 Q85 150 105 140 Q120 135 135 140 Q150 150 175 140" stroke="#B94D2F" stroke-width="6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="actions">
+          <button class="btn-primary">Выбрать</button>
+        </div>
+        <div class="info">С layer element</div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      Version 3 — ChickenFit Logo Variants<br>
+      Выберите любой вариант
+    </div>
+  </div>
+
+  <script>
+    function selectVariant(num) {
+      alert(`Вариант ${num} выбран. Сейчас в разработке.`);
+    }
+  </script>
+</body>
+</html>

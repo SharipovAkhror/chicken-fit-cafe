@@ -1,0 +1,355 @@
+{
+  "$schema": "./menu.schema.json",
+  "updated": "2026-08-14",
+  "currency": "UZS",
+  "cafe": {
+    "name": "ChickenFit",
+    "tagline": {
+      "ru": "Хрустящая курица и свежая выпечка. Самарканд",
+      "uz": "Qarsildoq tovuq va yangi pishiriqlar. Samarqand",
+      "en": "Crispy chicken & fresh pastries. Samarkand"
+    }
+  },
+  "categories": [
+    {
+      "id": "chicken",
+      "title": {
+        "ru": "Курица",
+        "uz": "Tovuq",
+        "en": "Chicken"
+      },
+      "items": [
+        {
+          "id": "strips-5",
+          "name": {
+            "ru": "Стрипсы, 5 шт",
+            "uz": "Striplar, 5 dona",
+            "en": "Chicken Strips, 5 pcs"
+          },
+          "description": {
+            "ru": "Куриное филе в хрустящей фирменной панировке",
+            "uz": "Qarsildoq firma panirovkasidagi tovuq filesi",
+            "en": "Crispy coated tender chicken fillets"
+          },
+          "price": 38000,
+          "image": "/menu/strips-5.jpg",
+          "weight": 220,
+          "kcal": 410,
+          "available": true
+        },
+        {
+          "id": "wings-6",
+          "name": {
+            "ru": "Крылья, 6 шт",
+            "uz": "Qanotchalar, 6 dona",
+            "en": "Chicken Wings, 6 pcs"
+          },
+          "description": {
+            "ru": "Сочные куриные крылышки в золотистой панировке",
+            "uz": "Oltinrang panirovkadagi sersuv tovuq qanotchalari",
+            "en": "Juicy crispy golden chicken wings"
+          },
+          "price": 42000,
+          "image": "/menu/wings-6.jpg",
+          "weight": 250,
+          "kcal": 480,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "combo",
+      "title": {
+        "ru": "Комбо-наборы",
+        "uz": "Kombo to'plamlar",
+        "en": "Combos"
+      },
+      "items": [
+        {
+          "id": "combo-strips",
+          "name": {
+            "ru": "Комбо со стрипсами",
+            "uz": "Stripli kombo",
+            "en": "Strips Combo"
+          },
+          "description": {
+            "ru": "Стрипсы 5 шт, картофель фри, соус на выбор, напиток 0.5л",
+            "uz": "5 dona strip, fri kartoshka, tanlangan sous, 0.5l ichimlik",
+            "en": "5 strips, french fries, choice of sauce, 0.5L drink"
+          },
+          "price": 55000,
+          "image": "/menu/combo-strips.jpg",
+          "weight": 480,
+          "kcal": 780,
+          "available": true
+        },
+        {
+          "id": "combo-wings",
+          "name": {
+            "ru": "Комбо с крыльями",
+            "uz": "Qanotchali kombo",
+            "en": "Wings Combo"
+          },
+          "description": {
+            "ru": "Крылья 6 шт, картофель фри, соус на выбор, напиток 0.5л",
+            "uz": "6 dona qanotcha, fri kartoshka, tanlangan sous, 0.5l ichimlik",
+            "en": "6 wings, french fries, choice of sauce, 0.5L drink"
+          },
+          "price": 58000,
+          "image": "/menu/combo-wings.jpg",
+          "weight": 510,
+          "kcal": 850,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "pastry",
+      "title": {
+        "ru": "Выпечка",
+        "uz": "Pishiriqlar",
+        "en": "Pastries & Pies"
+      },
+      "items": [
+        {
+          "id": "pirozhki",
+          "name": {
+            "ru": "Пирожки",
+            "uz": "Pirojkilar",
+            "en": "Pirozhki"
+          },
+          "description": {
+            "ru": "Свежая домашняя выпечка с начинкой",
+            "uz": "Uyda pishirilgan yangi pirojkilar",
+            "en": "Fresh homemade stuffed pastries"
+          },
+          "price": 8000,
+          "image": "/menu/pirozhki.jpg",
+          "weight": 90,
+          "kcal": 210,
+          "available": true
+        },
+        {
+          "id": "belyashi",
+          "name": {
+            "ru": "Беляши",
+            "uz": "Belyashlar",
+            "en": "Belyashi"
+          },
+          "description": {
+            "ru": "Сочный беляш с мясной начинкой и румяной корочкой",
+            "uz": "Go'shtli sersuv belyash",
+            "en": "Juicy fried meat pie"
+          },
+          "price": 12000,
+          "image": "/menu/belyashi.jpg",
+          "weight": 130,
+          "kcal": 320,
+          "available": true
+        },
+        {
+          "id": "cheburek",
+          "name": {
+            "ru": "Чебуреки",
+            "uz": "Chebureklar",
+            "en": "Cheburek"
+          },
+          "description": {
+            "ru": "Хрустящий чебурек с сочной начинкой и пузырчатым тестом",
+            "uz": "Qarsildoq sersuv cheburek",
+            "en": "Crispy deep-fried turnover with savory filling"
+          },
+          "price": 15000,
+          "image": "/menu/cheburek.jpg",
+          "weight": 160,
+          "kcal": 380,
+          "available": true
+        },
+        {
+          "id": "blinchiki",
+          "name": {
+            "ru": "Блинчики",
+            "uz": "Blinchiklar",
+            "en": "Pancakes / Blini"
+          },
+          "description": {
+            "ru": "Нежные золотистые блинчики",
+            "uz": "Mayin oltinrang blinchiklar",
+            "en": "Tender rolled crepes"
+          },
+          "price": 12000,
+          "image": "/menu/blinchiki.jpg",
+          "weight": 150,
+          "kcal": 260,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "soups",
+      "title": {
+        "ru": "Супы",
+        "uz": "Sho'rvalar",
+        "en": "Soups"
+      },
+      "items": [
+        {
+          "id": "chicken-soup",
+          "name": {
+            "ru": "Куриный суп",
+            "uz": "Tovuq sho'rva",
+            "en": "Chicken Soup"
+          },
+          "description": {
+            "ru": "Наваристый куриный бульон с домашней лапшой и зеленью",
+            "uz": "Uy lag'moni va ko'katlar bilan tovuq sho'rva",
+            "en": "Rich chicken broth with homemade noodles and fresh herbs"
+          },
+          "price": 25000,
+          "image": "/menu/chicken-soup.jpg",
+          "weight": 350,
+          "kcal": 190,
+          "available": true
+        },
+        {
+          "id": "lentil-soup",
+          "name": {
+            "ru": "Чечевичный суп",
+            "uz": "Mosh / Yasmiq sho'rva",
+            "en": "Lentil Soup"
+          },
+          "description": {
+            "ru": "Нежный крем-суп из чечевицы с лимоном",
+            "uz": "Qovurilgan non va limon bilan mayin yasmiq sho'rva",
+            "en": "Smooth lentil cream soup served with lemon"
+          },
+          "price": 22000,
+          "image": "/menu/lentil-soup.jpg",
+          "weight": 350,
+          "kcal": 210,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "sides",
+      "title": {
+        "ru": "Гарниры",
+        "uz": "Garnirlar",
+        "en": "Sides"
+      },
+      "items": [
+        {
+          "id": "fries",
+          "name": {
+            "ru": "Картофель фри",
+            "uz": "Fri kartoshka",
+            "en": "French Fries"
+          },
+          "description": {
+            "ru": "Хрустящий картофель с морской солью",
+            "uz": "Tuzli qarsildoq kartoshka",
+            "en": "Crisp salted golden french fries"
+          },
+          "price": 18000,
+          "image": "/menu/fries.jpg",
+          "weight": 140,
+          "kcal": 340,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "sauces",
+      "title": {
+        "ru": "Соусы",
+        "uz": "Souslar",
+        "en": "Sauces"
+      },
+      "items": [
+        {
+          "id": "house-sauce",
+          "name": {
+            "ru": "Фирменный соус",
+            "uz": "Firma sousi",
+            "en": "House Sauce"
+          },
+          "description": {
+            "ru": "Сливочный соус с паприкой и специями",
+            "uz": "Paprikali qaymoqli sous",
+            "en": "House special creamy paprika sauce"
+          },
+          "price": 5000,
+          "image": "/menu/house-sauce.jpg",
+          "weight": 40,
+          "kcal": 95,
+          "available": true
+        },
+        {
+          "id": "garlic-sauce",
+          "name": {
+            "ru": "Чесночный соус",
+            "uz": "Sarimsoqli sous",
+            "en": "Garlic Sauce"
+          },
+          "description": {
+            "ru": "Чеснок, свежая зелень, йогурт",
+            "uz": "Sarimsoq, ko'kat, yogurt",
+            "en": "Garlic, fresh herbs, yoghurt"
+          },
+          "price": 5000,
+          "image": "/menu/garlic-sauce.jpg",
+          "weight": 40,
+          "kcal": 85,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "drinks",
+      "title": {
+        "ru": "Напитки",
+        "uz": "Ichimliklar",
+        "en": "Drinks"
+      },
+      "items": [
+        {
+          "id": "tea",
+          "name": {
+            "ru": "Чай",
+            "uz": "Choy",
+            "en": "Tea"
+          },
+          "description": {
+            "ru": "Зелёный или чёрный, чайник",
+            "uz": "Ko'k yoki qora, choynak",
+            "en": "Green or black tea, pot"
+          },
+          "price": 8000,
+          "image": "/menu/tea.jpg",
+          "weight": 600,
+          "kcal": 0,
+          "available": true
+        },
+        {
+          "id": "coca-cola",
+          "name": {
+            "ru": "Coca-Cola 0,5л",
+            "uz": "Coca-Cola 0,5l",
+            "en": "Coca-Cola 0.5L"
+          },
+          "description": {
+            "ru": "Освежающий газированный напиток",
+            "uz": "Salqin gazli ichimlik",
+            "en": "Refreshing sparkling drink"
+          },
+          "price": 12000,
+          "image": "/menu/coca-cola.jpg",
+          "weight": 500,
+          "kcal": 210,
+          "available": true
+        }
+      ]
+    }
+  ]
+}
