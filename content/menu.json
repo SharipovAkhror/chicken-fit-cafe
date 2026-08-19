@@ -386,7 +386,7 @@
             "en": "Tender chicken cutlets with choice of side"
           },
           "price": 35000,
-          "image": "/menu/cutlet-homemade.jpg",
+          "image": "/menu/cutlet-chicken.jpg",
           "weight": 350,
           "kcal": 420,
           "available": true
@@ -404,7 +404,7 @@
             "en": "Slow-cooked tender beef goulash in savory gravy with side"
           },
           "price": 35000,
-          "image": "/menu/cutlet-homemade.jpg",
+          "image": "/menu/goulash.jpg",
           "weight": 350,
           "kcal": 480,
           "available": true
@@ -422,7 +422,7 @@
             "en": "Savory beef meatballs in rich sauce with choice of side"
           },
           "price": 35000,
-          "image": "/menu/meatball-soup.jpg",
+          "image": "/menu/tefteli.jpg",
           "weight": 350,
           "kcal": 450,
           "available": true
@@ -458,7 +458,7 @@
             "en": "Tender chicken fillets stewed with bell peppers, tomatoes and herbs"
           },
           "price": 40000,
-          "image": "/menu/chicken-strips.jpg",
+          "image": "/menu/chicken-vegetables.jpg",
           "weight": 350,
           "kcal": 390,
           "available": true
@@ -476,7 +476,7 @@
             "en": "Golden oven-roasted chicken leg with seasonings and side"
           },
           "price": 40000,
-          "image": "/menu/cutlet-homemade.jpg",
+          "image": "/menu/chicken-roast.jpg",
           "weight": 380,
           "kcal": 510,
           "available": true
@@ -522,7 +522,7 @@
             "en": "Traditional beet, potato, pickle and pea salad with vegetable oil"
           },
           "price": 12000,
-          "image": "/menu/fresh-salad.jpg",
+          "image": "/menu/salad-vinegret.jpg",
           "weight": 180,
           "kcal": 130,
           "available": true
@@ -540,7 +540,7 @@
             "en": "Crisp fresh cabbage, shredded carrots and herbs"
           },
           "price": 10000,
-          "image": "/menu/fresh-salad.jpg",
+          "image": "/menu/salad-cabbage-vitamin.jpg",
           "weight": 180,
           "kcal": 95,
           "available": true
@@ -558,7 +558,7 @@
             "en": "Fresh shredded carrot salad with herbs and spices"
           },
           "price": 10000,
-          "image": "/menu/eggplant-salad.jpg",
+          "image": "/menu/salad-carrot-vitamin.jpg",
           "weight": 180,
           "kcal": 90,
           "available": true
@@ -576,7 +576,7 @@
             "en": "Crisp cucumbers, fresh tomatoes, sweet onion and greens"
           },
           "price": 10000,
-          "image": "/menu/fresh-salad.jpg",
+          "image": "/menu/salad-vesenniy.jpg",
           "weight": 180,
           "kcal": 80,
           "available": true
@@ -594,7 +594,7 @@
             "en": "Marinated mushrooms with onions and fresh herbs"
           },
           "price": 15000,
-          "image": "/menu/fresh-salad.jpg",
+          "image": "/menu/salad-mushroom.jpg",
           "weight": 180,
           "kcal": 110,
           "available": true
@@ -612,7 +612,7 @@
             "en": "Tender chicken breast with crisp fresh vegetables"
           },
           "price": 15000,
-          "image": "/menu/eggplant-salad.jpg",
+          "image": "/menu/salad-chicken-veg.jpg",
           "weight": 200,
           "kcal": 160,
           "available": true
@@ -694,7 +694,7 @@
             "en": "Hot aromatic 3-in-1 MacCoffee in cup"
           },
           "price": 5000,
-          "image": "/menu/maccoffee-pack.jpg",
+          "image": "/menu/maccoffee.jpg",
           "weight": 200,
           "kcal": 80,
           "available": true
@@ -711,8 +711,8 @@
             "uz": "Shokolad kukunli mayin Tora Bika kapuchinosi",
             "en": "Creamy Tora Bika cappuccino with chocolate sprinkles"
           },
-          "price": 5000,
-          "image": "/menu/torabika-pack.jpg",
+          "price": 8000,
+          "image": "/menu/torabika.jpg",
           "weight": 220,
           "kcal": 110,
           "available": true
@@ -784,7 +784,7 @@
             "en": "Natural mineral water 0.5L"
           },
           "price": 5000,
-          "image": "/menu/coca-cola.jpg",
+          "image": "/menu/water-05.jpg",
           "weight": 500,
           "kcal": 0,
           "available": true

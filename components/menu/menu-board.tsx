@@ -217,7 +217,7 @@ export function MenuBoard({
             {category.title}
           </h2>
 
-          <ul className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {category.items.map((item) => {
               const inCart = guestCart[item.id] || 0
 
@@ -225,43 +225,46 @@ export function MenuBoard({
                 <li key={item.id} className="flex">
                   <div
                     onClick={() => setOpenItem(item)}
-                    className="flex h-full w-full cursor-pointer gap-3.5 overflow-hidden rounded-2xl border border-border bg-card p-3 text-left transition-all hover:border-amber-500/40 hover:bg-secondary/40 sm:flex-col sm:gap-0 sm:p-0 shadow-xs"
+                    className="group flex flex-col h-full w-full cursor-pointer overflow-hidden rounded-3xl border border-border/80 bg-card text-left transition-all duration-200 hover:border-amber-500/60 hover:shadow-xl shadow-sm"
                   >
-                    <div className="relative shrink-0 sm:w-full">
+                    {/* Большое аппетитное фото на всю ширину карточки */}
+                    <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-secondary/50">
                       <Thumb
                         item={item}
-                        className={`size-24 rounded-xl sm:aspect-[4/3] sm:size-auto sm:w-full sm:rounded-none ${
+                        className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                           item.available ? '' : 'opacity-40 grayscale'
                         }`}
                       />
                       {inCart > 0 && (
-                        <span className="absolute top-1.5 left-1.5 flex size-6 items-center justify-center rounded-full bg-amber-500 text-xs font-black text-black shadow">
-                          {inCart}
+                        <span className="absolute top-3 left-3 flex items-center justify-center rounded-full bg-amber-500 px-2.5 py-1 text-xs font-black text-black shadow-lg">
+                          {inCart} шт
+                        </span>
+                      )}
+                      {item.meta && (
+                        <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-md shadow">
+                          {item.meta}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:p-4">
-                      <h3 className="text-base leading-snug font-bold text-balance sm:text-lg text-foreground">
-                        {item.name}
-                      </h3>
+                    <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5 gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-base sm:text-lg leading-tight font-black text-balance text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          {item.name}
+                        </h3>
+                      </div>
 
                       {item.description && (
-                        <p className="line-clamp-2 text-xs sm:text-sm text-muted-foreground">
+                        <p className="line-clamp-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">
                           {item.description}
                         </p>
                       )}
 
-                      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
+                      <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-border/40">
                         <div>
-                          <span className="text-base font-extrabold text-amber-600 dark:text-amber-400 sm:text-lg">
+                          <span className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400">
                             {item.price}
                           </span>
-                          {item.meta && (
-                            <span className="ml-2 text-[11px] text-muted-foreground">
-                              {item.meta}
-                            </span>
-                          )}
                         </div>
 
                         {/* Кнопка быстрого добавления в корзину */}
@@ -271,27 +274,27 @@ export function MenuBoard({
                               <button
                                 type="button"
                                 onClick={(e) => handleAddToCart(item.id, e)}
-                                className="flex items-center gap-1 rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-black px-3 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 transition cursor-pointer active:scale-95"
+                                className="flex items-center gap-1.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 text-xs sm:text-sm font-black transition cursor-pointer active:scale-95 shadow-md shadow-amber-500/20"
                               >
                                 <span>+</span>
-                                <span>Выбрать</span>
+                                <span>В заказ</span>
                               </button>
                             ) : (
-                              <div className="flex items-center gap-1 rounded-xl bg-amber-500 px-1 py-0.5 text-black font-bold shadow-sm">
+                              <div className="flex items-center gap-1 rounded-2xl bg-amber-500 px-2 py-1 text-black font-black shadow-md">
                                 <button
                                   type="button"
                                   onClick={(e) => handleRemoveFromCart(item.id, e)}
-                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 text-sm font-bold cursor-pointer"
+                                  className="flex size-7 items-center justify-center rounded-xl hover:bg-black/10 text-base font-black cursor-pointer"
                                 >
                                   −
                                 </button>
-                                <span className="min-w-4 text-center text-xs">
+                                <span className="min-w-6 text-center text-xs sm:text-sm font-black">
                                   {inCart}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={(e) => handleAddToCart(item.id, e)}
-                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 text-sm font-bold cursor-pointer"
+                                  className="flex size-7 items-center justify-center rounded-xl hover:bg-black/10 text-base font-black cursor-pointer"
                                 >
                                   +
                                 </button>
@@ -301,7 +304,7 @@ export function MenuBoard({
                         )}
 
                         {!item.available && (
-                          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold text-muted-foreground">
                             {labels.soldOut}
                           </span>
                         )}

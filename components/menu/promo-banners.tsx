@@ -23,7 +23,7 @@ const BANNERS: PromoBanner[] = [
     priceTag: '45 000 сум',
     buttonText: 'Заказать комбо',
     targetCategory: 'chicken',
-    image: '/assets/banners/super-combo.jpg',
+    image: '/menu/combo-chicken.jpg',
     accentColor: 'from-amber-500/90 to-orange-600/90',
   },
   {
@@ -34,7 +34,7 @@ const BANNERS: PromoBanner[] = [
     priceTag: '90 000 сум',
     buttonText: 'Выбрать баскет',
     targetCategory: 'chicken',
-    image: '/assets/banners/brand-hero.jpg',
+    image: '/menu/chicken-kfc-1kg.jpg',
     accentColor: 'from-amber-600/90 to-zinc-900/90',
   },
   {
@@ -45,7 +45,7 @@ const BANNERS: PromoBanner[] = [
     priceTag: 'от 20 000 сум',
     buttonText: 'Смотреть обеды',
     targetCategory: 'soups',
-    image: '/assets/banners/lunch-menu.jpg',
+    image: '/menu/borscht.jpg',
     accentColor: 'from-emerald-600/90 to-teal-800/90',
   },
   {
@@ -56,7 +56,7 @@ const BANNERS: PromoBanner[] = [
     priceTag: 'от 5 000 сум',
     buttonText: 'Меню завтраков',
     targetCategory: 'breakfast',
-    image: '/assets/banners/breakfast-menu.jpg',
+    image: '/menu/pirozhki-potatoes.jpg',
     accentColor: 'from-amber-500/90 to-yellow-700/90',
   },
 ]
