@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
@@ -13,6 +13,7 @@ import {
   cartTotal,
   cartCount,
   type CartItem,
+  type GarnishIngredient,
 } from '@/lib/cart'
 import {
   nextOrderNumber,
@@ -29,7 +30,13 @@ import {
 import { useTheme } from '@/lib/theme'
 import { MenuGrid } from './menu-grid'
 import { CartPanel } from './cart-panel'
-import { ReceiptPrint, ReceiptModal, type ReceiptProps } from './receipt-print'
+import {
+  ReceiptPrint,
+  ReceiptModal,
+  type ReceiptProps,
+  type PrintMode,
+} from './receipt-print'
+import { GarnishMixerModal } from './garnish-mixer-modal'
 import { OrdersHistory } from './orders-history'
 import { ShiftReport } from './shift-report'
 import { MenuManager } from './menu-manager'
@@ -103,6 +110,10 @@ export function PosTerminal() {
   const [showMobileCart, setShowMobileCart] = useState<boolean>(false)
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false)
 
+  // Модальное окно микшера гарниров
+  const [showGarnishModal, setShowGarnishModal] = useState<boolean>(false)
+  const [garnishInitialSize, setGarnishInitialSize] = useState<'half' | 'full'>('half')
+
   // История заказов за сегодня
   const [todayOrders, setTodayOrders] = useState<Order[]>([])
 
@@ -142,16 +153,68 @@ export function PosTerminal() {
   }
 
   const handleAddItem = useCallback(
-    (item: { id: string; name: string; price: number }) => {
+    (item: {
+      id: string
+      name: string
+      price: number
+      category?: string
+      isKitchen?: boolean
+      notes?: string
+    }) => {
       setCart((prev) => addItem(prev, item))
     },
     [],
   )
 
-  const handleAddCustomItem = useCallback((item: { name: string; price: number }) => {
-    const id = `custom-${Date.now()}`
-    setCart((prev) => addItem(prev, { id, name: item.name, price: item.price }))
+  const handleOpenGarnishMixer = useCallback((initialSize?: 'half' | 'full') => {
+    setGarnishInitialSize(initialSize || 'half')
+    setShowGarnishModal(true)
   }, [])
+
+  const handleAddGarnish = useCallback(
+    (garnishItem: {
+      id: string
+      name: string
+      price: number
+      category: string
+      isKitchen: boolean
+      notes: string
+      garnishMix: GarnishIngredient[]
+      qty: number
+    }) => {
+      setCart((prev) => {
+        let updated = prev
+        for (let i = 0; i < garnishItem.qty; i++) {
+          updated = addItem(updated, {
+            id: garnishItem.id,
+            name: garnishItem.name,
+            price: garnishItem.price,
+            category: garnishItem.category,
+            isKitchen: true,
+            notes: garnishItem.notes,
+            garnishMix: garnishItem.garnishMix,
+          })
+        }
+        return updated
+      })
+    },
+    [],
+  )
+
+  const handleAddCustomItem = useCallback(
+    (item: { name: string; price: number }) => {
+      const id = `custom-${Date.now()}`
+      setCart((prev) =>
+        addItem(prev, {
+          id,
+          name: item.name,
+          price: item.price,
+          isKitchen: false,
+        }),
+      )
+    },
+    [],
+  )
 
   const handleSetQty = useCallback((id: string, qty: number) => {
     setCart((prev) => setQty(prev, id, qty))
@@ -174,6 +237,18 @@ export function PosTerminal() {
     setShowMobileCart(false)
   }, [])
 
+  // Печать с заданным режимом ('guest' | 'kitchen' | 'both')
+  const handlePrintWithMode = useCallback(
+    (mode: PrintMode) => {
+      if (!receiptData) return
+      setReceiptData((prev) => (prev ? { ...prev, printMode: mode } : null))
+      requestAnimationFrame(() => {
+        window.print()
+      })
+    },
+    [receiptData],
+  )
+
   // Оформление заказа и печать
   const handleSubmitOrder = useCallback(async () => {
     if (cart.length === 0) return
@@ -181,7 +256,8 @@ export function PosTerminal() {
     const num = nextOrderNumber()
     const dt = receiptDateTime()
     const subtotal = cartTotal(cart)
-    const pctDiscount = discountPercent > 0 ? (subtotal * discountPercent) / 100 : 0
+    const pctDiscount =
+      discountPercent > 0 ? (subtotal * discountPercent) / 100 : 0
     const totalDiscount = pctDiscount + (customDiscount || 0)
     const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
     const finalTotal = Math.max(0, subtotal - totalDiscount + activeDelivery)
@@ -201,8 +277,10 @@ export function PosTerminal() {
       deliveryFee: activeDelivery,
       total: finalTotal,
       paymentMethod,
-      cashReceived: paymentMethod === 'cash' ? (cashReceived || finalTotal) : undefined,
+      cashReceived:
+        paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
       changeAmount: paymentMethod === 'cash' ? change : undefined,
+      printMode: 'guest',
     }
 
     // 1. Сохраняем заказ в базу / локальное хранилище
@@ -219,7 +297,8 @@ export function PosTerminal() {
       deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
       total: finalTotal,
       paymentMethod,
-      cashReceived: paymentMethod === 'cash' ? (cashReceived || finalTotal) : undefined,
+      cashReceived:
+        paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
       changeAmount: paymentMethod === 'cash' ? change : undefined,
     })
 
@@ -256,32 +335,36 @@ export function PosTerminal() {
   ])
 
   // Повторная печать чека из истории
-  const handleReprint = useCallback((order: Order) => {
-    const rData: ReceiptProps = {
-      items: order.items,
-      orderNumber: order.orderNumber,
-      dateTime: receiptDateTime(),
-      orderType: order.type,
-      tableNumber: order.tableNumber,
-      customerPhone: order.customerPhone,
-      deliveryAddress: order.deliveryAddress,
-      subtotal: order.subtotal ?? order.total,
-      discountAmount: order.discountAmount ?? 0,
-      discountPercent: order.discountPercent,
-      deliveryFee: order.deliveryFee ?? 0,
-      total: order.total,
-      paymentMethod: order.paymentMethod,
-      cashReceived: order.cashReceived,
-      changeAmount: order.changeAmount,
-    }
+  const handleReprint = useCallback(
+    (order: Order, mode: PrintMode = 'guest') => {
+      const rData: ReceiptProps = {
+        items: order.items,
+        orderNumber: order.orderNumber,
+        dateTime: receiptDateTime(),
+        orderType: order.type,
+        tableNumber: order.tableNumber,
+        customerPhone: order.customerPhone,
+        deliveryAddress: order.deliveryAddress,
+        subtotal: order.subtotal ?? order.total,
+        discountAmount: order.discountAmount ?? 0,
+        discountPercent: order.discountPercent,
+        deliveryFee: order.deliveryFee ?? 0,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        cashReceived: order.cashReceived,
+        changeAmount: order.changeAmount,
+        printMode: mode,
+      }
 
-    setReceiptData(rData)
-    setShowReceiptModal(true)
+      setReceiptData(rData)
+      setShowReceiptModal(true)
 
-    requestAnimationFrame(() => {
-      window.print()
-    })
-  }, [])
+      requestAnimationFrame(() => {
+        window.print()
+      })
+    },
+    [],
+  )
 
   // Функции управления меню
   const handleToggleAvailable = useCallback(
@@ -298,11 +381,11 @@ export function PosTerminal() {
   )
 
   const handleUpdatePrice = useCallback(
-    (itemId: string, newPrice: number) => {
+    (itemId: string, price: number) => {
       const updated = categories.map((cat) => ({
         ...cat,
         items: cat.items.map((it) =>
-          it.id === itemId ? { ...it, price: newPrice } : it,
+          it.id === itemId ? { ...it, price } : it,
         ),
       }))
       persistMenuOverrides(updated)
@@ -311,33 +394,12 @@ export function PosTerminal() {
   )
 
   const handleAddNewItem = useCallback(
-    (newItem: {
-      id: string
-      categoryId: string
-      name: string
-      price: number
-      description: string
-    }) => {
-      const updated = categories.map((cat) => {
-        if (cat.id === newItem.categoryId) {
-          return {
-            ...cat,
-            items: [
-              ...cat.items,
-              {
-                id: newItem.id,
-                name: { ru: newItem.name },
-                price: newItem.price,
-                description: newItem.description
-                  ? { ru: newItem.description }
-                  : undefined,
-                available: true,
-              },
-            ],
-          }
-        }
-        return cat
-      })
+    (categoryId: string, item: Omit<MenuItem, 'id'>) => {
+      const id = `item-${Date.now()}`
+      const newItem: MenuItem = { ...item, id }
+      const updated = categories.map((cat) =>
+        cat.id === categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
+      )
       persistMenuOverrides(updated)
     },
     [categories],
@@ -345,39 +407,40 @@ export function PosTerminal() {
 
   const totalCartCount = cartCount(cart)
   const currentSubtotal = cartTotal(cart)
-  const pctDiscountAmt = discountPercent > 0 ? (currentSubtotal * discountPercent) / 100 : 0
-  const activeFee = orderType === 'delivery' ? deliveryFee : 0
-  const currentFinalTotal = Math.max(0, currentSubtotal - pctDiscountAmt - customDiscount + activeFee)
+  const currentDiscountAmount =
+    discountPercent > 0 ? (currentSubtotal * discountPercent) / 100 : 0
+  const currentDelivery = orderType === 'delivery' ? deliveryFee : 0
+  const currentFinalTotal = Math.max(
+    0,
+    currentSubtotal - currentDiscountAmount - customDiscount + currentDelivery,
+  )
 
   return (
     <>
-      <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white print:hidden transition-colors duration-200">
-        {/* Верхняя навигационная панель админки */}
-        <header className="flex shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/80 px-3 py-2.5 sm:px-6 backdrop-blur shadow-xs">
-          {/* Левая часть: кнопка назад и логотип */}
+      <div className="flex h-screen w-full flex-col bg-zinc-100 dark:bg-zinc-950 font-sans antialiased text-zinc-900 dark:text-zinc-100 overflow-hidden select-none">
+        {/* Верхняя панель навигации POS */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-900/90 px-3 sm:px-5 backdrop-blur-md z-10 shadow-2xs">
+          {/* Левая часть: логотип и статус */}
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-black transition shadow-xs"
-              title="Вернуться к гостевому меню"
+              className="flex items-center gap-2 font-black tracking-wider text-black dark:text-white group"
+              title="Перейти на клиентский сайт меню"
             >
-              <span>←</span>
-              <span className="hidden sm:inline">В меню</span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-black tracking-tight">
-                Chicken<span className="text-amber-500">Fit</span>
-              </h1>
-              <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Смена открыта
+              <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500 font-black text-black text-sm shadow-xs group-hover:scale-105 transition">
+                CF
               </span>
-            </div>
+              <span className="hidden sm:inline font-black text-base">
+                CHICKEN<span className="text-amber-600 dark:text-amber-400">FIT</span>
+              </span>
+            </Link>
+            <span className="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              ● КАССА ОНЛАЙН
+            </span>
           </div>
 
-          {/* Центральная часть: Вкладки админки */}
-          <nav className="flex gap-1 overflow-x-auto">
+          {/* Центральная часть: переключатель вкладок терминала */}
+          <nav className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-zinc-100 dark:bg-zinc-950/80 p-1 border border-zinc-200/60 dark:border-zinc-800">
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
@@ -387,7 +450,7 @@ export function PosTerminal() {
                   : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
-              🛒 Касса
+              🛒 Терминал
             </button>
             <button
               type="button"
@@ -395,7 +458,7 @@ export function PosTerminal() {
                 setActiveTab('orders')
                 reloadOrders()
               }}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer relative ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'orders'
                   ? 'bg-amber-500 text-black shadow-xs'
                   : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -441,13 +504,17 @@ export function PosTerminal() {
             </button>
           </nav>
 
-          {/* Правая часть: переключатель темы */}
+          {/* Правая часть: кнопка темы */}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={toggleTheme}
               className="flex items-center justify-center size-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-200 transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
-              title={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+              title={
+                isDark
+                  ? 'Переключить на светлую тему'
+                  : 'Переключить на тёмную тему'
+              }
             >
               {isDark ? '☀️' : '🌙'}
             </button>
@@ -465,10 +532,11 @@ export function PosTerminal() {
                   activeCategory={activeCategory}
                   onCategoryChange={setActiveCategory}
                   onAddItem={handleAddItem}
+                  onOpenGarnishMixer={handleOpenGarnishMixer}
                 />
               </div>
 
-              {/* Панель оформления и корзины (на ПК справа, на мобильных в виде шторки) */}
+              {/* Панель оформления и корзины (на ПК справа) */}
               <aside className="hidden lg:block w-full lg:w-[26rem] xl:w-[28rem] shrink-0 border-l border-zinc-200 dark:border-zinc-800 p-3 sm:p-5 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950">
                 <CartPanel
                   items={cart}
@@ -537,13 +605,13 @@ export function PosTerminal() {
                 </div>
               )}
 
-              {/* Плавающая кнопка корзины на мобильных экранах (как в Яндекс.Еда / Uzum Tezkor) */}
+              {/* Плавающая кнопка корзины на мобильных экранах */}
               {totalCartCount > 0 && !showMobileCart && (
                 <div className="fixed bottom-3 inset-x-3 z-40 lg:hidden">
                   <button
                     type="button"
                     onClick={() => setShowMobileCart(true)}
-                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-4 text-black font-extrabold shadow-2xl shadow-amber-500/30 active:scale-98 transition"
+                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-4 text-black font-extrabold shadow-2xl shadow-amber-500/30 active:scale-98 transition cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <span className="flex size-7 items-center justify-center rounded-xl bg-black text-amber-400 text-xs font-black">
@@ -596,12 +664,20 @@ export function PosTerminal() {
         </div>
       </div>
 
+      {/* Модальное окно микшера гарниров */}
+      <GarnishMixerModal
+        isOpen={showGarnishModal}
+        initialSize={garnishInitialSize}
+        onClose={() => setShowGarnishModal(false)}
+        onAddGarnish={handleAddGarnish}
+      />
+
       {/* Экранный модальный предпросмотр чека */}
       {showReceiptModal && receiptData && (
         <ReceiptModal
           data={receiptData}
           onClose={() => setShowReceiptModal(false)}
-          onPrint={() => window.print()}
+          onPrint={handlePrintWithMode}
         />
       )}
 
@@ -623,6 +699,7 @@ export function PosTerminal() {
           paymentMethod={receiptData.paymentMethod}
           cashReceived={receiptData.cashReceived}
           changeAmount={receiptData.changeAmount}
+          printMode={receiptData.printMode}
         />
       )}
     </>

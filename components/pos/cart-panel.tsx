@@ -71,9 +71,16 @@ function CartLine({
     <div className="group flex flex-col gap-1.5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 p-2.5 transition hover:border-amber-500/30">
       {/* Название + сумма строки */}
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs sm:text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-          {item.name}
-        </span>
+        <div className="leading-snug">
+          <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            {item.name}
+          </span>
+          {item.notes && item.notes !== item.name && (
+            <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+              ↳ {item.notes}
+            </p>
+          )}
+        </div>
         <span className="shrink-0 text-xs sm:text-sm font-black text-zinc-900 dark:text-white">
           {formatNum(lineTotal(item))} сум
         </span>

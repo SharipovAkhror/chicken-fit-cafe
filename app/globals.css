@@ -184,6 +184,11 @@
   box-sizing: border-box;
 }
 
+.receipt--kitchen {
+  border: 1px dashed #000;
+  padding: 3mm 2mm;
+}
+
 .receipt-header {
   text-align: center;
   margin-bottom: 2mm;
@@ -207,6 +212,7 @@
 
 .receipt-divider--bold {
   border-top: 2px solid #000;
+  margin: 2mm 0;
 }
 
 .receipt-meta {
@@ -229,6 +235,13 @@
 .receipt-item-qty {
   font-weight: normal;
   color: #555;
+}
+
+.receipt-item-subnote {
+  font-size: 10px;
+  color: #555;
+  padding-left: 2mm;
+  margin-top: 0.5mm;
 }
 
 .receipt-item-price {
@@ -257,7 +270,82 @@
   margin-top: 1mm;
 }
 
-/* ── Print: show only receipt ────────────────────────────────── */
+/* Кухонный бегунок */
+.kitchen-badge-header {
+  text-align: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 2mm;
+}
+
+.kitchen-title {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.kitchen-order-number {
+  font-size: 24px;
+  font-weight: 900;
+  margin: 1mm 0;
+}
+
+.kitchen-order-type {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.kitchen-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  margin: 2mm 0;
+}
+
+.kitchen-item-row {
+  display: flex;
+  gap: 2mm;
+  align-items: flex-start;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 1.5mm;
+}
+
+.kitchen-item-qty-badge {
+  font-weight: 900;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.kitchen-item-details {
+  flex: 1;
+}
+
+.kitchen-item-name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.kitchen-item-notes {
+  font-size: 11px;
+  color: #333;
+  margin-top: 0.5mm;
+}
+
+.kitchen-footer-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 1mm;
+}
+
+.kitchen-stamp {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+/* ── Print: show only receipts ────────────────────────────────── */
 
 @media print {
   html, body {
@@ -274,7 +362,7 @@
     display: none !important;
   }
 
-  #receipt-print-area {
+  #receipt-print-wrapper {
     display: block !important;
     position: absolute !important;
     left: 0 !important;
@@ -290,8 +378,31 @@
     visibility: visible !important;
   }
 
-  #receipt-print-area * {
+  #receipt-print-wrapper * {
     visibility: visible !important;
+  }
+
+  .print-mode-guest .kitchen-receipt-print {
+    display: none !important;
+  }
+
+  .print-mode-guest .guest-receipt-print {
+    display: block !important;
+  }
+
+  .print-mode-kitchen .guest-receipt-print {
+    display: none !important;
+  }
+
+  .print-mode-kitchen .kitchen-receipt-print {
+    display: block !important;
+  }
+
+  .print-mode-both .guest-receipt-print,
+  .print-mode-both .kitchen-receipt-print {
+    display: block !important;
+    page-break-after: always;
+    break-after: page;
   }
 
   .receipt {

@@ -502,6 +502,52 @@
       ]
     },
     {
+      "id": "sides",
+      "title": {
+        "ru": "Гарниры & Миксы",
+        "uz": "Garnirlar & Mikslar",
+        "en": "Side Dishes & Mixes"
+      },
+      "items": [
+        {
+          "id": "side-portion-half",
+          "name": {
+            "ru": "Гарнир (Полпорции)",
+            "uz": "Garnir (Yarim porsiya)",
+            "en": "Side Dish (Half Portion)"
+          },
+          "description": {
+            "ru": "Порция на выбор или микс: рис, гречка, макароны, пюре, картофель фри",
+            "uz": "Tanlov bo'yicha yoki miks: guruch, grechka, makaron, pyure, fri",
+            "en": "Choice of single or mixed: rice, buckwheat, pasta, mashed potatoes, fries"
+          },
+          "price": 23000,
+          "image": "/menu/fries-plate.jpg",
+          "weight": 180,
+          "kcal": 220,
+          "available": true
+        },
+        {
+          "id": "side-portion-full",
+          "name": {
+            "ru": "Гарнир (1 порция)",
+            "uz": "Garnir (1 porsiya)",
+            "en": "Side Dish (Full Portion)"
+          },
+          "description": {
+            "ru": "Большая порция на выбор или микс: рис, гречка, макароны, пюре, картофель фри",
+            "uz": "Katta porsiya tanlov yoki miks: guruch, grechka, makaron, pyure, fri",
+            "en": "Full portion single or mixed: rice, buckwheat, pasta, mashed potatoes, fries"
+          },
+          "price": 35000,
+          "image": "/menu/fries-plate.jpg",
+          "weight": 350,
+          "kcal": 410,
+          "available": true
+        }
+      ]
+    },
+    {
       "id": "salads",
       "title": {
         "ru": "Салаты",

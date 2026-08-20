@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from 'react'
 import type { Order, OrderType } from '@/lib/orders'
+import type { PrintMode } from './receipt-print'
 
 type Props = {
   orders: Order[]
-  onReprint: (order: Order) => void
+  onReprint: (order: Order, mode?: PrintMode) => void
   onRefresh: () => void
 }
 
@@ -59,8 +60,12 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
       {/* Шапка и сводка */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base sm:text-lg font-black tracking-tight">История заказов за сегодня</h2>
-          <p className="text-xs text-zinc-500">Авто-обновление и синхронизация с кассой</p>
+          <h2 className="text-base sm:text-lg font-black tracking-tight">
+            История заказов за сегодня
+          </h2>
+          <p className="text-xs text-zinc-500">
+            Авто-обновление · Повторная печать гостевых чеков и бегунков на кухню
+          </p>
         </div>
 
         <button
@@ -78,19 +83,22 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-3 shadow-xs">
           <p className="text-[11px] font-semibold text-zinc-400">Выручка</p>
           <p className="text-sm sm:text-base font-black text-amber-600 dark:text-amber-400 mt-0.5">
-            {formatNum(totalRevenue)} <span className="text-[10px] font-normal text-zinc-400">сум</span>
+            {formatNum(totalRevenue)}{' '}
+            <span className="text-[10px] font-normal text-zinc-400">сум</span>
           </p>
         </div>
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-3 shadow-xs">
           <p className="text-[11px] font-semibold text-zinc-400">Чеков</p>
           <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-white mt-0.5">
-            {orders.length} <span className="text-[10px] font-normal text-zinc-400">зак.</span>
+            {orders.length}{' '}
+            <span className="text-[10px] font-normal text-zinc-400">зак.</span>
           </p>
         </div>
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-3 shadow-xs">
           <p className="text-[11px] font-semibold text-zinc-400">Средний чек</p>
           <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-white mt-0.5">
-            {formatNum(avgCheck)} <span className="text-[10px] font-normal text-zinc-400">сум</span>
+            {formatNum(avgCheck)}{' '}
+            <span className="text-[10px] font-normal text-zinc-400">сум</span>
           </p>
         </div>
       </div>
@@ -143,15 +151,30 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
           filteredOrders.map((order) => {
             const typeBadge =
               order.type === 'dine_in'
-                ? { label: `🍽️ Стол ${order.tableNumber || '1'}`, bg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' }
+                ? {
+                    label: `🍽️ Стол ${order.tableNumber || '1'}`,
+                    bg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+                  }
                 : order.type === 'delivery'
-                ? { label: `🛵 Доставка (${order.customerPhone || '—'})`, bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' }
-                : { label: '🛍️ Навынос', bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' }
+                ? {
+                    label: `🛵 Доставка (${order.customerPhone || '—'})`,
+                    bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                  }
+                : {
+                    label: '🛍️ Навынос',
+                    bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+                  }
 
             const payBadge =
               order.paymentMethod === 'cash'
-                ? { label: '💵 Наличные', bg: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300' }
-                : { label: '💳 Click/Payme', bg: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300' }
+                ? {
+                    label: '💵 Наличные',
+                    bg: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300',
+                  }
+                : {
+                    label: '💳 Click/Payme',
+                    bg: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300',
+                  }
 
             return (
               <div
@@ -163,17 +186,25 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                     <span className="font-black text-amber-600 dark:text-amber-400 text-sm">
                       {order.orderNumber}
                     </span>
-                    <span className="text-xs font-semibold text-zinc-400">{formatTime(order.createdAt)}</span>
-                    <span className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${typeBadge.bg}`}>
+                    <span className="text-xs font-semibold text-zinc-400">
+                      {formatTime(order.createdAt)}
+                    </span>
+                    <span
+                      className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${typeBadge.bg}`}
+                    >
                       {typeBadge.label}
                     </span>
-                    <span className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${payBadge.bg}`}>
+                    <span
+                      className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${payBadge.bg}`}
+                    >
                       {payBadge.label}
                     </span>
                   </div>
 
                   <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300 line-clamp-1">
-                    {order.items.map((it) => `${it.name} (×${it.qty})`).join(', ')}
+                    {order.items
+                      .map((it) => `${it.name} (×${it.qty})`)
+                      .join(', ')}
                   </div>
 
                   {order.deliveryAddress && (
@@ -187,7 +218,9 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                   <div className="text-right">
                     <span className="text-base font-black text-zinc-900 dark:text-white">
                       {formatNum(order.total)}{' '}
-                      <span className="text-xs font-normal text-zinc-400">сум</span>
+                      <span className="text-xs font-normal text-zinc-400">
+                        сум
+                      </span>
                     </span>
                     {order.discountAmount && order.discountAmount > 0 && (
                       <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
@@ -196,14 +229,28 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => onReprint(order)}
-                    className="flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-zinc-800 dark:text-white transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
-                  >
-                    <span>🖨️</span>
-                    <span>Чек</span>
-                  </button>
+                  {/* Кнопки печати: Гость и Кухня */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onReprint(order, 'guest')}
+                      title="Печать гостевого чека"
+                      className="flex items-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-800 dark:text-white transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
+                    >
+                      <span>🖨️</span>
+                      <span>Гость</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onReprint(order, 'kitchen')}
+                      title="Печать кухонного бегунка (без цен)"
+                      className="flex items-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-2 text-xs font-bold transition hover:opacity-85 cursor-pointer shadow-xs"
+                    >
+                      <span>👨‍🍳</span>
+                      <span>Кухня</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )

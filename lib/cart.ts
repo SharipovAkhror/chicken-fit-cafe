@@ -5,8 +5,14 @@
  * Компонент хранит `CartItem[]` в `useState` и вызывает эти хелперы.
  */
 
+export type GarnishIngredient = {
+  ingredient: string
+  percent: number
+  grams?: number
+}
+
 export type CartItem = {
-  /** id позиции из menu.json */
+  /** id позиции из menu.json или уникальный id микса */
   id: string
   /** Название (ru) */
   name: string
@@ -16,12 +22,82 @@ export type CartItem = {
   originalPrice: number
   /** Количество */
   qty: number
+  /** Категория меню (например, 'sides', 'drinks', 'mains') */
+  category?: string
+  /** Относится ли блюдо к кухне (false для напитков бара, компотов, воды) */
+  isKitchen?: boolean
+  /** Дополнительные примечания (например, состав микса гарнира) */
+  notes?: string
+  /** Подробная раскладка ингредиентов микса */
+  garnishMix?: GarnishIngredient[]
 }
 
-/** Добавить +1 к позиции. Если её нет в корзине — создать запись. */
+/** Проверка, готовится ли позиция на кухне */
+export function isKitchenItem(item: {
+  id?: string
+  name?: string
+  category?: string
+  isKitchen?: boolean
+}): boolean {
+  if (typeof item.isKitchen === 'boolean') {
+    return item.isKitchen
+  }
+
+  const cat = (item.category || '').toLowerCase()
+  if (cat === 'drinks' || cat === 'напитки') {
+    return false
+  }
+
+  const id = (item.id || '').toLowerCase()
+  const name = (item.name || '').toLowerCase()
+
+  // Исключаем напитки, компоты, пакетированный чай/кофе, минералку
+  const drinkKeywords = [
+    'compote',
+    'компот',
+    'tea',
+    'чай',
+    'coffee',
+    'кофе',
+    'coca-cola',
+    'cola',
+    'fanta',
+    'sprite',
+    'water',
+    'вода',
+    'torabika',
+    'maccoffee',
+    'americano',
+    'американо',
+    'напиток',
+  ]
+
+  for (const kw of drinkKeywords) {
+    if (id.includes(kw) || name.includes(kw)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/** Отфильтровать только блюда для кухни */
+export function getKitchenItems(items: CartItem[]): CartItem[] {
+  return items.filter(isKitchenItem)
+}
+
+/** Добавить +1 к позиции или создать новую запись */
 export function addItem(
   cart: CartItem[],
-  item: { id: string; name: string; price: number },
+  item: {
+    id: string
+    name: string
+    price: number
+    category?: string
+    isKitchen?: boolean
+    notes?: string
+    garnishMix?: GarnishIngredient[]
+  },
 ): CartItem[] {
   const idx = cart.findIndex((c) => c.id === item.id)
   if (idx >= 0) {
@@ -35,6 +111,11 @@ export function addItem(
       price: item.price,
       originalPrice: item.price,
       qty: 1,
+      category: item.category,
+      isKitchen:
+        item.isKitchen !== undefined ? item.isKitchen : isKitchenItem(item),
+      notes: item.notes,
+      garnishMix: item.garnishMix,
     },
   ]
 }
@@ -72,6 +153,11 @@ export function cartTotal(cart: CartItem[]): number {
 /** Общее количество единиц товаров. */
 export function cartCount(cart: CartItem[]): number {
   return cart.reduce((sum, item) => sum + item.qty, 0)
+}
+
+/** Общее количество блюд на кухню. */
+export function kitchenItemsCount(cart: CartItem[]): number {
+  return getKitchenItems(cart).reduce((sum, item) => sum + item.qty, 0)
 }
 
 /** Очистить корзину. */
