@@ -9,9 +9,9 @@ const COOKIE_DAYS = 30
  * Простой гейт по паролю. Пароль сверяется на клиенте (для MVP достаточно).
  * Правильный пароль сохраняется в cookie, чтобы не вводить каждый раз.
  *
- * Пароль по умолчанию: «chickenfit» — можно поменять ниже.
+ * Пароль по умолчанию: «12345678» — можно поменять ниже.
  */
-const ADMIN_PASSWORD = 'chickenfit'
+const ADMIN_PASSWORD = '12345678'
 
 function setCookie(name: string, value: string, days: number) {
   const d = new Date()

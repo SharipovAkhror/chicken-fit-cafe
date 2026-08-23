@@ -1,6 +1,6 @@
 {
   "$schema": "./menu.schema.json",
-  "updated": "2026-08-15",
+  "updated": "2026-08-23",
   "currency": "UZS",
   "cafe": {
     "name": "Cafe ChickenFit",
@@ -261,6 +261,42 @@
           "image": "/menu/fried-egg.jpg",
           "weight": 90,
           "kcal": 140,
+          "available": true
+        },
+        {
+          "id": "bread-full",
+          "name": {
+            "ru": "Хлеб (1 порция)",
+            "uz": "Non (1 porsiya)",
+            "en": "Bread (1 portion)"
+          },
+          "description": {
+            "ru": "Свежий ароматный хлеб / лепёшка (целая порция)",
+            "uz": "Yangi yopilgan issiq non (to'liq porsiya)",
+            "en": "Freshly baked bread (full portion)"
+          },
+          "price": 4000,
+          "image": "/menu/bread.jpg",
+          "weight": 200,
+          "kcal": 260,
+          "available": true
+        },
+        {
+          "id": "bread-half",
+          "name": {
+            "ru": "Хлеб (0.5 порции)",
+            "uz": "Non (0.5 porsiya)",
+            "en": "Bread (0.5 portion)"
+          },
+          "description": {
+            "ru": "Свежий хлеб / лепёшка (половина порции)",
+            "uz": "Yangi non (yarim porsiya)",
+            "en": "Freshly baked bread (half portion)"
+          },
+          "price": 2000,
+          "image": "/menu/bread.jpg",
+          "weight": 100,
+          "kcal": 130,
           "available": true
         }
       ]
@@ -779,6 +815,24 @@
           "image": "/menu/americano-cup.jpg",
           "weight": 200,
           "kcal": 10,
+          "available": true
+        },
+        {
+          "id": "coca-cola-glass-025",
+          "name": {
+            "ru": "Coca-Cola 0.25л (стекло)",
+            "uz": "Coca-Cola 0.25l (shisha)",
+            "en": "Coca-Cola 0.25L (Glass)"
+          },
+          "description": {
+            "ru": "Классическая холодная Coca-Cola 0.25л в стеклянной бутылке (возвратная тара)",
+            "uz": "Qaytariladigan shisha idishdagi salqin Coca-Cola 0.25l",
+            "en": "Classic chilled Coca-Cola in 0.25L returnable glass bottle"
+          },
+          "price": 5000,
+          "image": "/menu/coca-cola-glass-025.jpg",
+          "weight": 250,
+          "kcal": 105,
           "available": true
         },
         {
