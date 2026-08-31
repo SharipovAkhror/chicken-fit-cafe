@@ -1,6 +1,19 @@
 'use client'
 
 import { useCallback, useEffect, useState, useMemo } from 'react'
+import {
+  ShoppingBag,
+  Check,
+  X,
+  ArrowRight,
+  Plus,
+  Minus,
+  MapPin,
+  Phone,
+  User,
+  Send,
+  UtensilsCrossed,
+} from 'lucide-react'
 import { createOrder } from '@/lib/orders'
 import { nextOrderNumber, receiptDateTime } from '@/lib/receipt'
 
@@ -42,15 +55,10 @@ function Thumb({
   if (!item.image) {
     return (
       <div
-        className={`flex items-center justify-center bg-secondary ${className ?? ''}`}
+        className={`flex items-center justify-center bg-secondary/50 ${className ?? ''}`}
         aria-hidden
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-mark.svg"
-          alt=""
-          className="size-1/3 max-w-16 opacity-25"
-        />
+        <UtensilsCrossed className="size-8 text-muted-foreground/30" />
       </div>
     )
   }
@@ -77,10 +85,15 @@ export function MenuBoard({
   const [openItem, setOpenItem] = useState<ViewItem | null>(null)
   const [guestCart, setGuestCart] = useState<Record<string, number>>({})
   const [showCartDrawer, setShowCartDrawer] = useState(false)
+  const [orderType, setOrderType] = useState<'dine_in' | 'takeaway' | 'delivery'>('dine_in')
   const [selectedTable, setSelectedTable] = useState('1')
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [orderSuccess, setOrderSuccess] = useState<{
     orderNumber: string
     table: string
+    orderType: string
     total: number
     items: Array<{ name: string; qty: number; price: number }>
     time: string
@@ -150,7 +163,7 @@ export function MenuBoard({
     })
   }
 
-  // Отправка заказа прямо на кассу и официанту
+  // Отправка заказа прямо на кассу
   async function handleSendOrderToPOS() {
     if (cartEntries.length === 0) return
 
@@ -164,10 +177,17 @@ export function MenuBoard({
       qty: e.qty,
     }))
 
+    const destination =
+      orderType === 'dine_in'
+        ? `Стол №${selectedTable}`
+        : orderType === 'takeaway'
+        ? `Самовывоз (${customerName || 'Гость'}, тел: ${customerPhone || 'не указан'})`
+        : `Доставка (${deliveryAddress || 'Адрес не указан'}, ${customerPhone || ''})`
+
     await createOrder({
       orderNumber: num,
-      type: 'dine_in',
-      tableNumber: selectedTable,
+      type: orderType,
+      tableNumber: orderType === 'dine_in' ? selectedTable : destination,
       items: orderItems,
       total: totalCartSum,
       paymentMethod: 'cash',
@@ -175,7 +195,13 @@ export function MenuBoard({
 
     setOrderSuccess({
       orderNumber: num,
-      table: selectedTable,
+      table: destination,
+      orderType:
+        orderType === 'dine_in'
+          ? 'В зале'
+          : orderType === 'takeaway'
+          ? 'Самовывоз'
+          : 'Доставка',
       total: totalCartSum,
       items: orderItems.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
       time: dt,
@@ -213,9 +239,14 @@ export function MenuBoard({
           id={category.id}
           className="scroll-mt-28 md:scroll-mt-32"
         >
-          <h2 className="mb-4 text-2xl font-black tracking-tight md:text-3xl text-foreground">
-            {category.title}
-          </h2>
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              {category.title}
+            </h2>
+            <span className="text-xs text-muted-foreground font-mono">
+              {category.items.length} позиций
+            </span>
+          </div>
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {category.items.map((item) => {
@@ -225,78 +256,76 @@ export function MenuBoard({
                 <li key={item.id} className="flex">
                   <div
                     onClick={() => setOpenItem(item)}
-                    className="group flex flex-col h-full w-full cursor-pointer overflow-hidden rounded-3xl border border-border/80 bg-card text-left transition-all duration-200 hover:border-amber-500/60 hover:shadow-xl shadow-sm"
+                    className="group flex flex-col h-full w-full cursor-pointer overflow-hidden rounded-2xl border border-border/70 bg-card text-left transition-all duration-200 hover:border-amber-500/50 hover:shadow-md shadow-xs"
                   >
-                    {/* Большое аппетитное фото на всю ширину карточки */}
-                    <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-secondary/50">
+                    {/* Фотография блюда */}
+                    <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full overflow-hidden bg-secondary/40">
                       <Thumb
                         item={item}
-                        className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                        className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-103 ${
                           item.available ? '' : 'opacity-40 grayscale'
                         }`}
                       />
                       {inCart > 0 && (
-                        <span className="absolute top-3 left-3 flex items-center justify-center rounded-full bg-amber-500 px-2.5 py-1 text-xs font-black text-black shadow-lg">
+                        <span className="absolute top-2.5 left-2.5 flex items-center justify-center rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-bold text-black shadow-md font-mono">
                           {inCart} шт
                         </span>
                       )}
                       {item.meta && (
-                        <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-md shadow">
+                        <span className="absolute bottom-2 right-2 rounded-md bg-black/75 px-2 py-0.5 text-[10px] sm:text-[11px] font-mono text-zinc-200 backdrop-blur-md">
                           {item.meta}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5 gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-base sm:text-lg leading-tight font-black text-balance text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          {item.name}
-                        </h3>
-                      </div>
+                    <div className="flex min-w-0 flex-1 flex-col p-4 gap-2">
+                      <h3 className="text-base font-bold leading-snug text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        {item.name}
+                      </h3>
 
                       {item.description && (
-                        <p className="line-clamp-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                           {item.description}
                         </p>
                       )}
 
                       <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-border/40">
-                        <div>
-                          <span className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400">
-                            {item.price}
-                          </span>
-                        </div>
+                        <span className="text-base sm:text-lg font-bold font-mono text-foreground">
+                          {item.price}
+                        </span>
 
-                        {/* Кнопка быстрого добавления в корзину */}
+                        {/* Кнопка быстрого добавления */}
                         {item.available && (
                           <div onClick={(e) => e.stopPropagation()}>
                             {inCart === 0 ? (
                               <button
                                 type="button"
                                 onClick={(e) => handleAddToCart(item.id, e)}
-                                className="flex items-center gap-1.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 text-xs sm:text-sm font-black transition cursor-pointer active:scale-95 shadow-md shadow-amber-500/20"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
                               >
-                                <span>+</span>
+                                <Plus className="size-3.5" />
                                 <span>В заказ</span>
                               </button>
                             ) : (
-                              <div className="flex items-center gap-1 rounded-2xl bg-amber-500 px-2 py-1 text-black font-black shadow-md">
+                              <div className="flex items-center gap-1 rounded-xl bg-amber-500 px-1.5 py-1 text-black font-bold shadow-xs">
                                 <button
                                   type="button"
                                   onClick={(e) => handleRemoveFromCart(item.id, e)}
-                                  className="flex size-7 items-center justify-center rounded-xl hover:bg-black/10 text-base font-black cursor-pointer"
+                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
+                                  aria-label="Уменьшить"
                                 >
-                                  −
+                                  <Minus className="size-3" />
                                 </button>
-                                <span className="min-w-6 text-center text-xs sm:text-sm font-black">
+                                <span className="min-w-5 text-center text-xs font-bold font-mono">
                                   {inCart}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={(e) => handleAddToCart(item.id, e)}
-                                  className="flex size-7 items-center justify-center rounded-xl hover:bg-black/10 text-base font-black cursor-pointer"
+                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
+                                  aria-label="Увеличить"
                                 >
-                                  +
+                                  <Plus className="size-3" />
                                 </button>
                               </div>
                             )}
@@ -304,7 +333,7 @@ export function MenuBoard({
                         )}
 
                         {!item.available && (
-                          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold text-muted-foreground">
+                          <span className="rounded-md bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground">
                             {labels.soldOut}
                           </span>
                         )}
@@ -318,10 +347,10 @@ export function MenuBoard({
         </section>
       ))}
 
-      {/* Модалка подробного просмотра карточки блюда */}
+      {/* Модальное окно просмотра блюда */}
       {openItem && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4"
           onClick={close}
         >
           <div
@@ -329,13 +358,13 @@ export function MenuBoard({
             aria-modal="true"
             aria-label={openItem.name}
             onClick={(event) => event.stopPropagation()}
-            className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card shadow-2xl sm:rounded-3xl border border-border/50"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-card shadow-2xl sm:rounded-2xl border border-border"
           >
-            <div className={openItem.image ? 'relative' : 'relative h-14'}>
+            <div className={openItem.image ? 'relative' : 'relative h-12'}>
               {openItem.image && (
                 <Thumb
                   item={openItem}
-                  className={`aspect-[4/3] w-full rounded-t-3xl ${
+                  className={`aspect-[4/3] w-full rounded-t-2xl ${
                     openItem.available ? '' : 'opacity-40 grayscale'
                   }`}
                 />
@@ -344,77 +373,77 @@ export function MenuBoard({
                 type="button"
                 onClick={close}
                 aria-label={labels.close}
-                autoFocus
-                className="absolute top-3 right-3 flex size-10 items-center justify-center rounded-full bg-card/90 text-xl leading-none font-medium shadow-md backdrop-blur focus-visible:outline-none cursor-pointer"
+                className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-card/90 text-foreground border border-border shadow-xs backdrop-blur-xs cursor-pointer hover:bg-secondary transition"
               >
-                ×
+                <X className="size-4" />
               </button>
             </div>
 
-            <div className="flex flex-col gap-4 p-5 sm:p-6">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h3 className="text-2xl leading-tight font-black text-balance">
+            <div className="flex flex-col gap-3 p-5 sm:p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-xl sm:text-2xl font-bold leading-tight">
                   {openItem.name}
                 </h3>
-                <span className="text-2xl font-extrabold text-amber-500">
+                <span className="text-xl sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-500">
                   {openItem.price}
                 </span>
               </div>
 
               {openItem.meta && (
-                <p className="text-xs sm:text-sm font-semibold text-muted-foreground">{openItem.meta}</p>
+                <p className="text-xs font-mono text-muted-foreground">{openItem.meta}</p>
               )}
 
               {openItem.description && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <div className="border-t border-border/50 pt-2">
+                  <p className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                     {labels.ingredients}
                   </p>
-                  <p className="leading-relaxed text-sm">{openItem.description}</p>
+                  <p className="leading-relaxed text-sm text-foreground/90">{openItem.description}</p>
                 </div>
               )}
 
               {openItem.available ? (
-                <div className="pt-2 flex items-center gap-3">
+                <div className="pt-3 flex items-center gap-3">
                   {(guestCart[openItem.id] || 0) > 0 ? (
-                    <div className="flex items-center gap-3 rounded-2xl bg-amber-500 px-4 py-2 text-black font-bold shadow">
+                    <div className="flex items-center gap-3 rounded-xl bg-amber-500 px-4 py-2 text-black font-bold shadow-xs">
                       <button
                         type="button"
                         onClick={() => handleRemoveFromCart(openItem.id)}
-                        className="flex size-8 items-center justify-center rounded-xl bg-black/10 text-lg hover:bg-black/20"
+                        className="flex size-7 items-center justify-center rounded-lg bg-black/10 hover:bg-black/20"
                       >
-                        −
+                        <Minus className="size-4" />
                       </button>
-                      <span className="text-base font-black">
+                      <span className="text-sm font-mono font-bold">
                         {guestCart[openItem.id]} шт
                       </span>
                       <button
                         type="button"
                         onClick={() => handleAddToCart(openItem.id)}
-                        className="flex size-8 items-center justify-center rounded-xl bg-black/10 text-lg hover:bg-black/20"
+                        className="flex size-7 items-center justify-center rounded-lg bg-black/10 hover:bg-black/20"
                       >
-                        +
+                        <Plus className="size-4" />
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleAddToCart(openItem.id)}
-                      className="flex-1 rounded-2xl bg-amber-500 py-3 text-base font-bold text-black transition hover:bg-amber-400 active:scale-98 shadow"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
                     >
-                      + Добавить в заказ
+                      <Plus className="size-4" />
+                      <span>Добавить в заказ</span>
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={close}
-                    className="rounded-2xl border border-border bg-secondary px-5 py-3 text-sm font-semibold hover:bg-secondary/80"
+                    className="rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium hover:bg-secondary/80 cursor-pointer"
                   >
                     Закрыть
                   </button>
                 </div>
               ) : (
-                <p className="rounded-xl bg-secondary px-4 py-3 text-sm font-medium text-muted-foreground">
+                <p className="rounded-xl bg-secondary px-4 py-3 text-sm text-center text-muted-foreground">
                   {labels.soldOut}
                 </p>
               )}
@@ -423,128 +452,218 @@ export function MenuBoard({
         </div>
       )}
 
-      {/* Плавающая плашка корзины заказа (как в Яндекс.Еда / Uzum Tezkor) */}
+      {/* Плавающая плашка корзины */}
       {totalItemsCount > 0 && !showCartDrawer && (
-        <div className="fixed bottom-4 inset-x-4 z-40 max-w-lg mx-auto">
+        <div className="fixed bottom-4 inset-x-4 z-40 max-w-md mx-auto">
           <button
             type="button"
             onClick={() => setShowCartDrawer(true)}
-            className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-4 text-black font-extrabold shadow-2xl shadow-amber-500/40 transition active:scale-98 cursor-pointer"
+            className="flex w-full items-center justify-between rounded-xl bg-zinc-900 text-white dark:bg-amber-500 dark:text-black px-4 py-3.5 font-bold shadow-xl border border-white/10 transition active:scale-[0.98] cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <span className="flex size-7 items-center justify-center rounded-xl bg-black text-amber-400 text-xs font-black">
+              <span className="flex size-6 items-center justify-center rounded-md bg-amber-500 text-black dark:bg-black dark:text-amber-400 text-xs font-mono font-bold">
                 {totalItemsCount}
               </span>
-              <span className="text-sm sm:text-base">Ваш заказ (Стол №{selectedTable})</span>
+              <span className="text-sm">Оформить заказ</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg">{formatNum(totalCartSum)} сум</span>
-              <span className="text-sm">➔</span>
+              <span className="text-sm font-mono">{formatNum(totalCartSum)} сум</span>
+              <ArrowRight className="size-4" />
             </div>
           </button>
         </div>
       )}
 
-      {/* Шторка оформления заказа гостем */}
+      {/* Шторка оформления заказа */}
       {showCartDrawer && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-xs sm:items-center sm:p-4"
           onClick={() => setShowCartDrawer(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex flex-col max-h-[90vh] w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card border border-border p-5 sm:p-6 shadow-2xl text-foreground"
+            className="flex flex-col max-h-[92vh] w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-card border border-border p-5 shadow-2xl text-foreground"
           >
-            <div className="flex items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center justify-between border-b border-border/70 pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🍗</span>
-                <h3 className="text-lg font-black">Ваш заказ</h3>
-                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <ShoppingBag className="size-5 text-amber-500" />
+                <h3 className="text-base font-bold">Ваш заказ</h3>
+                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-mono text-muted-foreground">
                   {totalItemsCount} шт
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCartDrawer(false)}
-                className="flex size-8 items-center justify-center rounded-full bg-secondary text-sm font-bold hover:bg-secondary/80"
+                className="flex size-7 items-center justify-center rounded-lg bg-secondary text-foreground hover:bg-secondary/80"
               >
-                ✕
+                <X className="size-4" />
               </button>
             </div>
 
-            {/* Выбор стола */}
-            <div className="pt-3 pb-1">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-xs font-bold text-muted-foreground">Номер вашего стола:</span>
+            {/* Выбор типа заказа: В зале / Самовывоз / Доставка */}
+            <div className="pt-3 pb-2 border-b border-border/50">
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-secondary/50 p-1 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setOrderType('dine_in')}
+                  className={`rounded-lg py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    orderType === 'dine_in'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  В зале
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderType('takeaway')}
+                  className={`rounded-lg py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    orderType === 'takeaway'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Самовывоз
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderType('delivery')}
+                  className={`rounded-lg py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    orderType === 'delivery'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Доставка
+                </button>
               </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {['1', '2', '3', '4', '5', '6', '7', '8', 'Бар'].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setSelectedTable(num)}
-                    className={`min-w-8 h-8 rounded-xl text-xs font-bold transition shrink-0 ${
-                      selectedTable === num
-                        ? 'bg-amber-500 text-black shadow'
-                        : 'bg-secondary text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
+
+              {/* Поля в зависимости от типа заказа */}
+              {orderType === 'dine_in' && (
+                <div>
+                  <span className="text-[11px] font-semibold text-muted-foreground">Выберите стол:</span>
+                  <div className="flex gap-1.5 overflow-x-auto pt-1.5 pb-1">
+                    {['1', '2', '3', '4', '5', '6', '7', '8', 'Бар'].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setSelectedTable(num)}
+                        className={`min-w-8 h-8 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
+                          selectedTable === num
+                            ? 'bg-amber-500 text-black shadow-xs'
+                            : 'bg-secondary text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {orderType === 'takeaway' && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                    <User className="size-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Ваше имя"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full bg-transparent text-xs outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                    <Phone className="size-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      type="tel"
+                      placeholder="Номер телефона (+998)"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full bg-transparent text-xs outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {orderType === 'delivery' && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                    <MapPin className="size-3.5 text-amber-500 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Адрес доставки (улица, дом, квартира)"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      className="w-full bg-transparent text-xs outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                    <Phone className="size-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      type="tel"
+                      placeholder="Номер телефона (+998)"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full bg-transparent text-xs outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Список выбранных блюд */}
-            <div className="my-3 flex-1 space-y-2.5 overflow-y-auto pr-1">
+            {/* Список блюд в корзине */}
+            <div className="my-2.5 flex-1 space-y-2 overflow-y-auto pr-1">
               {cartEntries.map(({ item, qty }) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/40 p-3">
+                <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/30 p-2.5 border border-border/40">
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatNum(item.rawPrice * qty)} сум</p>
+                    <p className="font-semibold text-xs truncate">{item.name}</p>
+                    <p className="text-[11px] font-mono text-muted-foreground">{formatNum(item.rawPrice * qty)} сум</p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-secondary px-2 py-1">
+                  <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-1.5 py-0.5">
                     <button
                       type="button"
                       onClick={() => handleRemoveFromCart(item.id)}
-                      className="size-6 text-base font-bold text-muted-foreground hover:text-foreground"
+                      className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                     >
-                      −
+                      <Minus className="size-3" />
                     </button>
-                    <span className="min-w-4 text-center text-xs font-black">{qty}</span>
+                    <span className="min-w-4 text-center text-xs font-mono font-bold">{qty}</span>
                     <button
                       type="button"
                       onClick={() => handleAddToCart(item.id)}
-                      className="size-6 text-base font-bold text-muted-foreground hover:text-foreground"
+                      className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                     >
-                      +
+                      <Plus className="size-3" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Итого и отправка заказа на кассу */}
-            <div className="border-t border-border pt-3 space-y-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-sm font-bold text-muted-foreground">ИТОГО К ОПЛАТЕ:</span>
-                <span className="text-2xl font-black text-amber-500">{formatNum(totalCartSum)} сум</span>
+            {/* Итого и отправка */}
+            <div className="border-t border-border/70 pt-3 space-y-3">
+              <div className="flex items-baseline justify-between font-mono">
+                <span className="text-xs text-muted-foreground">ИТОГО:</span>
+                <span className="text-xl font-bold text-foreground">{formatNum(totalCartSum)} сум</span>
               </div>
 
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setGuestCart({})}
-                  className="rounded-xl bg-secondary px-4 py-3 text-xs font-bold text-muted-foreground hover:text-foreground"
+                  className="rounded-xl border border-border bg-secondary px-3.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   Очистить
                 </button>
                 <button
                   type="button"
                   onClick={handleSendOrderToPOS}
-                  className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-black text-black transition hover:bg-amber-400 active:scale-98 shadow-lg shadow-amber-500/20"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
                 >
-                  🔔 Отправить заказ на кассу (Стол №{selectedTable})
+                  <Send className="size-3.5" />
+                  <span>Отправить заказ</span>
                 </button>
               </div>
             </div>
@@ -555,38 +674,38 @@ export function MenuBoard({
       {/* Экран подтверждения отправленного заказа */}
       {orderSuccess && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs"
           onClick={() => setOrderSuccess(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl bg-card border border-border p-6 shadow-2xl text-foreground space-y-4"
+            className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-2xl text-foreground space-y-4"
           >
             <div className="text-center space-y-2">
-              <div className="flex size-16 mx-auto items-center justify-center rounded-2xl bg-emerald-500/20 text-3xl">
-                ✅
+              <div className="flex size-12 mx-auto items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                <Check className="size-6" />
               </div>
-              <h3 className="text-2xl font-black text-foreground">Заказ принят!</h3>
-              <p className="text-sm text-muted-foreground">
-                Заказ отправлен на кассу. Официант уже готовит чек и подходит к столу №{orderSuccess.table}.
+              <h3 className="text-xl font-bold">Заказ принят!</h3>
+              <p className="text-xs text-muted-foreground">
+                Заказ передан в систему. Номер: <span className="font-mono font-bold text-foreground">{orderSuccess.orderNumber}</span> ({orderSuccess.orderType})
               </p>
             </div>
 
-            {/* Электронный чек на экране телефона гостя */}
-            <div className="rounded-2xl border border-border bg-secondary/30 p-4 space-y-2.5 font-mono text-xs">
-              <div className="flex justify-between border-b border-border pb-2">
-                <span className="font-bold">ChickenFit · Стол №{orderSuccess.table}</span>
-                <span className="text-amber-500 font-bold">{orderSuccess.orderNumber}</span>
+            {/* Электронная квитанция */}
+            <div className="rounded-xl border border-border/80 bg-secondary/30 p-3.5 space-y-2 font-mono text-xs">
+              <div className="flex justify-between border-b border-border/50 pb-1.5">
+                <span className="font-bold">ChickenFit · {orderSuccess.table}</span>
+                <span className="text-amber-600 dark:text-amber-400 font-bold">{orderSuccess.orderNumber}</span>
               </div>
-              <div className="space-y-1.5 py-1">
+              <div className="space-y-1 py-1">
                 {orderSuccess.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between">
+                  <div key={idx} className="flex justify-between text-muted-foreground">
                     <span>{it.name} × {it.qty}</span>
                     <span>{formatNum(it.price * it.qty)} сум</span>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between border-t border-border pt-2 text-sm font-black text-amber-500">
+              <div className="flex justify-between border-t border-border/50 pt-1.5 font-bold text-foreground">
                 <span>ИТОГО:</span>
                 <span>{formatNum(orderSuccess.total)} сум</span>
               </div>
@@ -595,9 +714,9 @@ export function MenuBoard({
             <button
               type="button"
               onClick={() => setOrderSuccess(null)}
-              className="w-full rounded-2xl bg-amber-500 py-3.5 text-sm font-black text-black shadow transition hover:bg-amber-400"
+              className="w-full rounded-xl bg-amber-500 py-3 text-xs font-bold text-black shadow-xs transition hover:bg-amber-400 cursor-pointer"
             >
-              Отлично, спасибо!
+              Понятно, спасибо
             </button>
           </div>
         </div>
