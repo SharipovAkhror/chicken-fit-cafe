@@ -249,9 +249,9 @@ export function PosTerminal() {
     (mode: PrintMode) => {
       if (!receiptData) return
       setReceiptData((prev) => (prev ? { ...prev, printMode: mode } : null))
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         window.print()
-      })
+      }, 150)
     },
     [receiptData],
   )

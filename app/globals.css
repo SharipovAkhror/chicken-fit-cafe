@@ -355,20 +355,26 @@
     padding: 0 !important;
     width: 100% !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
-  body > *:not(#receipt-print-wrapper) {
-    display: none !important;
+  /* Hide all screen elements during printing */
+  body * {
+    visibility: hidden !important;
   }
 
-  .print\:hidden {
-    display: none !important;
+  /* Show ONLY the receipt wrapper and all its child elements */
+  #receipt-print-wrapper,
+  #receipt-print-wrapper * {
+    visibility: visible !important;
   }
 
   #receipt-print-wrapper {
     display: block !important;
-    position: static !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     width: 76mm !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -376,34 +382,39 @@
     background: #fff !important;
     color: #000 !important;
     overflow: visible !important;
-    visibility: visible !important;
-  }
-
-  #receipt-print-wrapper * {
-    visibility: visible !important;
+    z-index: 999999 !important;
   }
 
   .print-mode-guest .kitchen-receipt-print {
     display: none !important;
+    visibility: hidden !important;
   }
 
   .print-mode-guest .guest-receipt-print {
     display: block !important;
+    visibility: visible !important;
   }
 
   .print-mode-kitchen .guest-receipt-print {
     display: none !important;
+    visibility: hidden !important;
   }
 
   .print-mode-kitchen .kitchen-receipt-print {
     display: block !important;
+    visibility: visible !important;
   }
 
-  .print-mode-both .guest-receipt-print,
-  .print-mode-both .kitchen-receipt-print {
+  .print-mode-both .guest-receipt-print {
     display: block !important;
+    visibility: visible !important;
     page-break-after: always;
     break-after: page;
+  }
+
+  .print-mode-both .kitchen-receipt-print {
+    display: block !important;
+    visibility: visible !important;
   }
 
   .receipt {
@@ -413,10 +424,11 @@
     color: #000 !important;
     padding: 2mm 1mm !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
   @page {
-    size: auto;
+    size: 76mm auto;
     margin: 0;
   }
 }
