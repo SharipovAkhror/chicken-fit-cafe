@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Search, X, Sliders, Plus, UtensilsCrossed } from 'lucide-react'
 import type { MenuItem } from '@/lib/menu'
 
 type Props = {
@@ -100,23 +101,21 @@ export function MenuGrid({
       <div className="space-y-2">
         {/* Поисковая строка */}
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-            🔍
-          </span>
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Быстрый поиск блюда по меню (например: гарнир, стрипсы, суп, чай)..."
-            className="w-full rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 pl-10 pr-9 py-2.5 text-xs sm:text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:border-amber-500 shadow-xs transition"
+            placeholder="Быстрый поиск блюда по меню (стрипсы, комбо, суп, чай)..."
+            className="w-full rounded-xl border border-border bg-card pl-10 pr-9 py-2.5 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none focus:border-amber-500 shadow-2xs transition"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              ✕
+              <X className="size-4" />
             </button>
           )}
         </div>
@@ -133,8 +132,8 @@ export function MenuGrid({
                   onClick={() => onCategoryChange(cat.id)}
                   className={`shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold transition cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-black shadow-sm'
-                      : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                      ? 'bg-amber-500 text-black shadow-xs font-bold'
+                      : 'border border-border bg-card text-muted-foreground hover:text-foreground hover:border-amber-500/40'
                   }`}
                 >
                   {cat.title}
@@ -147,15 +146,17 @@ export function MenuGrid({
 
       {/* Быстрая кнопка запуска конструктора гарниров */}
       {onOpenGarnishMixer && (activeCategory === 'sides' || activeCategory === 'mains') && !search && (
-        <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-xs">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
           <div className="flex items-center gap-2.5">
-            <span className="text-2xl">🥗</span>
+            <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <Sliders className="size-4" />
+            </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-black text-zinc-900 dark:text-white">
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">
                 Конструктор & Миксер гарнира
               </h4>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Полпорции (23 000 сум) · 1 порция (35 000 сум) · Рис, Гречка, Макароны, Пюре, Фри
+              <p className="text-[11px] text-muted-foreground">
+                Полпорции (23 000 сум) · 1 порция (35 000 сум) · Рис, Гречка, Макароны, Пюре
               </p>
             </div>
           </div>
@@ -163,16 +164,16 @@ export function MenuGrid({
             <button
               type="button"
               onClick={() => onOpenGarnishMixer('half')}
-              className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-black hover:bg-amber-400 transition cursor-pointer shadow-xs"
+              className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-black hover:bg-amber-400 transition cursor-pointer shadow-xs"
             >
-              🥣 Полпорции (23к)
+              Полпорции (23к)
             </button>
             <button
               type="button"
               onClick={() => onOpenGarnishMixer('full')}
-              className="rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-1.5 text-xs font-black hover:opacity-90 transition cursor-pointer shadow-xs"
+              className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-1.5 text-xs font-bold hover:opacity-90 transition cursor-pointer shadow-xs"
             >
-              🍽️ 1 порция (35к)
+              1 порция (35к)
             </button>
           </div>
         </div>
@@ -181,12 +182,12 @@ export function MenuGrid({
       {/* Сетка блюд */}
       <div className="flex-1 overflow-y-auto pr-0.5">
         {filteredItems.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center">
-            <p className="text-sm font-medium text-zinc-400">Ничего не найдено</p>
+          <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-border text-center">
+            <p className="text-sm font-medium text-muted-foreground">Ничего не найдено</p>
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="mt-2 text-xs font-bold text-amber-500 hover:underline"
+              className="mt-2 text-xs font-bold text-amber-500 hover:underline cursor-pointer"
             >
               Сбросить поиск
             </button>
@@ -207,37 +208,41 @@ export function MenuGrid({
                   key={item.id}
                   type="button"
                   onClick={() => handleItemClick(item, categoryId)}
-                  className="group flex flex-col justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/70 p-3 text-left transition-all hover:border-amber-500/50 hover:shadow-md hover:scale-[1.01] active:scale-[0.97] cursor-pointer shadow-xs"
+                  className="group flex flex-col justify-between rounded-xl border border-border/70 bg-card p-2.5 sm:p-3 text-left transition-all hover:border-amber-500/50 hover:shadow-xs active:scale-[0.98] cursor-pointer shadow-2xs min-h-[90px]"
                 >
-                  <div className="space-y-1.5">
-                    {item.image && (
-                      <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800/50 relative">
+                  <div className="space-y-1.5 w-full">
+                    {item.image ? (
+                      <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-secondary/50 relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={item.image}
                           alt={name}
-                          className="size-full object-cover transition duration-200 group-hover:scale-105"
+                          className="size-full object-cover transition duration-300 group-hover:scale-103"
                           loading="lazy"
                         />
                         {isSide && (
-                          <span className="absolute top-1.5 right-1.5 rounded-lg bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 shadow-sm">
+                          <span className="absolute top-1.5 right-1.5 rounded-md bg-amber-500 text-black text-[9px] font-bold px-1.5 py-0.5 shadow-xs font-mono">
                             Микс
                           </span>
                         )}
                       </div>
+                    ) : (
+                      <div className="aspect-[4/3] w-full flex items-center justify-center rounded-lg bg-secondary/40">
+                        <UtensilsCrossed className="size-6 text-muted-foreground/30" />
+                      </div>
                     )}
-                    <h3 className="text-xs sm:text-sm font-bold leading-snug text-zinc-900 dark:text-zinc-100 line-clamp-2">
+                    <h3 className="text-xs sm:text-sm font-bold leading-tight text-foreground line-clamp-2">
                       {name}
                     </h3>
                   </div>
 
-                  <div className="mt-2.5 flex items-baseline justify-between border-t border-zinc-100 dark:border-zinc-800/60 pt-2">
-                    <span className="text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400">
+                  <div className="mt-2 flex items-baseline justify-between border-t border-border/40 pt-2 w-full">
+                    <span className="text-xs sm:text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
                       {formatNum(item.price)}{' '}
-                      <span className="text-[10px] font-normal text-zinc-400">сум</span>
+                      <span className="text-[10px] font-normal text-muted-foreground">сум</span>
                     </span>
-                    <span className="flex size-6 items-center justify-center rounded-lg bg-amber-500/10 text-xs font-black text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition">
-                      +
+                    <span className="flex size-6 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition">
+                      <Plus className="size-3.5" />
                     </span>
                   </div>
                 </button>

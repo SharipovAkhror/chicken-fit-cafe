@@ -1,6 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import {
+  Printer,
+  ChefHat,
+  Receipt as ReceiptIcon,
+  Zap,
+  X,
+  Check,
+  Store,
+} from 'lucide-react'
 import type { CartItem } from '@/lib/cart'
 import { lineTotal, cartTotal, getKitchenItems, kitchenItemsCount } from '@/lib/cart'
 import { receiptPrice } from '@/lib/receipt'
@@ -53,7 +62,6 @@ export function ReceiptPrint({
   const subtotal = propSubtotal ?? calculatedSubtotal
   const total = propTotal ?? subtotal - discountAmount + deliveryFee
   const kitchenItems = getKitchenItems(items)
-  const totalKitchenDishes = kitchenItemsCount(items)
 
   const orderTypeLabel =
     orderType === 'dine_in'
@@ -67,25 +75,25 @@ export function ReceiptPrint({
       id="receipt-print-wrapper"
       className={`receipt-hidden print-mode-${printMode}`}
     >
-      {/* ── 1. ГОСТЕВОЙ ЧЕК (С ценами, скидками и напитками) ── */}
+      {/* ── 1. ГОСТЕВОЙ ЧЕК ── */}
       <div id="receipt-print-area" className="receipt-container guest-receipt-print">
-        <div className="receipt">
+        <div className="receipt font-mono text-xs text-black">
           {/* Заголовок заведения */}
-          <div className="receipt-header">
-            <div className="receipt-logo">CHICKENFIT</div>
-            <div className="receipt-sub">Вкусно · Полезно · По-домашнему</div>
-            <div className="receipt-sub">Самарканд, ул. Ибн Сина 136 (аэропорт)</div>
-            <div className="receipt-sub">Тел: 93-380-2002 · @ChickenFit</div>
+          <div className="receipt-header text-center">
+            <div className="text-base font-bold tracking-wider">CHICKENFIT</div>
+            <div className="text-[10px]">Вкусно · Полезно · По-домашнему</div>
+            <div className="text-[10px]">Самарканд, ул. Ибн Сина 136</div>
+            <div className="text-[10px]">Тел: 93-380-2002 · @ChickenFit</div>
           </div>
 
-          <div className="receipt-divider" />
+          <div className="receipt-divider border-b border-dashed border-black my-1.5" />
 
           {/* Номер и тип заказа */}
-          <div className="receipt-order-type">
-            <strong>{orderTypeLabel}</strong>
+          <div className="text-center font-bold text-xs">
+            {orderTypeLabel}
           </div>
 
-          <div className="receipt-meta">
+          <div className="flex justify-between text-[10px] my-1">
             <span>{dateTime}</span>
             <span>
               Чек <strong>{orderNumber}</strong>
@@ -93,37 +101,37 @@ export function ReceiptPrint({
           </div>
 
           {orderType === 'delivery' && (
-            <div className="receipt-delivery-info">
+            <div className="text-[10px] border-b border-dashed border-black pb-1 mb-1">
               {customerPhone && <div>Тел: {customerPhone}</div>}
               {deliveryAddress && <div>Адрес: {deliveryAddress}</div>}
             </div>
           )}
 
-          <div className="receipt-divider" />
+          <div className="receipt-divider border-b border-dashed border-black my-1" />
 
           {/* Список всех блюд и напитков */}
-          <table className="receipt-items">
+          <table className="w-full text-left text-[11px]">
             <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>Наименование</th>
-                <th style={{ textAlign: 'right' }}>Сумма</th>
+              <tr className="border-b border-black">
+                <th className="pb-1 font-bold">Наименование</th>
+                <th className="pb-1 text-right font-bold">Сумма</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="receipt-item-name">
+                <tr key={item.id} className="border-b border-dotted border-gray-400">
+                  <td className="py-1 pr-1">
                     <div>
                       {item.name}
                       {item.qty > 1 && (
-                        <span className="receipt-item-qty"> × {item.qty}</span>
+                        <span className="font-bold"> × {item.qty}</span>
                       )}
                     </div>
                     {item.notes && item.notes !== item.name && (
-                      <div className="receipt-item-subnote">↳ {item.notes}</div>
+                      <div className="text-[9px] text-gray-700">↳ {item.notes}</div>
                     )}
                   </td>
-                  <td className="receipt-item-price">
+                  <td className="py-1 text-right font-bold whitespace-nowrap align-top">
                     {receiptPrice(lineTotal(item))}
                   </td>
                 </tr>
@@ -131,24 +139,15 @@ export function ReceiptPrint({
             </tbody>
           </table>
 
-          {/* Скидка и доставка если есть */}
+          {/* Скидка и доставка */}
           {(discountAmount > 0 || deliveryFee > 0) && (
-            <div
-              className="receipt-breakdown"
-              style={{ marginTop: '4px', fontSize: '11px' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="mt-1 pt-1 border-t border-dashed border-black text-[10px] space-y-0.5">
+              <div className="flex justify-between">
                 <span>Подытог:</span>
                 <span>{receiptPrice(subtotal)} сум</span>
               </div>
               {discountAmount > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <div className="flex justify-between font-bold">
                   <span>
                     Скидка {discountPercent ? `(${discountPercent}%)` : ''}:
                   </span>
@@ -156,12 +155,7 @@ export function ReceiptPrint({
                 </div>
               )}
               {deliveryFee > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                  }}
-                >
+                <div className="flex justify-between">
                   <span>Доставка:</span>
                   <span>+{receiptPrice(deliveryFee)} сум</span>
                 </div>
@@ -169,15 +163,15 @@ export function ReceiptPrint({
             </div>
           )}
 
-          <div className="receipt-divider receipt-divider--bold" />
+          <div className="receipt-divider border-b-2 border-black my-1.5" />
 
           {/* Итого и оплата */}
-          <div className="receipt-total">
+          <div className="flex justify-between text-sm font-black my-1">
             <span>ИТОГО:</span>
             <span>{receiptPrice(total)} сум</span>
           </div>
 
-          <div className="receipt-payment">
+          <div className="text-[10px] space-y-0.5 pt-1 border-t border-dashed border-black">
             <div>
               Оплата:{' '}
               {paymentMethod === 'cash'
@@ -194,74 +188,63 @@ export function ReceiptPrint({
               )}
           </div>
 
-          <div className="receipt-divider" />
+          <div className="receipt-divider border-b border-dashed border-black my-1.5" />
 
           {/* Подвал чека */}
-          <div className="receipt-footer">
+          <div className="text-center text-[10px] space-y-0.5 pt-1">
             <div>Приятного аппетита! Ждем вас снова!</div>
-            <div className="receipt-url">
-              Бесплатная доставка до 1 км · 93-380-2002
-            </div>
+            <div>Доставка: 93-380-2002</div>
           </div>
         </div>
       </div>
 
-      {/* ── 2. КУХОННЫЙ БЕГУНОК (Без цен, без компотов/напитков) ── */}
+      {/* ── 2. КУХОННЫЙ БЕГУНОК (БЕЗ ЦЕН, ТОЛЬКО ГОРЯЧАЯ ЕДА) ── */}
       <div
         id="kitchen-ticket-print-area"
         className="receipt-container kitchen-receipt-print"
       >
-        <div className="receipt receipt--kitchen">
-          <div className="kitchen-badge-header">
-            <div className="kitchen-title">*** КУХНЯ ***</div>
-            <div className="kitchen-order-number">{orderNumber}</div>
-            <div className="kitchen-order-type">{orderTypeLabel}</div>
+        <div className="receipt receipt--kitchen font-mono text-xs text-black">
+          <div className="text-center border-b-2 border-black pb-1.5">
+            <div className="text-xs font-bold tracking-widest uppercase">*** КУХНЯ ***</div>
+            <div className="text-2xl font-black">{orderNumber}</div>
+            <div className="text-xs font-bold">{orderTypeLabel}</div>
           </div>
 
-          <div className="receipt-meta" style={{ marginTop: '2mm' }}>
+          <div className="flex justify-between text-[10px] my-1">
             <span>{dateTime}</span>
             <span>Поварам</span>
           </div>
 
-          <div className="receipt-divider receipt-divider--bold" />
+          <div className="receipt-divider border-b-2 border-black my-1" />
 
           {/* Список блюд кухни */}
           {kitchenItems.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '4mm 0',
-                fontSize: '11px',
-                color: '#666',
-              }}
-            >
+            <div className="text-center py-2 text-[10px] text-gray-500 font-sans">
               (В заказе только напитки из бара / на кухню ничего нет)
             </div>
           ) : (
-            <div className="kitchen-items-list">
+            <div className="space-y-2 py-1">
               {kitchenItems.map((item, idx) => (
-                <div key={`${item.id}-${idx}`} className="kitchen-item-row">
-                  <div className="kitchen-item-qty-badge">
-                    [ {item.qty} × ]
+                <div key={`${item.id}-${idx}`} className="border-b border-dashed border-gray-400 pb-1">
+                  <div className="flex items-start gap-2">
+                    <span className="font-black text-sm bg-black text-white px-1 rounded">
+                      {item.qty}×
+                    </span>
+                    <span className="font-bold text-xs sm:text-sm leading-tight">
+                      {item.name}
+                    </span>
                   </div>
-                  <div className="kitchen-item-details">
-                    <div className="kitchen-item-name">{item.name}</div>
-                    {item.notes && item.notes !== item.name && (
-                      <div className="kitchen-item-notes">↳ {item.notes}</div>
-                    )}
-                  </div>
+                  {item.notes && item.notes !== item.name && (
+                    <div className="pl-6 text-[10px] text-gray-700">↳ {item.notes}</div>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="receipt-divider receipt-divider--bold" />
-
-          <div className="kitchen-footer-summary">
-            <div>
-              ИТОГО БЛЮД: <strong>{totalKitchenDishes} шт.</strong>
-            </div>
-            <div className="kitchen-stamp">Приготовить оперативно</div>
+          <div className="border-t-2 border-black pt-1 flex justify-between text-[11px] font-bold mt-2">
+            <span>БЛЮД НА КУХНЮ:</span>
+            <span>{kitchenItemsCount(items)} шт.</span>
           </div>
         </div>
       </div>
@@ -270,8 +253,7 @@ export function ReceiptPrint({
 }
 
 /**
- * Интерактивная карточка чека для отображения на экране POS-терминала.
- * Позволяет переключать просмотр (Гостевой / Кухонный) и печатать отдельно или вместе.
+ * Экранный модальный предпросмотр чека перед печатью.
  */
 export function ReceiptModal({
   data,
@@ -283,65 +265,73 @@ export function ReceiptModal({
   onPrint: (mode: PrintMode) => void
 }) {
   const [activeTab, setActiveTab] = useState<'guest' | 'kitchen'>('guest')
-
-  const calculatedSubtotal = cartTotal(data.items)
-  const subtotal = data.subtotal ?? calculatedSubtotal
+  const subtotal = data.subtotal ?? cartTotal(data.items)
   const total =
     data.total ??
     subtotal - (data.discountAmount || 0) + (data.deliveryFee || 0)
+
   const kitchenItems = getKitchenItems(data.items)
   const kitchenCount = kitchenItemsCount(data.items)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md print:hidden">
-      <div className="flex flex-col max-h-[94vh] w-full max-w-md rounded-3xl bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-        {/* Вкладки переключения между гостевым и кухонным чеком */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 p-1.5 gap-1">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-xs">
+      <div className="relative flex max-h-[92vh] w-full max-w-md flex-col rounded-2xl bg-card border border-border text-foreground shadow-2xl overflow-hidden">
+        {/* Шапка модалки */}
+        <div className="flex items-center justify-between border-b border-border/70 p-3 sm:p-4">
+          <div className="flex items-center gap-2">
+            <ReceiptIcon className="size-5 text-amber-500" />
+            <h3 className="text-base font-bold">
+              Чек заказа <span className="font-mono text-amber-500">#{data.orderNumber}</span>
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-7 items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Переключатель вкладок: Гость / Кухня */}
+        <div className="flex border-b border-border/70 bg-secondary/30 p-1.5 gap-1 text-xs">
           <button
             type="button"
             onClick={() => setActiveTab('guest')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition cursor-pointer ${
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl font-bold transition cursor-pointer ${
               activeTab === 'guest'
-                ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-sm'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-card text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span>📄</span>
-            <span>Гостевой чек (с ценами)</span>
+            <ReceiptIcon className="size-3.5" />
+            <span>Гостевой чек</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('kitchen')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition cursor-pointer ${
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl font-bold transition cursor-pointer ${
               activeTab === 'kitchen'
-                ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-sm'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-card text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span>👨‍🍳</span>
+            <ChefHat className="size-3.5 text-amber-500" />
             <span>Кухня ({kitchenCount} блюд)</span>
           </button>
         </div>
 
-        {/* ── Содержимое активного чека ── */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+        {/* Содержимое чека */}
+        <div className="flex-1 overflow-y-auto p-4 font-mono text-xs">
           {activeTab === 'guest' ? (
-            /* Гостевой чек */
             <div className="space-y-3">
-              <div className="text-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <div className="text-2xl font-black tracking-wider text-black dark:text-white">
-                  CHICKENFIT
-                </div>
-                <p className="text-xs text-zinc-500 font-semibold">
-                  Вкусно · Полезно · По-домашнему
-                </p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
-                  Самарканд, ул. Ибн Сина 136 · 93-380-2002
-                </p>
+              <div className="text-center border-b border-border/60 pb-2">
+                <div className="text-lg font-bold">CHICKENFIT</div>
+                <p className="text-[11px] text-muted-foreground">Вкусно · Полезно · По-домашнему</p>
+                <p className="text-[10px] text-muted-foreground">Самарканд, ул. Ибн Сина 136 · 93-380-2002</p>
               </div>
 
-              {/* Мета-информация */}
-              <div className="py-2 border-b border-dashed border-zinc-300 dark:border-zinc-700 text-xs space-y-1">
+              <div className="py-1 border-b border-dashed border-border/60 text-xs space-y-1">
                 <div className="flex justify-between font-bold">
                   <span>
                     {data.orderType === 'dine_in'
@@ -350,70 +340,52 @@ export function ReceiptModal({
                       ? 'Доставка'
                       : 'С собой (навынос)'}
                   </span>
-                  <span className="text-amber-600 font-black">
-                    Чек {data.orderNumber}
-                  </span>
+                  <span className="text-amber-500">#{data.orderNumber}</span>
                 </div>
-                <div className="flex justify-between text-zinc-500 text-[11px]">
+                <div className="flex justify-between text-[11px] text-muted-foreground">
                   <span>{data.dateTime}</span>
-                  <span>Кассир: Администратор</span>
+                  <span>Кассир</span>
                 </div>
                 {data.orderType === 'delivery' && (
-                  <div className="pt-1 text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <div className="pt-1 text-[11px] text-muted-foreground">
                     {data.customerPhone && <p>Тел: {data.customerPhone}</p>}
-                    {data.deliveryAddress && (
-                      <p>Адрес: {data.deliveryAddress}</p>
-                    )}
+                    {data.deliveryAddress && <p>Адрес: {data.deliveryAddress}</p>}
                   </div>
                 )}
               </div>
 
               {/* Список позиций */}
-              <div className="space-y-2 text-xs py-1">
+              <div className="space-y-1.5 py-1">
                 {data.items.map((it) => (
-                  <div
-                    key={it.id}
-                    className="flex justify-between items-start gap-2 border-b border-zinc-100 dark:border-zinc-800/60 pb-1.5"
-                  >
-                    <div className="leading-snug">
-                      <span className="font-semibold">{it.name}</span>{' '}
-                      <span className="text-zinc-500 font-bold">× {it.qty}</span>
+                  <div key={it.id} className="flex justify-between items-start gap-2 border-b border-border/40 pb-1">
+                    <div>
+                      <span>{it.name}</span>
+                      {it.qty > 1 && <span className="font-bold"> × {it.qty}</span>}
                       {it.notes && it.notes !== it.name && (
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                          ↳ {it.notes}
-                        </p>
+                        <p className="text-[10px] text-amber-500">↳ {it.notes}</p>
                       )}
                     </div>
-                    <span className="font-bold shrink-0">
-                      {receiptPrice(lineTotal(it))} сум
-                    </span>
+                    <span className="font-bold shrink-0">{receiptPrice(lineTotal(it))} сум</span>
                   </div>
                 ))}
               </div>
 
-              {/* Расчет и скидки */}
-              <div className="border-t border-dashed border-zinc-300 dark:border-zinc-700 pt-2 space-y-1 text-xs">
-                {((data.discountAmount || 0) > 0 ||
-                  (data.deliveryFee || 0) > 0) && (
+              {/* Расчет */}
+              <div className="border-t border-dashed border-border/60 pt-2 space-y-1">
+                {((data.discountAmount || 0) > 0 || (data.deliveryFee || 0) > 0) && (
                   <>
-                    <div className="flex justify-between text-zinc-500">
+                    <div className="flex justify-between text-muted-foreground">
                       <span>Подытог:</span>
                       <span>{receiptPrice(subtotal)} сум</span>
                     </div>
                     {(data.discountAmount || 0) > 0 && (
-                      <div className="flex justify-between font-bold text-emerald-600">
-                        <span>
-                          Скидка{' '}
-                          {data.discountPercent
-                            ? `(${data.discountPercent}%)`
-                            : ''}
-                          :
-                        </span>
+                      <div className="flex justify-between font-bold text-emerald-500">
+                        <span>Скидка:</span>
                         <span>-{receiptPrice(data.discountAmount || 0)} сум</span>
                       </div>
                     )}
                     {(data.deliveryFee || 0) > 0 && (
-                      <div className="flex justify-between text-amber-600">
+                      <div className="flex justify-between text-amber-500">
                         <span>Доставка:</span>
                         <span>+{receiptPrice(data.deliveryFee || 0)} сум</span>
                       </div>
@@ -421,120 +393,94 @@ export function ReceiptModal({
                   </>
                 )}
 
-                <div className="flex justify-between items-baseline pt-1 border-t border-zinc-800 dark:border-zinc-200 text-sm font-black">
-                  <span>ИТОГО К ОПЛАТЕ:</span>
-                  <span className="text-base font-black text-amber-600">
-                    {receiptPrice(total)} сум
-                  </span>
+                <div className="flex justify-between items-baseline pt-1 border-t border-border font-bold text-sm">
+                  <span>ИТОГО:</span>
+                  <span className="text-base text-amber-500">{receiptPrice(total)} сум</span>
                 </div>
 
-                <div className="pt-1 text-[11px] text-zinc-500 space-y-0.5">
+                <div className="pt-1 text-[11px] text-muted-foreground space-y-0.5">
                   <div className="flex justify-between">
                     <span>Оплата:</span>
-                    <span className="font-semibold">
-                      {data.paymentMethod === 'cash'
-                        ? 'Наличные'
-                        : 'Click / Payme'}
-                    </span>
+                    <span>{data.paymentMethod === 'cash' ? 'Наличные' : 'Click / Payme / Карта'}</span>
                   </div>
-                  {data.paymentMethod === 'cash' &&
-                    data.cashReceived !== undefined && (
-                      <>
-                        <div className="flex justify-between">
-                          <span>Получено:</span>
-                          <span>{receiptPrice(data.cashReceived)} сум</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-emerald-600">
-                          <span>Сдача:</span>
-                          <span>{receiptPrice(data.changeAmount || 0)} сум</span>
-                        </div>
-                      </>
-                    )}
+                  {data.paymentMethod === 'cash' && data.cashReceived !== undefined && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Получено:</span>
+                        <span>{receiptPrice(data.cashReceived)} сум</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-emerald-500">
+                        <span>Сдача:</span>
+                        <span>{receiptPrice(data.changeAmount || 0)} сум</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             /* Кухонный бегунок */
-            <div className="space-y-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 p-4 font-mono">
-              <div className="text-center border-b-2 border-zinc-900 dark:border-zinc-100 pb-2">
-                <div className="text-xs font-black tracking-widest uppercase text-zinc-500">
+            <div className="space-y-3 rounded-xl border border-border/80 bg-secondary/30 p-3">
+              <div className="text-center border-b border-border pb-1.5">
+                <div className="text-[11px] font-bold uppercase text-muted-foreground">
                   *** ЗАКАЗ НА КУХНЮ ***
                 </div>
-                <div className="text-3xl font-black text-amber-600 dark:text-amber-400 mt-1">
-                  {data.orderNumber}
-                </div>
-                <div className="text-sm font-black mt-1">
+                <div className="text-2xl font-bold text-amber-500">{data.orderNumber}</div>
+                <div className="text-xs font-semibold">
                   {data.orderType === 'dine_in'
-                    ? `🍽️ В ЗАЛЕ (СТОЛ №${data.tableNumber || 1})`
+                    ? `В ЗАЛЕ (СТОЛ №${data.tableNumber || 1})`
                     : data.orderType === 'delivery'
-                    ? '🛵 ДОСТАВКА'
-                    : '🛍️ НАВЫНОС'}
+                    ? 'ДОСТАВКА'
+                    : 'НАВЫНОС'}
                 </div>
               </div>
 
-              <div className="flex justify-between text-xs text-zinc-500 py-1 border-b border-dashed border-zinc-300 dark:border-zinc-700">
-                <span>Время: {data.dateTime}</span>
-                <span>Без цен / Только еда</span>
-              </div>
-
-              {/* Список блюд кухни */}
-              <div className="space-y-3 py-2">
+              <div className="space-y-2 py-1">
                 {kitchenItems.length === 0 ? (
-                  <p className="text-xs text-center text-zinc-400 py-4 font-sans">
-                    В этом заказе нет блюд для кухни (только напитки)
+                  <p className="text-xs text-center text-muted-foreground py-3 font-sans">
+                    В заказе нет блюд для кухни (только бар/напитки)
                   </p>
                 ) : (
                   kitchenItems.map((it) => (
-                    <div
-                      key={it.id}
-                      className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-2.5 space-y-1"
-                    >
+                    <div key={it.id} className="rounded-lg border border-border bg-card p-2">
                       <div className="flex items-start gap-2">
-                        <span className="rounded-lg bg-amber-500 text-black px-1.5 py-0.5 text-xs font-black shrink-0">
-                          {it.qty} ×
+                        <span className="rounded bg-amber-500 text-black px-1.5 py-0.5 text-xs font-bold shrink-0">
+                          {it.qty}×
                         </span>
-                        <span className="text-xs sm:text-sm font-bold leading-tight">
-                          {it.name}
-                        </span>
+                        <span className="text-xs font-bold leading-tight">{it.name}</span>
                       </div>
-                      {it.notes && (
-                        <div className="pl-8 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                          ↳ {it.notes}
-                        </div>
-                      )}
+                      {it.notes && <div className="pl-7 text-[10px] text-amber-500">↳ {it.notes}</div>}
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="border-t-2 border-zinc-900 dark:border-zinc-100 pt-2 flex justify-between items-center text-xs font-bold">
+              <div className="border-t border-border pt-1.5 flex justify-between text-xs font-bold">
                 <span>ИТОГО КУХОННЫХ БЛЮД:</span>
-                <span className="text-sm font-black text-amber-600">
-                  {kitchenCount} шт.
-                </span>
+                <span className="text-amber-500">{kitchenCount} шт.</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Кнопки действий и печати */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 sm:p-4 space-y-2">
+        {/* Кнопки печати */}
+        <div className="border-t border-border/70 bg-secondary/40 p-3 space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => onPrint('guest')}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-amber-500 py-3 text-xs font-black text-black shadow-md transition hover:bg-amber-400 active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-2.5 text-xs font-bold text-black shadow-xs transition cursor-pointer"
             >
-              <span>🖨️</span>
-              <span>Гостевой чек</span>
+              <Printer className="size-3.5" />
+              <span>Чек гостю</span>
             </button>
 
             <button
               type="button"
               onClick={() => onPrint('kitchen')}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black py-3 text-xs font-black shadow-md transition hover:opacity-90 active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-secondary hover:bg-secondary/80 py-2.5 text-xs font-bold text-foreground border border-border shadow-xs transition cursor-pointer"
             >
-              <span>👨‍🍳</span>
+              <ChefHat className="size-3.5 text-amber-500" />
               <span>Чек на кухню</span>
             </button>
           </div>
@@ -543,15 +489,16 @@ export function ReceiptModal({
             <button
               type="button"
               onClick={() => onPrint('both')}
-              className="flex-1 rounded-2xl border border-amber-500 bg-amber-500/10 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition cursor-pointer text-center"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 py-2 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
             >
-              ⚡ Распечатать оба чека (Гость + Кухня)
+              <Zap className="size-3.5" />
+              <span>Печать обоих чеков (Гость + Кухня)</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
             >
               Закрыть
             </button>

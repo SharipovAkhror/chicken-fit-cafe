@@ -1,6 +1,23 @@
 'use client'
 
 import { useState } from 'react'
+import {
+  Trash2,
+  Plus,
+  Minus,
+  X,
+  Printer,
+  Edit2,
+  Check,
+  Percent,
+  Banknote,
+  CreditCard,
+  QrCode,
+  Utensils,
+  ShoppingBag,
+  Truck,
+  Delete,
+} from 'lucide-react'
 import type { CartItem } from '@/lib/cart'
 import { lineTotal, cartTotal } from '@/lib/cart'
 import type { OrderType, PaymentMethod } from '@/lib/orders'
@@ -68,11 +85,11 @@ function CartLine({
   }
 
   return (
-    <div className="group flex flex-col gap-1.5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 p-2.5 transition hover:border-amber-500/30">
+    <div className="group flex flex-col gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 p-2.5 transition hover:border-amber-500/40">
       {/* Название + сумма строки */}
       <div className="flex items-start justify-between gap-2">
-        <div className="leading-snug">
-          <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+        <div className="leading-snug min-w-0">
+          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate block">
             {item.name}
           </span>
           {item.notes && item.notes !== item.name && (
@@ -81,69 +98,84 @@ function CartLine({
             </p>
           )}
         </div>
-        <span className="shrink-0 text-xs sm:text-sm font-black text-zinc-900 dark:text-white">
+        <span className="shrink-0 text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-white">
           {formatNum(lineTotal(item))} сум
         </span>
       </div>
 
       {/* Управление количеством и ценой */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-0.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 shadow-2xs">
           <button
             type="button"
             onClick={() => onSetQty(item.id, item.qty - 1)}
-            className="flex size-6 items-center justify-center rounded-lg text-sm text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-bold"
+            className="flex size-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+            aria-label="Уменьшить"
           >
-            −
+            <Minus className="size-3.5" />
           </button>
-          <span className="min-w-[1.5rem] text-center text-xs font-black text-zinc-900 dark:text-white">
+          <span className="min-w-6 text-center text-xs font-bold font-mono text-zinc-900 dark:text-white">
             {item.qty}
           </span>
           <button
             type="button"
             onClick={() => onSetQty(item.id, item.qty + 1)}
-            className="flex size-6 items-center justify-center rounded-lg text-sm text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-bold"
+            className="flex size-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+            aria-label="Увеличить"
           >
-            +
+            <Plus className="size-3.5" />
           </button>
         </div>
 
-        <span className="text-zinc-400 text-xs">×</span>
+        <span className="text-zinc-400 text-xs font-mono">×</span>
+
         {editingPrice ? (
-          <input
-            type="number"
-            value={priceInput}
-            onChange={(e) => setPriceInput(e.target.value)}
-            onBlur={commitPrice}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitPrice()
-              if (e.key === 'Escape') setEditingPrice(false)
-            }}
-            autoFocus
-            className="w-20 rounded-lg border border-amber-500 bg-white dark:bg-zinc-800 px-1.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-300 outline-none"
-          />
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              value={priceInput}
+              onChange={(e) => setPriceInput(e.target.value)}
+              onBlur={commitPrice}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitPrice()
+                if (e.key === 'Escape') setEditingPrice(false)
+              }}
+              autoFocus
+              className="w-20 rounded-lg border border-amber-500 bg-white dark:bg-zinc-800 px-1.5 py-1 text-xs font-bold font-mono text-amber-600 dark:text-amber-300 outline-none"
+            />
+            <button
+              type="button"
+              onClick={commitPrice}
+              className="p-1 rounded-md bg-amber-500 text-black text-xs font-bold"
+            >
+              <Check className="size-3" />
+            </button>
+          </div>
         ) : (
           <button
             type="button"
             onClick={startEditPrice}
             title="Нажмите для изменения цены единицы"
-            className={`flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-xs transition hover:bg-zinc-200 dark:hover:bg-zinc-800 ${
-              modified ? 'font-bold text-amber-600 dark:text-amber-400' : 'text-zinc-500 dark:text-zinc-400'
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-mono transition hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${
+              modified
+                ? 'font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                : 'text-zinc-500 dark:text-zinc-400'
             }`}
           >
             <span>{formatNum(item.price)}</span>
-            <span className="text-[10px] opacity-40">✏️</span>
+            <Edit2 className="size-2.5 opacity-60" />
           </button>
         )}
 
         <div className="flex-1" />
+
         <button
           type="button"
           onClick={() => onRemove(item.id)}
-          className="flex size-6 items-center justify-center rounded-lg text-zinc-400 hover:bg-red-500/10 hover:text-red-500 transition"
+          className="flex size-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-500 transition cursor-pointer"
           title="Удалить"
         >
-          ✕
+          <Trash2 className="size-3.5" />
         </button>
       </div>
     </div>
@@ -182,6 +214,7 @@ export function CartPanel({
   const [showAddCustom, setShowAddCustom] = useState(false)
   const [customName, setCustomName] = useState('')
   const [customPrice, setCustomPrice] = useState('')
+  const [showNumpad, setShowNumpad] = useState(false)
 
   const subtotal = cartTotal(items)
   const percentDiscountAmount = discountPercent > 0 ? (subtotal * discountPercent) / 100 : 0
@@ -190,8 +223,6 @@ export function CartPanel({
   const finalTotal = Math.max(0, subtotal - totalDiscountAmount + activeDeliveryFee)
   const hasItems = items.length > 0
   const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
-
-  const quickBills = [50000, 100000, 200000]
 
   function handleAddCustomLine(e: React.FormEvent) {
     e.preventDefault()
@@ -205,33 +236,54 @@ export function CartPanel({
     setShowAddCustom(false)
   }
 
+  function handleNumpadPress(digit: string) {
+    const curStr = String(cashReceived || '')
+    const nextStr = curStr + digit
+    const val = parseInt(nextStr, 10) || 0
+    onSetCashReceived(val)
+  }
+
+  function handleNumpadClear() {
+    onSetCashReceived(0)
+  }
+
+  function handleNumpadBackspace() {
+    const curStr = String(cashReceived || '')
+    const nextStr = curStr.slice(0, -1)
+    onSetCashReceived(parseInt(nextStr, 10) || 0)
+  }
+
+  function handleAddBill(amount: number) {
+    onSetCashReceived((cashReceived || 0) + amount)
+  }
+
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-zinc-900 dark:text-white shadow-sm">
-      {/* Верх: номер заказа, тип и кнопка закрытия на мобильных */}
-      <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+    <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-4 text-foreground shadow-xs">
+      {/* Верх: номер заказа, тип и кнопка закрытия */}
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center gap-2">
-          <span className="rounded-xl bg-amber-500/15 dark:bg-amber-500/20 px-2.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400">
+          <span className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
             {orderNumber}
           </span>
-          <h2 className="text-sm sm:text-base font-black">Текущий чек</h2>
+          <h2 className="text-sm sm:text-base font-bold">Текущий чек</h2>
         </div>
         <div className="flex items-center gap-2">
           {hasItems && (
             <button
               type="button"
               onClick={onClear}
-              className="rounded-xl px-2.5 py-1 text-xs font-semibold text-zinc-400 hover:bg-red-500/10 hover:text-red-500 transition"
+              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:bg-destructive/15 hover:text-destructive transition cursor-pointer"
             >
-              Сброс
+              Очистить
             </button>
           )}
           {onCloseMobile && (
             <button
               type="button"
               onClick={onCloseMobile}
-              className="rounded-xl bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-bold text-zinc-700 dark:text-zinc-200 lg:hidden"
+              className="rounded-lg bg-secondary px-2.5 py-1 text-xs font-bold text-foreground lg:hidden"
             >
-              ✕
+              <X className="size-4" />
             </button>
           )}
         </div>
@@ -239,55 +291,58 @@ export function CartPanel({
 
       {/* 1. Выбор формата заказа */}
       <div className="pt-3">
-        <div className="grid grid-cols-3 gap-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-1 text-xs font-bold">
+        <div className="grid grid-cols-3 gap-1 rounded-xl border border-border/70 bg-secondary/50 p-1 text-xs font-semibold">
           <button
             type="button"
             onClick={() => onSetOrderType('dine_in')}
-            className={`rounded-xl py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
               orderType === 'dine_in'
-                ? 'bg-amber-500 font-black text-black shadow-xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-card font-bold text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            🍽️ В зале
+            <Utensils className="size-3.5" />
+            <span>В зале</span>
           </button>
           <button
             type="button"
             onClick={() => onSetOrderType('takeaway')}
-            className={`rounded-xl py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
               orderType === 'takeaway'
-                ? 'bg-amber-500 font-black text-black shadow-xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-card font-bold text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            🛍️ С собой
+            <ShoppingBag className="size-3.5" />
+            <span>С собой</span>
           </button>
           <button
             type="button"
             onClick={() => onSetOrderType('delivery')}
-            className={`rounded-xl py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
               orderType === 'delivery'
-                ? 'bg-amber-500 font-black text-black shadow-xs'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-card font-bold text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            🛵 Доставка
+            <Truck className="size-3.5" />
+            <span>Доставка</span>
           </button>
         </div>
 
         {/* Столы */}
         {orderType === 'dine_in' && (
-          <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-1">
-            <span className="text-xs font-semibold text-zinc-400 shrink-0">Стол:</span>
+          <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1">
+            <span className="text-xs text-muted-foreground shrink-0 font-medium">Стол:</span>
             {['1', '2', '3', '4', '5', '6', '7', '8', 'Бар'].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => onSetTableNumber(num)}
-                className={`min-w-7 h-7 px-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
+                className={`min-w-8 h-8 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
                   tableNumber === num
                     ? 'bg-amber-500 text-black shadow-xs'
-                    : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    : 'border border-border bg-card text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {num}
@@ -298,33 +353,33 @@ export function CartPanel({
 
         {/* Доставка */}
         {orderType === 'delivery' && (
-          <div className="mt-2.5 space-y-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-2.5">
+          <div className="mt-2 space-y-1.5 rounded-xl border border-border/70 bg-secondary/30 p-2 text-xs">
             <input
               type="text"
               value={customerPhone}
               onChange={(e) => onSetCustomerPhone(e.target.value)}
-              placeholder="Телефон клиента (+998...)"
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-amber-500"
+              placeholder="Телефон (+998...)"
+              className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 outline-none font-mono"
             />
             <input
               type="text"
               value={deliveryAddress}
               onChange={(e) => onSetDeliveryAddress(e.target.value)}
               placeholder="Адрес доставки / ориентир"
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-amber-500"
+              className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 outline-none"
             />
-            <div className="flex items-center justify-between gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
-              <span className="text-[11px] font-semibold text-zinc-500">Доставка:</span>
+            <div className="flex items-center justify-between gap-1 pt-1">
+              <span className="text-[11px] text-muted-foreground">Доставка:</span>
               <div className="flex gap-1">
                 {[0, 10000, 15000, 20000].map((fee) => (
                   <button
                     key={fee}
                     type="button"
                     onClick={() => onSetDeliveryFee(fee)}
-                    className={`rounded-lg px-2 py-0.5 text-[11px] font-bold transition ${
+                    className={`rounded-md px-2 py-0.5 text-[11px] font-bold font-mono transition cursor-pointer ${
                       deliveryFee === fee
-                        ? 'bg-amber-500 text-black shadow-xs'
-                        : 'border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
+                        ? 'bg-amber-500 text-black'
+                        : 'border border-border bg-background text-muted-foreground'
                     }`}
                   >
                     {fee === 0 ? '0' : `${fee / 1000}к`}
@@ -337,9 +392,9 @@ export function CartPanel({
       </div>
 
       {/* 2. Список блюд в чеке */}
-      <div className="my-3 flex-1 space-y-1.5 overflow-y-auto pr-0.5 min-h-[120px]">
+      <div className="my-2.5 flex-1 space-y-1.5 overflow-y-auto pr-0.5 min-h-[100px]">
         {!hasItems && (
-          <div className="flex h-full flex-col items-center justify-center text-center p-4 text-zinc-400">
+          <div className="flex h-full flex-col items-center justify-center text-center p-4 text-muted-foreground">
             <p className="text-xs">Нажимайте на блюда слева для добавления в чек</p>
           </div>
         )}
@@ -357,21 +412,21 @@ export function CartPanel({
           <button
             type="button"
             onClick={() => setShowAddCustom(true)}
-            className="w-full rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 py-1.5 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 transition hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400"
+            className="w-full rounded-xl border border-dashed border-border py-1.5 text-[11px] font-medium text-muted-foreground hover:border-amber-500 hover:text-amber-500 transition cursor-pointer"
           >
             + Добавить доплату / услугу в чек
           </button>
         )}
 
         {showAddCustom && (
-          <form onSubmit={handleAddCustomLine} className="flex gap-1.5 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+          <form onSubmit={handleAddCustomLine} className="flex gap-1.5 p-2 rounded-xl border border-border bg-secondary/40">
             <input
               type="text"
               required
               placeholder="Название услуги"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1 text-xs text-zinc-900 dark:text-white outline-none"
+              className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-xs outline-none"
             />
             <input
               type="number"
@@ -379,125 +434,177 @@ export function CartPanel({
               placeholder="Сумма"
               value={customPrice}
               onChange={(e) => setCustomPrice(e.target.value)}
-              className="w-20 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1 text-xs text-zinc-900 dark:text-white outline-none"
+              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-xs font-mono outline-none"
             />
-            <button type="submit" className="rounded-xl bg-amber-500 px-2.5 py-1 text-xs font-bold text-black">
+            <button type="submit" className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-bold text-black cursor-pointer">
               ✓
             </button>
-            <button type="button" onClick={() => setShowAddCustom(false)} className="px-1 text-xs text-zinc-400">
+            <button type="button" onClick={() => setShowAddCustom(false)} className="px-1 text-xs text-muted-foreground cursor-pointer">
               ✕
             </button>
           </form>
         )}
       </div>
 
-      {/* 3. Скидки, Оплата и Сдача */}
+      {/* 3. Скидки, Оплата и Сенсорный калькулятор сдачи */}
       {hasItems && (
-        <div className="border-t border-zinc-100 dark:border-zinc-800 pt-2.5 space-y-2.5">
-          {/* Скидка */}
+        <div className="border-t border-border/70 pt-2 space-y-2">
+          {/* Скидки */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500">
-              <span>Скидка на чек:</span>
+            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Percent className="size-3" />
+                <span>Скидка:</span>
+              </span>
               {totalDiscountAmount > 0 && (
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="font-bold font-mono text-emerald-500">
                   -{formatNum(totalDiscountAmount)} сум
                 </span>
               )}
             </div>
-            <div className="flex gap-1">
-              {[
-                { label: '0%', val: 0 },
-                { label: '5%', val: 5 },
-                { label: '10%', val: 10 },
-                { label: '15%', val: 15 },
-                { label: '20%', val: 20 },
-              ].map((d) => (
+            <div className="grid grid-cols-5 gap-1">
+              {[0, 5, 10, 15, 20].map((pct) => (
                 <button
-                  key={d.val}
+                  key={pct}
                   type="button"
                   onClick={() => {
-                    onSetDiscountPercent(d.val)
+                    onSetDiscountPercent(pct)
                     onSetCustomDiscount(0)
                   }}
-                  className={`flex-1 rounded-xl py-1 text-xs font-bold transition ${
-                    discountPercent === d.val && customDiscount === 0
+                  className={`rounded-lg py-1 text-xs font-mono font-bold transition cursor-pointer ${
+                    discountPercent === pct && customDiscount === 0
                       ? 'bg-emerald-500 text-black shadow-xs'
-                      : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50'
+                      : 'border border-border bg-secondary/50 text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {d.label}
+                  {pct}%
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Оплата */}
-          <div className="grid grid-cols-2 gap-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-1 text-xs">
+          {/* Метод оплаты */}
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-secondary/50 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => {
                 onSetPaymentMethod('cash')
                 if (!cashReceived) onSetCashReceived(finalTotal)
               }}
-              className={`rounded-xl py-1.5 font-bold transition cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
                 paymentMethod === 'cash'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-card font-bold text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              💵 Наличные
+              <Banknote className="size-3.5 text-amber-500" />
+              <span>Наличные</span>
             </button>
             <button
               type="button"
               onClick={() => onSetPaymentMethod('click_payme')}
-              className={`rounded-xl py-1.5 font-bold transition cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
                 paymentMethod === 'click_payme'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-card font-bold text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              💳 Click / Payme / Карта
+              <CreditCard className="size-3.5 text-blue-500" />
+              <span>Карта / QR</span>
             </button>
           </div>
 
-          {/* Сдача */}
+          {/* Сенсорный ввод наличных и сдачи (Touch Numpad) */}
           {paymentMethod === 'cash' && (
-            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 p-2 space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-zinc-500">Получено:</span>
-                <input
-                  type="number"
-                  value={cashReceived || ''}
-                  onChange={(e) => onSetCashReceived(Number(e.target.value))}
-                  placeholder={String(finalTotal)}
-                  className="w-28 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1 text-right text-xs font-bold text-amber-600 dark:text-amber-400 outline-none focus:border-amber-500"
-                />
+            <div className="rounded-xl border border-border/80 bg-secondary/20 p-2.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">Получено от гостя:</span>
+                <button
+                  type="button"
+                  onClick={() => setShowNumpad(!showNumpad)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-background border border-border px-2.5 py-1 text-xs font-mono font-bold text-amber-600 dark:text-amber-400 cursor-pointer"
+                >
+                  <span>{cashReceived > 0 ? formatNum(cashReceived) : '0'} сум</span>
+                  <Edit2 className="size-3 opacity-60" />
+                </button>
               </div>
 
-              <div className="flex gap-1 justify-end">
+              {/* Быстрые купюры */}
+              <div className="grid grid-cols-4 gap-1">
                 <button
                   type="button"
                   onClick={() => onSetCashReceived(finalTotal)}
-                  className="rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  className="rounded-lg bg-amber-500/15 border border-amber-500/30 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 cursor-pointer text-center"
                 >
-                  Ровно
+                  Без сдачи
                 </button>
-                {quickBills.map((bill) => (
-                  <button
-                    key={bill}
-                    type="button"
-                    onClick={() => onSetCashReceived(bill)}
-                    className="rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  >
-                    {formatNum(bill)}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => handleAddBill(50000)}
+                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                >
+                  +50к
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddBill(100000)}
+                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                >
+                  +100к
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddBill(200000)}
+                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                >
+                  +200к
+                </button>
               </div>
 
+              {/* Сенсорная цифровая клавиатура (On-Screen Numpad) */}
+              {showNumpad && (
+                <div className="pt-2 border-t border-border/60">
+                  <div className="grid grid-cols-3 gap-1 mb-1">
+                    {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => handleNumpadPress(n)}
+                        className="h-10 rounded-lg bg-card border border-border/80 text-sm font-bold font-mono hover:bg-secondary active:scale-95 transition cursor-pointer"
+                      >
+                        {n}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleNumpadClear}
+                      className="h-10 rounded-lg bg-destructive/15 text-destructive text-xs font-bold hover:bg-destructive/25 cursor-pointer"
+                    >
+                      СБРОС
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleNumpadPress('0')}
+                      className="h-10 rounded-lg bg-card border border-border/80 text-sm font-bold font-mono hover:bg-secondary cursor-pointer"
+                    >
+                      0
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNumpadBackspace}
+                      className="h-10 flex items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <Delete className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Расчет сдачи */}
               {cashReceived > finalTotal && (
-                <div className="flex items-baseline justify-between pt-1 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Сдача:</span>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-baseline justify-between pt-1.5 border-t border-border/60 font-mono">
+                  <span className="text-xs text-emerald-500 font-bold">СДАЧА ГОСТЮ:</span>
+                  <span className="text-base font-bold text-emerald-500">
                     {formatNum(change)} сум
                   </span>
                 </div>
@@ -507,34 +614,34 @@ export function CartPanel({
         </div>
       )}
 
-      {/* 4. Итого и кнопка печати */}
-      <div className="mt-2 border-t border-zinc-100 dark:border-zinc-800 pt-2.5">
-        <div className="space-y-1 mb-2">
+      {/* 4. Итого и кнопка быстрой печати чека */}
+      <div className="mt-2 border-t border-border/70 pt-2.5">
+        <div className="space-y-1 mb-2 font-mono">
           {subtotal !== finalTotal && (
-            <div className="flex justify-between text-xs text-zinc-400">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>Сумма блюд:</span>
               <span>{formatNum(subtotal)} сум</span>
             </div>
           )}
           {totalDiscountAmount > 0 && (
-            <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+            <div className="flex justify-between text-xs text-emerald-500 font-semibold">
               <span>Скидка:</span>
               <span>-{formatNum(totalDiscountAmount)} сум</span>
             </div>
           )}
           {activeDeliveryFee > 0 && (
-            <div className="flex justify-between text-xs text-amber-600 dark:text-amber-400 font-semibold">
+            <div className="flex justify-between text-xs text-amber-500 font-semibold">
               <span>Доставка:</span>
               <span>+{formatNum(activeDeliveryFee)} сум</span>
             </div>
           )}
           <div className="flex items-baseline justify-between pt-1">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              ИТОГО К ОПЛАТЕ:
+            <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase font-sans">
+              ИТОГО:
             </span>
-            <span className="text-xl font-black text-amber-600 dark:text-amber-400">
+            <span className="text-xl font-bold text-amber-600 dark:text-amber-500">
               {formatNum(finalTotal)}{' '}
-              <span className="text-xs font-normal text-zinc-400">сум</span>
+              <span className="text-xs font-normal text-muted-foreground">сум</span>
             </span>
           </div>
         </div>
@@ -543,10 +650,10 @@ export function CartPanel({
           type="button"
           onClick={onSubmitOrder}
           disabled={!hasItems}
-          className="w-full rounded-2xl bg-amber-500 py-3.5 text-sm sm:text-base font-black text-black transition hover:bg-amber-400 active:scale-[0.98] disabled:opacity-25 disabled:hover:bg-amber-500 cursor-pointer shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-bold text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
         >
-          <span>🖨️</span>
-          <span>Оформить и распечатать чек</span>
+          <Printer className="size-5" />
+          <span>Оформить и напечатать чек</span>
         </button>
       </div>
     </div>

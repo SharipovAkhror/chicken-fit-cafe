@@ -1,7 +1,17 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import {
+  ShoppingCart,
+  ClipboardList,
+  BarChart3,
+  UtensilsCrossed,
+  QrCode,
+  Sun,
+  Moon,
+  Tv,
+} from 'lucide-react'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
 import {
@@ -127,14 +137,12 @@ export function PosTerminal() {
 
   useEffect(() => {
     reloadOrders()
-    // Периодическая фоновая синхронизация заказов каждые 10 секунд
     const interval = setInterval(() => {
       reloadOrders()
     }, 10000)
     return () => clearInterval(interval)
   }, [reloadOrders])
 
-  // Сохранение изменений меню в локальное хранилище
   function persistMenuOverrides(updated: CategoryData[]) {
     setCategories(updated)
     if (typeof window === 'undefined') return
@@ -237,7 +245,6 @@ export function PosTerminal() {
     setShowMobileCart(false)
   }, [])
 
-  // Печать с заданным режимом ('guest' | 'kitchen' | 'both')
   const handlePrintWithMode = useCallback(
     (mode: PrintMode) => {
       if (!receiptData) return
@@ -249,7 +256,6 @@ export function PosTerminal() {
     [receiptData],
   )
 
-  // Оформление заказа и печать
   const handleSubmitOrder = useCallback(async () => {
     if (cart.length === 0) return
 
@@ -283,7 +289,6 @@ export function PosTerminal() {
       printMode: 'guest',
     }
 
-    // 1. Сохраняем заказ в базу / локальное хранилище
     await createOrder({
       orderNumber: num,
       type: orderType,
@@ -300,52 +305,41 @@ export function PosTerminal() {
       cashReceived:
         paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
       changeAmount: paymentMethod === 'cash' ? change : undefined,
+      createdAt: new Date().toISOString(),
+      status: 'confirmed',
     })
 
-    // 2. Формируем данные чека и открываем экран
     setReceiptData(rData)
     setShowReceiptModal(true)
-
-    // 3. Открываем окно печати чека
-    requestAnimationFrame(() => {
-      window.print()
-
-      // Сброс корзины и подготовка следующего заказа
-      setCart(clearCart())
-      setOrderNumber(peekOrderNumber())
-      setCashReceived(0)
-      setDiscountPercent(0)
-      setCustomDiscount(0)
-      setDeliveryFee(0)
-      setShowMobileCart(false)
-      reloadOrders()
-    })
+    setOrderNumber(peekOrderNumber())
+    handleClear()
+    reloadOrders()
   }, [
     cart,
     orderType,
     tableNumber,
     customerPhone,
     deliveryAddress,
-    paymentMethod,
-    cashReceived,
     discountPercent,
     customDiscount,
     deliveryFee,
+    paymentMethod,
+    cashReceived,
+    handleClear,
     reloadOrders,
   ])
 
-  // Повторная печать чека из истории
   const handleReprint = useCallback(
     (order: Order, mode: PrintMode = 'guest') => {
       const rData: ReceiptProps = {
         items: order.items,
         orderNumber: order.orderNumber,
-        dateTime: receiptDateTime(),
+        dateTime: receiptDateTime(new Date(order.createdAt)),
         orderType: order.type,
         tableNumber: order.tableNumber,
         customerPhone: order.customerPhone,
         deliveryAddress: order.deliveryAddress,
-        subtotal: order.subtotal ?? order.total,
+        subtotal: order.subtotal,
         discountAmount: order.discountAmount ?? 0,
         discountPercent: order.discountPercent,
         deliveryFee: order.deliveryFee ?? 0,
@@ -358,15 +352,10 @@ export function PosTerminal() {
 
       setReceiptData(rData)
       setShowReceiptModal(true)
-
-      requestAnimationFrame(() => {
-        window.print()
-      })
     },
     [],
   )
 
-  // Функции управления меню
   const handleToggleAvailable = useCallback(
     (itemId: string, available: boolean) => {
       const updated = categories.map((cat) => ({
@@ -417,40 +406,41 @@ export function PosTerminal() {
 
   return (
     <>
-      <div className="flex h-screen w-full flex-col bg-zinc-100 dark:bg-zinc-950 font-sans antialiased text-zinc-900 dark:text-zinc-100 overflow-hidden select-none">
+      <div className="flex h-screen w-full flex-col bg-background font-sans antialiased text-foreground overflow-hidden select-none">
         {/* Верхняя панель навигации POS */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-900/90 px-3 sm:px-5 backdrop-blur-md z-10 shadow-2xs">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-5 backdrop-blur-md z-10 shadow-2xs">
           {/* Левая часть: логотип и статус */}
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2 font-black tracking-wider text-black dark:text-white group"
+              className="flex items-center gap-2 font-black tracking-wider text-foreground group"
               title="Перейти на клиентский сайт меню"
             >
               <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500 font-black text-black text-sm shadow-xs group-hover:scale-105 transition">
                 CF
               </span>
-              <span className="hidden sm:inline font-black text-base">
-                CHICKEN<span className="text-amber-600 dark:text-amber-400">FIT</span>
+              <span className="hidden sm:inline font-bold text-base">
+                CHICKEN<span className="text-amber-500">FIT</span> POS
               </span>
             </Link>
-            <span className="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              ● КАССА ОНЛАЙН
+            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 border border-emerald-500/20">
+              ● ОНЛАЙН
             </span>
           </div>
 
           {/* Центральная часть: переключатель вкладок терминала */}
-          <nav className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-zinc-100 dark:bg-zinc-950/80 p-1 border border-zinc-200/60 dark:border-zinc-800">
+          <nav className="flex items-center gap-1 overflow-x-auto rounded-xl bg-secondary/60 p-1 border border-border">
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'pos'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              🛒 Терминал
+              <ShoppingCart className="size-3.5 text-amber-500" />
+              <span>Терминал</span>
             </button>
             <button
               type="button"
@@ -458,13 +448,14 @@ export function PosTerminal() {
                 setActiveTab('orders')
                 reloadOrders()
               }}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'orders'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              📋 Заказы ({todayOrders.length})
+              <ClipboardList className="size-3.5 text-blue-500" />
+              <span>Заказы ({todayOrders.length})</span>
             </button>
             <button
               type="button"
@@ -472,61 +463,76 @@ export function PosTerminal() {
                 setActiveTab('shift')
                 reloadOrders()
               }}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'shift'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              📊 Смена
+              <BarChart3 className="size-3.5 text-emerald-500" />
+              <span>Смена</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('menu')}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'menu'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              🍱 Меню
+              <UtensilsCrossed className="size-3.5 text-purple-500" />
+              <span>Меню</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('qr')}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                 activeTab === 'qr'
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              📱 QR & Столы
+              <QrCode className="size-3.5 text-orange-500" />
+              <span>QR Столы</span>
             </button>
           </nav>
 
-          {/* Правая часть: кнопка темы */}
+          {/* Правая часть: тема */}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center justify-center size-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-200 transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
-              title={
-                isDark
-                  ? 'Переключить на светлую тему'
-                  : 'Переключить на тёмную тему'
-              }
+              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-foreground transition hover:border-amber-500 cursor-pointer shadow-2xs"
+              title={isDark ? 'Светлая тема' : 'Тёмная тема'}
             >
-              {isDark ? '☀️' : '🌙'}
+              {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4 text-zinc-700" />}
             </button>
           </div>
         </header>
+
+        {/* 📟 Индикатор внешнего табло покупателя (Customer Pole Display) */}
+        <div className="bg-zinc-950 text-red-500 border-b border-zinc-800 px-4 py-1 flex items-center justify-between text-xs font-mono select-none">
+          <div className="flex items-center gap-2">
+            <span className="inline-block size-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-[11px] text-zinc-400 font-sans font-semibold inline-flex items-center gap-1">
+              <Tv className="size-3 text-zinc-400" />
+              <span>ТАБЛО ПОКУПАТЕЛЯ:</span>
+            </span>
+          </div>
+          <div className="font-bold tracking-widest text-red-500 bg-black px-3 py-0.5 rounded border border-red-950">
+            {currentFinalTotal > 0
+              ? `K OPLATE: ${formatNum(currentFinalTotal)} UZS`
+              : 'CHICKEN FIT CAFE • 0.00 UZS'}
+          </div>
+        </div>
 
         {/* Главная рабочая область */}
         <div className="flex min-h-0 flex-1 overflow-hidden relative">
           {activeTab === 'pos' && (
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row w-full">
               {/* Сетка меню */}
-              <div className="flex-1 overflow-hidden p-3 sm:p-5 pb-20 lg:pb-5">
+              <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-20 lg:pb-4">
                 <MenuGrid
                   categories={categories}
                   activeCategory={activeCategory}
@@ -536,8 +542,8 @@ export function PosTerminal() {
                 />
               </div>
 
-              {/* Панель оформления и корзины (на ПК справа) */}
-              <aside className="hidden lg:block w-full lg:w-[26rem] xl:w-[28rem] shrink-0 border-l border-zinc-200 dark:border-zinc-800 p-3 sm:p-5 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950">
+              {/* Панель оформления и корзины (справа) */}
+              <aside className="hidden lg:block w-full lg:w-[25rem] xl:w-[27rem] shrink-0 border-l border-border p-3 sm:p-4 overflow-y-auto bg-card/50">
                 <CartPanel
                   items={cart}
                   orderNumber={orderNumber}
@@ -570,8 +576,8 @@ export function PosTerminal() {
 
               {/* Мобильная всплывающая корзина */}
               {showMobileCart && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm lg:hidden">
-                  <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white dark:bg-zinc-950 p-4 border-t border-zinc-200 dark:border-zinc-800 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-xs lg:hidden">
+                  <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card p-4 border-t border-border shadow-2xl">
                     <CartPanel
                       items={cart}
                       orderNumber={orderNumber}
@@ -611,15 +617,15 @@ export function PosTerminal() {
                   <button
                     type="button"
                     onClick={() => setShowMobileCart(true)}
-                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-4 text-black font-extrabold shadow-2xl shadow-amber-500/30 active:scale-98 transition cursor-pointer"
+                    className="flex w-full items-center justify-between rounded-xl bg-amber-500 p-4 text-black font-bold shadow-2xl active:scale-98 transition cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="flex size-7 items-center justify-center rounded-xl bg-black text-amber-400 text-xs font-black">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-black text-amber-400 text-xs font-mono font-bold">
                         {totalCartCount}
                       </span>
                       <span>Оформить чек</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 font-mono">
                       <span>{formatNum(currentFinalTotal)} сум</span>
                       <span>➔</span>
                     </div>
