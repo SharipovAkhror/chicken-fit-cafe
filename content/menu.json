@@ -174,21 +174,57 @@
           "available": true
         },
         {
-          "id": "pirozhki-meat",
+          "id": "belyashi",
           "name": {
-            "ru": "Пирожки с мясом",
-            "uz": "Go'shtli pirojkilar",
-            "en": "Meat Pirozhki"
+            "ru": "Беляши",
+            "uz": "Belyash",
+            "en": "Belyashi"
           },
           "description": {
-            "ru": "Сытные пирожки с сочной мясной начинкой и лучком",
-            "uz": "Sersuv go'shtli qovurilgan pirojki",
-            "en": "Hearty homemade pastries with minced meat"
+            "ru": "Сочные домашние жареные беляши с мясом и лучком",
+            "uz": "Sersuv go'shtli qovurilgan belyash",
+            "en": "Juicy homemade fried meat pies"
           },
           "price": 6000,
-          "image": "/menu/pirozhki-meat.jpg",
+          "image": "/menu/belyashi.jpg",
           "weight": 100,
           "kcal": 240,
+          "available": true
+        },
+        {
+          "id": "breakfast-half",
+          "name": {
+            "ru": "Завтрак: 1 яйцо + 1 сосиска (0.5 порции)",
+            "uz": "Nonushta: 1 tuxum + 1 sosiska (0.5 porsiya)",
+            "en": "Breakfast: 1 Egg + 1 Sausage (Half)"
+          },
+          "description": {
+            "ru": "Горячая глазунья из 1 яйца и румяная канадская сосиска",
+            "uz": "1 ta qovurilgan tuxum va 1 ta Kanada sosiskasi",
+            "en": "1 fried egg and 1 Canadian sausage"
+          },
+          "price": 10000,
+          "image": "/menu/fried-egg.jpg",
+          "weight": 170,
+          "kcal": 330,
+          "available": true
+        },
+        {
+          "id": "breakfast-full",
+          "name": {
+            "ru": "Завтрак: 2 яйца + 2 сосиски (1 порция)",
+            "uz": "Nonushta: 2 tuxum + 2 sosiska (1 porsiya)",
+            "en": "Breakfast: 2 Eggs + 2 Sausages (Full)"
+          },
+          "description": {
+            "ru": "Сытная горячая глазунья из 2 яиц и 2 сочные канадские сосиски",
+            "uz": "2 ta qovurilgan tuxum va 2 ta Kanada sosiskasi",
+            "en": "2 fried eggs and 2 juicy Canadian sausages"
+          },
+          "price": 20000,
+          "image": "/menu/fried-egg.jpg",
+          "weight": 340,
+          "kcal": 660,
           "available": true
         },
         {
