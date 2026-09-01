@@ -432,9 +432,11 @@ export function MenuBoard({
                         </span>
                       )}
                       {isConfigurable && (
-                        <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 rounded-lg bg-black/85 px-2.5 py-1 text-[11px] font-bold text-amber-400 backdrop-blur-md border border-amber-500/40 shadow-xs">
-                          <Sliders className="size-3.5 text-amber-400" />
-                          <span>Собрать свой состав</span>
+                        <span
+                          title="Конструктор блюда"
+                          className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-xl bg-black/80 text-amber-400 backdrop-blur-md border border-amber-500/40 shadow-xs"
+                        >
+                          <Sliders className="size-3.5" />
                         </span>
                       )}
                       {item.meta && (
