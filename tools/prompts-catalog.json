@@ -1,203 +1,233 @@
 {
-  "style": "Commercial food studio photography, 45-degree angle shot, authentic Uzbek blue-and-turquoise glazed ceramic plate (Rishtan/Samarkand style), warm studio softbox lighting, isolated on solid pure clean white background, soft contact shadow, 85mm macro lens, f/4.0, razor-sharp food details, ultra-realistic",
+  "style": "Realistic commercial food studio photography, 45-degree angle shot, modern clean fast-casual cafe plating (clean white ceramic / craft packaging), warm studio softbox lighting, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, zero luxury exaggeration, authentic honest Samarkand cafe presentation",
   "dishes": [
     {
       "id": "chicken-1kg",
       "filename": "chicken-kfc-1kg.jpg",
       "name": "Chicken кг",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of crispy golden-amber fried chicken wings and tenders, flaky jagged crispy breading texture, juicy tender meat visible on cut piece, served on authentic Uzbek blue-and-turquoise patterned ceramic platter, fresh lemon wedge and small red dipping sauce bowl on the side, isolated on solid pure clean white background, soft natural contact shadow, warm studio softbox lighting, 85mm lens, f/4.0, ultra-realistic commercial food presentation"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 1 kg party size: large round craft paper bucket filled to the top with crispy golden-amber fried chicken wings and tenders, flaky jagged crunchy crust, white paper liner, garlic dipping sauce container on side, isolated on solid pure clean white background, soft natural contact shadow, 85mm lens, f/4.0, realistic fast-casual style"
     },
     {
       "id": "combo-chicken",
       "filename": "combo-chicken.jpg",
       "name": "Супер Комбо Chicken",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of Super Combo Chicken meal set: crispy fried chicken tenders and wings with flaky breading, golden french fries in crisp portion, two small sauce bowls (garlic and sweet chili), clear tumbler glass of chilled ruby-red homemade berry compote with condensation droplets on glass, served on authentic Uzbek ceramic plate, isolated on pure clean white background, soft contact shadow, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of complete meal combo set on clean white tray: 300g crispy fried chicken wings and tenders, small craft paper pouch of golden french fries, 0.5L clear glass of cold ruby-red homemade berry compote with condensation droplets, 2 small sauce tubs, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, authentic cafe meal"
     },
     {
-      "id": "fries-plate",
-      "filename": "fries-plate.jpg",
-      "name": "Картофель Фри",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of hot crispy golden french fries served on traditional Uzbek blue-patterned ceramic plate, lightly salted with fresh dill sprig, isolated on solid pure clean white background, soft natural contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "id": "fries-small",
+      "filename": "fries-small.jpg",
+      "name": "Картофель Фри (Small 100г)",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of small portion 100g french fries: compact small craft paper envelope pouch with hot golden crispy french fries sticking out, lightly salted, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, realistic fast food"
+    },
+    {
+      "id": "fries-medium",
+      "filename": "fries-medium.jpg",
+      "name": "Картофель Фри (Medium 150г)",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of medium standard portion 150g french fries: open craft carton container filled with hot golden crispy french fries, lightly salted, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, realistic fast food"
+    },
+    {
+      "id": "fries-large",
+      "filename": "fries-large.jpg",
+      "name": "Картофель Фри (Large 200г)",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of large generous portion 200g french fries: large open craft carton box overflowing with hot golden crispy french fries, lightly salted, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, realistic fast food"
+    },
+    {
+      "id": "chicken-strips",
+      "filename": "chicken-strips.jpg",
+      "name": "Куриные стрипсы",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 4 juicy tender crispy fried chicken strips with golden-amber crunchy crust, arranged neatly on a clean white ceramic plate, small ceramic bowl of white garlic sauce, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, ultra-realistic"
     },
     {
       "id": "belyashi",
       "filename": "belyashi.jpg",
       "name": "Беляши",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of fresh homemade fried belyashi meat pies with glistening golden-brown crust and sesame seeds, one belyash sliced open showing steaming juicy minced beef and onion filling with glistening meat juices, served on authentic Uzbek blue-patterned ceramic plate, delicate wisps of rising steam, isolated on pure solid clean white background, soft contact shadow, warm softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 3 freshly fried homemade belyashi meat pies with golden-brown glossy crust and sesame seeds, one belyash sliced open showing steaming juicy minced beef and onion filling with meat juices, on a simple clean white ceramic plate, delicate wisps of steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, ultra-realistic"
     },
     {
       "id": "pirozhki-potatoes",
       "filename": "pirozhki-potatoes.jpg",
       "name": "Пирожки с картошкой",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of golden brown baked pirozhki with potatoes, shiny crust with butter glaze, served on traditional Uzbek blue ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of golden baked potato pirozhki with shiny butter glaze, one cut open showing fluffy mashed potato filling with fresh dill, served on a clean white ceramic plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic bakery"
     },
     {
       "id": "sosiska-v-teste",
       "filename": "sosiska-v-teste.jpg",
       "name": "Сосиска в тесте",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of delicious oven-baked sausage rolls (sosiska v teste) with golden flaky crust and sprinkled sesame seeds, served on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of oven-baked sausage rolls (sosiska v teste) in golden soft pastry dough with sesame seeds, cut in half showing juicy sausage inside, on a clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic bakery"
     },
     {
-      "id": "fried-egg",
+      "id": "breakfast-half",
+      "filename": "breakfast-half.jpg",
+      "name": "Завтрак: 1 яйцо + 1 сосиска (0.5 порции)",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of breakfast 0.5 portion: one sunny side up fried egg with runny golden yolk and one grilled juicy Canadian sausage, fresh dill, on a clean white ceramic plate, isolated on solid clean pure white background, soft contact shadow, 85mm lens, f/4.0, realistic cafe breakfast"
+    },
+    {
+      "id": "breakfast-full",
       "filename": "fried-egg.jpg",
-      "name": "Завтрак: 2 яйца + 2 сосиски",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of hot breakfast: two sunny side up fried eggs with runny golden yolks and buttery edges, two grilled savory Canadian sausages with grill marks, fresh dill garnish, served on traditional Uzbek ceramic plate, isolated on solid clean pure white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "name": "Завтрак: 2 яйца + 2 сосиски (1 порция)",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of full breakfast: two sunny side up fried eggs with runny golden yolks and two grilled juicy Canadian sausages with grill marks, fresh dill, on a clean white ceramic plate, isolated on solid clean pure white background, soft contact shadow, 85mm lens, f/4.0, realistic cafe breakfast"
     },
     {
       "id": "blinchiki-meat",
       "filename": "blinchiki-meat.jpg",
       "name": "Блинчики с мясом",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of golden folded crepes (blinchiki) stuffed with savory seasoned minced beef, cut open showing juicy meat texture, served on traditional Uzbek ceramic plate with bowl of thick sour cream on the side, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 2 golden rolled crepes stuffed with seasoned minced beef, cut open showing juicy meat filling, served on clean white plate with a small bowl of thick sour cream, isolated on solid pure clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "blini-cottage-cheese",
       "filename": "blini-cottage-cheese.jpg",
       "name": "Блины с творогом",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of sweet golden rolled crepes (blini) stuffed with fresh creamy cottage cheese filling, dusted with powdered sugar, berry garnish, served on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 2 golden rolled crepes stuffed with sweet farmer cottage cheese, lightly dusted with powdered sugar, served on a clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "canadian-sausage",
       "filename": "canadian-sausage.jpg",
       "name": "Канадская сосиска жареная",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of grilled savory Canadian sausage with distinct grill marks, served with mustard sauce on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of grilled savory Canadian sausage with grill marks, served with mustard sauce on a clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "boiled-egg",
       "filename": "boiled-egg.jpg",
       "name": "Яйцо варёное",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of hard-boiled farm egg sliced in half showing rich creamy yellow yolk, served on Uzbek ceramic plate with fresh dill sprig, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of hard-boiled farm egg sliced in half showing yellow yolk, on small white saucer with fresh dill, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "bread",
       "filename": "bread.jpg",
       "name": "Хлеб / Лепёшка",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of traditional freshly baked golden Samarkand non bread with stamped center and glossy sesame crust, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of freshly baked golden Samarkand non bread with sesame seeds and glossy crust, sliced quarters, on clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "borscht",
       "filename": "borscht.jpg",
       "name": "Борщ домашний",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of rich vibrant ruby-red homemade beef borscht soup, tender beef chunks and shredded beetroot, topped with a dollop of thick white sour cream and freshly chopped dill, served in an authentic Uzbek blue-glazed ceramic soup bowl (kosa), delicate wisps of rising steam, isolated on pure solid clean white background, soft contact shadow, warm studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of deep white ceramic soup bowl filled with rich ruby-red homemade beef borscht, tender beef chunks, topped with a spoon of white sour cream and fresh dill, delicate wisps of steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic soup"
     },
     {
       "id": "shchi-green",
       "filename": "shchi-green.jpg",
       "name": "Щи зелёные",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of hot Russian-Uzbek green shchi soup with sorrel, tender beef and sliced boiled egg in rich broth, served in ceramic bowl, delicate steam, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of deep white ceramic soup bowl with green sorrel shchi soup, beef cubes, potato and sliced boiled egg, delicate steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic soup"
     },
     {
       "id": "chicken-noodles",
       "filename": "chicken-noodles.jpg",
       "name": "Куриная лапша",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of homemade chicken noodle soup with tender shredded chicken meat, carrots and fresh dill in traditional Uzbek ceramic bowl, delicate rising steam, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of deep white ceramic bowl with clear chicken noodle soup, homemade noodles, shredded chicken breast, carrots and dill, delicate steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic soup"
     },
     {
       "id": "meatball-soup",
       "filename": "meatball-soup.jpg",
       "name": "Суп с фрикадельками",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of clear beef meatball soup with golden potatoes and fresh herbs, served in traditional Uzbek ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of deep white ceramic bowl with clear beef meatball soup, round meatballs, potatoes and fresh herbs, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic soup"
     },
     {
       "id": "cutlet-homemade",
       "filename": "cutlet-homemade.jpg",
       "name": "Котлеты домашние с гарниром",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of two juicy pan-fried homemade beef cutlets (kotleti), one cut showing succulent meat texture, served with creamy butter mashed potatoes on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of two pan-fried homemade beef cutlets with crispy crust, served with a generous scoop of butter mashed potatoes on a clean white ceramic plate, fresh dill, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "cutlet-chicken",
       "filename": "cutlet-chicken.jpg",
       "name": "Котлеты куриные с гарниром",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of golden tender chicken cutlets with herb butter and steamed fluffy white rice on traditional Uzbek plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of two golden chicken cutlets served with steamed white rice garnish on clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "goulash",
       "filename": "goulash.jpg",
       "name": "Гуляш с гарниром",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of tender beef goulash with rich glossy savory tomato gravy, served with fluffy white rice garnish and fresh greens on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of tender beef goulash chunks in rich glossy tomato gravy, served with fluffy white rice on a clean white ceramic plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "tefteli",
       "filename": "tefteli.jpg",
       "name": "Тефтели говяжьи с гарниром",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of juicy beef meatballs (tefteli) in rich tomato sauce with buckwheat garnish, served on traditional Uzbek ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of two large beef meatballs (tefteli) in red tomato gravy, served with buckwheat garnish on a clean white ceramic plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "kiev-cutlet",
       "filename": "kiev-cutlet.jpg",
       "name": "Котлета по-Киевски с гарниром",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of a golden crispy Chicken Kiev cutlet with crunchy panko crust, sliced open with melted garlic herb butter gently oozing onto the plate, accompanied by a small portion of golden french fries and fresh parsley, served on traditional Uzbek blue-patterned ceramic plate, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of golden crispy Chicken Kiev cutlet cut in half with melted herb butter visible, served with golden french fries on clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "chicken-vegetables",
       "filename": "chicken-vegetables.jpg",
       "name": "Сочная Курица с овощами",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of tender chicken breast braised with bell peppers, onions and sweet carrots in savory sauce, on traditional Uzbek plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of tender chicken breast stewed with bell peppers, carrots and onions in savory sauce, on a clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "chicken-roast",
       "filename": "chicken-roast.jpg",
       "name": "Курица окорочка в духовке",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of oven-roasted juicy golden chicken leg quarter with crispy crackling skin and herbs, served on traditional Uzbek plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of oven-roasted juicy golden chicken leg quarter with crispy crackling skin, on clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "kupaty",
       "filename": "kupaty.jpg",
       "name": "Колбаски Купаты",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of grilled savory Georgian-style kupaty sausages with fresh onion rings and cilantro on traditional Uzbek plate, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of two grilled kupaty sausages with grill marks, served with fresh thinly sliced onion rings on clean white plate, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic meal"
     },
     {
       "id": "salad-vinegret",
       "filename": "salad-vinegret.jpg",
       "name": "Винегрет",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of fresh Russian-Uzbek vinegret beetroot salad with peas and pickles, served in traditional ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of fresh Russian-Uzbek vinegret beetroot salad with green peas and pickles in small clean white ceramic bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
       "id": "salad-cabbage-vitamin",
       "filename": "salad-cabbage-vitamin.jpg",
       "name": "Капустный витамин",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of crunchy shredded cabbage and carrot vitamin salad with vegetable oil dressing and fresh herbs, in ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of shredded white cabbage and carrot vitamin salad with oil dressing and fresh herbs in small clean white bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
       "id": "salad-carrot-vitamin",
       "filename": "salad-carrot-vitamin.jpg",
       "name": "Морковный витамин",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of shredded sweet carrot salad with garlic, oil dressing and cilantro in ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of finely shredded sweet carrot salad with garlic and oil dressing in small clean white bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
       "id": "salad-vesenniy",
       "filename": "salad-vesenniy.jpg",
       "name": "Салат «Весенний»",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of fresh Spring salad with sliced crisp cucumbers, radishes, boiled egg and sour cream in ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of fresh Spring salad with sliced crisp cucumbers, red radishes, boiled egg and sour cream in clean white bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
       "id": "salad-mushroom",
       "filename": "salad-mushroom.jpg",
       "name": "Грибной салат",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of marinated mushroom salad with sweet onions and fresh parsley in ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of marinated mushroom salad with onions and parsley in clean white bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
       "id": "salad-chicken-veg",
       "filename": "salad-chicken-veg.jpg",
       "name": "Овощи с курицей",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of warm chicken salad with grilled chicken breast, fresh cucumbers, sweet corn and lettuce in ceramic bowl, isolated on pure solid clean white background, soft contact shadow, studio 85mm lens, f/4.0, ultra-realistic"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of chicken salad with grilled chicken slices, crisp cucumbers, sweet corn and lettuce in clean white bowl, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic salad"
     },
     {
-      "id": "compote",
-      "filename": "compote.jpg",
-      "name": "Освежающий компот",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of a transparent glass carafe and drinking tumbler filled with chilled ruby-red homemade berry compote, whole dark cherries and berries resting at the bottom, glistening cold condensation droplets on the glass surface, fresh green mint sprig garnish, isolated on pure solid clean white background, soft contact shadow, crisp studio softbox lighting, 85mm lens, f/4.0, ultra-realistic refreshing drink"
+      "id": "compote-05",
+      "filename": "compote-05.jpg",
+      "name": "Освежающий компот 0.5л",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 0.5L portion: single transparent drinking tumbler glass filled with chilled ruby-red homemade cherry compote, whole dark cherries resting at the bottom, cold condensation droplets on glass surface, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic refreshing homemade drink"
+    },
+    {
+      "id": "compote-1l",
+      "filename": "compote-1l.jpg",
+      "name": "Освежающий компот 1л",
+      "prompt": "Commercial food studio photography, 45-degree angle shot of 1.0L family portion: large transparent glass carafe pitcher filled with rich ruby-red homemade berry compote with dark cherries, accompanied by one empty glass, condensation droplets on pitcher, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic refreshing homemade drink"
     },
     {
       "id": "tea-pot-glass",
       "filename": "tea-pot-glass.jpg",
       "name": "Чай в чайнике",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of transparent glass teapot with hot amber black tea and lemon slice, traditional Uzbek tea bowl (piyala) next to it, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic, steam"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of a clear glass teapot with hot amber black tea and lemon slice, one small white ceramic tea bowl (piyala) next to it, delicate steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic"
     },
     {
       "id": "americano-cup",
       "filename": "americano-cup.jpg",
       "name": "Американо",
-      "prompt": "Commercial food studio photography, 45-degree angle shot of hot fresh Americano coffee in clean white ceramic cup with rich crema on saucer, isolated on pure solid clean white background, soft contact shadow, studio softbox lighting, 85mm lens, f/4.0, ultra-realistic, steam"
+      "prompt": "Commercial food studio photography, 45-degree angle shot of hot Americano coffee in a clean white ceramic cup on saucer with rich crema, delicate steam, isolated on pure solid clean white background, soft contact shadow, 85mm lens, f/4.0, realistic coffee"
     }
   ]
 }
