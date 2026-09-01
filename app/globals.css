@@ -358,22 +358,23 @@
     overflow: visible !important;
   }
 
+  body > *:not(#receipt-print-wrapper) {
+    display: none !important;
+  }
+
   .print\:hidden {
     display: none !important;
   }
 
   #receipt-print-wrapper {
     display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 80mm !important;
+    position: static !important;
+    width: 76mm !important;
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
     color: #000 !important;
-    z-index: 999999 !important;
     overflow: visible !important;
     visibility: visible !important;
   }
@@ -406,15 +407,16 @@
   }
 
   .receipt {
-    width: 80mm !important;
+    width: 76mm !important;
     max-width: 100% !important;
     background: #fff !important;
     color: #000 !important;
-    padding: 4mm 2mm !important;
+    padding: 2mm 1mm !important;
+    margin: 0 !important;
   }
 
   @page {
-    size: 80mm auto;
+    size: auto;
     margin: 0;
   }
 }
