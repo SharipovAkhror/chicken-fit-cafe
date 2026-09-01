@@ -58,9 +58,9 @@
         {
           "id": "chicken-1kg",
           "name": {
-            "ru": "Chicken (Крылья / Стрипсы на развес)",
-            "uz": "Chicken (Qanotlar / Striplar vaznga)",
-            "en": "Chicken (Wings / Strips by Weight)"
+            "ru": "Chicken кг",
+            "uz": "Chicken kg",
+            "en": "Chicken by kg"
           },
           "description": {
             "ru": "Сочные крылья и стрипсы: 90 000 сум за 1 кг. Выберите вес (0.5 кг, 1 кг, 1.2 кг, 1.5 кг) и состав (крылья, стрипсы или микс).",

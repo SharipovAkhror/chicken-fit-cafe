@@ -432,9 +432,9 @@ export function MenuBoard({
                         </span>
                       )}
                       {isConfigurable && (
-                        <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-md bg-zinc-900/80 dark:bg-black/80 px-2 py-0.5 text-[10px] font-bold text-amber-400 backdrop-blur-md border border-amber-500/30">
-                          <Sliders className="size-3" />
-                          <span>Конструктор</span>
+                        <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 rounded-lg bg-black/85 px-2.5 py-1 text-[11px] font-bold text-amber-400 backdrop-blur-md border border-amber-500/40 shadow-xs">
+                          <Sliders className="size-3.5 text-amber-400" />
+                          <span>Собрать свой состав</span>
                         </span>
                       )}
                       {item.meta && (
@@ -470,7 +470,7 @@ export function MenuBoard({
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
                               >
                                 <Sliders className="size-3.5" />
-                                <span>Настроить</span>
+                                <span>Собрать состав</span>
                               </button>
                             ) : simpleItemInCart === 0 ? (
                               <button
