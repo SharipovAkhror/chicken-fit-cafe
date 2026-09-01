@@ -45,9 +45,9 @@
             "en": "Super Combo Chicken"
           },
           "description": {
-            "ru": "Сочные куриные стрипсы в панировке + картофель фри + 2 соуса (чесночный и томатный) + домашний компот 0.5л",
-            "uz": "Qarsildoq tovuq striplari + fri kartoshka + 2 xil sous + 0.5l kompot",
-            "en": "Crispy chicken strips + french fries + 2 sauces + homemade compote 0.5L"
+            "ru": "Конструктор: 300г курицы (крылья/стрипсы на выбор) + картофель фри + домашний компот 0.5л + 2 соуса. Состав можно изменять!",
+            "uz": "Kombo: 300g tovuq (qanotlar/striplar) + fri kartoshka + 0.5l kompot + 2 xil sous. Tarkibini tanlash mumkin!",
+            "en": "Combo builder: 300g chicken (wings/strips) + french fries + homemade compote 0.5L + 2 sauces. Customizable!"
           },
           "price": 45000,
           "image": "/menu/combo-chicken.jpg",
@@ -58,14 +58,14 @@
         {
           "id": "chicken-1kg",
           "name": {
-            "ru": "Chicken (KFC) 1 кг",
-            "uz": "Chicken (KFC) 1 kg",
-            "en": "Chicken Bucket 1 kg"
+            "ru": "Chicken (Крылья / Стрипсы на развес)",
+            "uz": "Chicken (Qanotlar / Striplar vaznga)",
+            "en": "Chicken (Wings / Strips by Weight)"
           },
           "description": {
-            "ru": "Большой килограммовый баскет сочной хрустящей курочки для компании",
-            "uz": "Kompaniya uchun 1 kg qarsildoq tovuq baseti",
-            "en": "Big 1kg crispy chicken bucket for sharing"
+            "ru": "Сочные крылья и стрипсы: 90 000 сум за 1 кг. Выберите вес (0.5 кг, 1 кг, 1.2 кг, 1.5 кг) и состав (крылья, стрипсы или микс).",
+            "uz": "Qarsildoq tovuq: 1 kg uchun 90 000 so'm. Vazn (0.5 kg, 1 kg, 1.2 kg, 1.5 kg) va tarkibini (qanotlar, striplar yoki miks) tanlang.",
+            "en": "Crispy chicken: 90,000 UZS per 1kg. Choose weight (0.5kg, 1kg, 1.2kg, 1.5kg) and mix (wings, strips or 50/50 mix)."
           },
           "price": 90000,
           "image": "/menu/chicken-kfc-1kg.jpg",
@@ -74,39 +74,57 @@
           "available": true
         },
         {
-          "id": "chicken-portion-fries",
+          "id": "fries-small",
           "name": {
-            "ru": "Chicken (1 порция) + Картошка Фри",
-            "uz": "Chicken (1 porsiya) + Fri",
-            "en": "Chicken (1 portion) + Fries"
+            "ru": "Картофель Фри (Small 100г)",
+            "uz": "Fri kartoshka (Small 100g)",
+            "en": "French Fries (Small 100g)"
           },
           "description": {
-            "ru": "Сочные куриные стрипсы в идеальной золотистой панировке с горячим картофелем фри",
-            "uz": "Oltinrang panirovkadagi sersuv striplar va qaynoq fri",
-            "en": "Juicy golden chicken strips served with hot crispy fries"
+            "ru": "Горячая хрустящая соломка картофеля фри (маленькая порция)",
+            "uz": "Qarsildoq qaynoq fri kartoshka (kichik porsiya)",
+            "en": "Hot crispy golden french fries (small portion)"
           },
-          "price": 40000,
-          "image": "/menu/chicken-strips.jpg",
-          "weight": 350,
-          "kcal": 590,
+          "price": 10000,
+          "image": "/menu/fries-plate.jpg",
+          "weight": 100,
+          "kcal": 220,
           "available": true
         },
         {
-          "id": "fries-single",
+          "id": "fries-medium",
           "name": {
-            "ru": "Картофель Фри",
-            "uz": "Fri kartoshka",
-            "en": "French Fries"
+            "ru": "Картофель Фри (Medium 150г)",
+            "uz": "Fri kartoshka (Medium 150g)",
+            "en": "French Fries (Medium 150g)"
           },
           "description": {
-            "ru": "Классическая горячая соломка фри с хрустящей корочкой",
-            "uz": "Klassik qarsildoq qaynoq fri kartoshka",
-            "en": "Classic hot crispy golden french fries"
+            "ru": "Классическая горячая соломка фри со специями (средняя порция)",
+            "uz": "Klassik qarsildoq qaynoq fri kartoshka (o'rtacha porsiya)",
+            "en": "Classic hot crispy golden french fries (medium portion)"
           },
           "price": 15000,
           "image": "/menu/fries-plate.jpg",
           "weight": 150,
           "kcal": 340,
+          "available": true
+        },
+        {
+          "id": "fries-large",
+          "name": {
+            "ru": "Картофель Фри (Large 200г)",
+            "uz": "Fri kartoshka (Large 200g)",
+            "en": "French Fries (Large 200g)"
+          },
+          "description": {
+            "ru": "Большая щедрая порция хрустящего картофеля фри",
+            "uz": "Katta porsiyadagi oltinrang qarsildoq fri kartoshka",
+            "en": "Large generous portion of crispy golden french fries"
+          },
+          "price": 20000,
+          "image": "/menu/fries-plate.jpg",
+          "weight": 200,
+          "kcal": 460,
           "available": true
         }
       ]

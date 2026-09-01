@@ -13,6 +13,8 @@ import {
   User,
   Send,
   UtensilsCrossed,
+  Sliders,
+  Sparkles,
 } from 'lucide-react'
 import { createOrder } from '@/lib/orders'
 import { nextOrderNumber, receiptDateTime } from '@/lib/receipt'
@@ -41,9 +43,27 @@ type Labels = {
   close: string
 }
 
+export type CartItemRecord = {
+  cartKey: string
+  baseId: string
+  name: string
+  optionsDescription?: string
+  price: number
+  qty: number
+}
+
 function formatNum(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
+
+const SIDES_4 = [
+  { id: 'puree', name: 'Картофельное пюре' },
+  { id: 'rice', name: 'Рис отварной' },
+  { id: 'buckwheat', name: 'Гречка' },
+  { id: 'macaroni', name: 'Макароны' },
+]
+
+const SAUCES = ['Чесночный', 'Томатный', 'Сырный', 'Кисло-сладкий']
 
 function Thumb({
   item,
@@ -83,7 +103,7 @@ export function MenuBoard({
   labels: Labels
 }) {
   const [openItem, setOpenItem] = useState<ViewItem | null>(null)
-  const [guestCart, setGuestCart] = useState<Record<string, number>>({})
+  const [cartItems, setCartItems] = useState<Record<string, CartItemRecord>>({})
   const [showCartDrawer, setShowCartDrawer] = useState(false)
   const [orderType, setOrderType] = useState<'dine_in' | 'takeaway' | 'delivery'>('dine_in')
   const [selectedTable, setSelectedTable] = useState('1')
@@ -95,9 +115,23 @@ export function MenuBoard({
     table: string
     orderType: string
     total: number
-    items: Array<{ name: string; qty: number; price: number }>
+    items: Array<{ name: string; qty: number; price: number; options?: string }>
     time: string
   } | null>(null)
+
+  // Состояния для конструктора весовой курицы
+  const [chickenType, setChickenType] = useState<'mix' | 'wings' | 'strips'>('mix')
+  const [chickenWeightKg, setChickenWeightKg] = useState<number>(1.0)
+
+  // Состояния для конструктора Комбо 45к
+  const [comboChickenPart, setComboChickenPart] = useState<'mix' | 'wings' | 'strips'>('mix')
+  const [comboIncludeFries, setComboIncludeFries] = useState(true)
+  const [comboIncludeDrink, setComboIncludeDrink] = useState(true)
+  const [comboSauce1, setComboSauce1] = useState('Чесночный')
+  const [comboSauce2, setComboSauce2] = useState('Томатный')
+
+  // Состояние для выбора гарнира к вторым блюдам
+  const [selectedSide, setSelectedSide] = useState<string>('puree')
 
   const close = useCallback(() => setOpenItem(null), [])
 
@@ -110,70 +144,185 @@ export function MenuBoard({
     }
   }, [])
 
-  // Карта всех блюд
-  const allItemsMap = useMemo(() => {
-    const map: Record<string, ViewItem> = {}
-    categories.forEach((cat) => {
-      cat.items.forEach((it) => {
-        map[it.id] = it
-      })
-    })
-    return map
-  }, [categories])
-
-  const cartEntries = useMemo(() => {
-    return Object.entries(guestCart)
-      .filter(([, qty]) => qty > 0)
-      .map(([id, qty]) => ({
-        item: allItemsMap[id],
-        qty,
-      }))
-      .filter((e) => Boolean(e.item))
-  }, [guestCart, allItemsMap])
+  const cartList = useMemo(() => {
+    return Object.values(cartItems).filter((it) => it.qty > 0)
+  }, [cartItems])
 
   const totalItemsCount = useMemo(() => {
-    return cartEntries.reduce((sum, e) => sum + e.qty, 0)
-  }, [cartEntries])
+    return cartList.reduce((sum, e) => sum + e.qty, 0)
+  }, [cartList])
 
   const totalCartSum = useMemo(() => {
-    return cartEntries.reduce((sum, e) => sum + (e.item?.rawPrice || 0) * e.qty, 0)
-  }, [cartEntries])
+    return cartList.reduce((sum, e) => sum + e.price * e.qty, 0)
+  }, [cartList])
 
-  function handleAddToCart(id: string, e?: React.MouseEvent) {
+  // Добавление обычного блюда без опций
+  function handleAddSimple(item: ViewItem, e?: React.MouseEvent) {
     if (e) e.stopPropagation()
-    setGuestCart((prev) => ({
-      ...prev,
-      [id]: (prev[id] || 0) + 1,
-    }))
+    const key = item.id
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return {
+          ...prev,
+          [key]: { ...existing, qty: existing.qty + 1 },
+        }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: item.id,
+          name: item.name,
+          price: item.rawPrice,
+          qty: 1,
+        },
+      }
+    })
   }
 
-  function handleRemoveFromCart(id: string, e?: React.MouseEvent) {
+  function handleDecrementCart(key: string, e?: React.MouseEvent) {
     if (e) e.stopPropagation()
-    setGuestCart((prev) => {
-      const cur = prev[id] || 0
-      if (cur <= 1) {
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (!existing) return prev
+      if (existing.qty <= 1) {
         const next = { ...prev }
-        delete next[id]
+        delete next[key]
         return next
       }
       return {
         ...prev,
-        [id]: cur - 1,
+        [key]: { ...existing, qty: existing.qty - 1 },
       }
     })
   }
 
+  function handleIncrementCart(key: string, e?: React.MouseEvent) {
+    if (e) e.stopPropagation()
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (!existing) return prev
+      return {
+        ...prev,
+        [key]: { ...existing, qty: existing.qty + 1 },
+      }
+    })
+  }
+
+  // Добавление комбо через конструктор
+  function handleAddCustomCombo(item: ViewItem) {
+    let price = 0
+    // Курица 300г = 30 000
+    price += 30000
+    if (comboIncludeFries) price += 10000
+    if (comboIncludeDrink) price += 5000
+
+    const chickenLabel =
+      comboChickenPart === 'mix'
+        ? 'Курица 300г (Микс: крылья + стрипсы)'
+        : comboChickenPart === 'wings'
+        ? 'Курица 300г (Только крылья)'
+        : 'Курица 300г (Только филе/стрипсы)'
+
+    const friesLabel = comboIncludeFries ? 'Фри 100г' : 'Без фри'
+    const drinkLabel = comboIncludeDrink ? 'Компот 0.5л' : 'Без напитка'
+    const saucesLabel = `Соусы: ${comboSauce1}, ${comboSauce2}`
+
+    const optDesc = `${chickenLabel} · ${friesLabel} · ${drinkLabel} · ${saucesLabel}`
+    const key = `combo-${comboChickenPart}-${comboIncludeFries}-${comboIncludeDrink}-${comboSauce1}-${comboSauce2}`
+
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return { ...prev, [key]: { ...existing, qty: existing.qty + 1 } }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: item.id,
+          name: 'Супер Комбо Chicken',
+          optionsDescription: optDesc,
+          price,
+          qty: 1,
+        },
+      }
+    })
+    close()
+  }
+
+  // Добавление весовой курицы
+  function handleAddChickenByWeight(item: ViewItem) {
+    const pricePerKg = 90000
+    const calcPrice = Math.round(chickenWeightKg * pricePerKg)
+    const typeLabel =
+      chickenType === 'mix'
+        ? 'Микс (крылья + стрипсы)'
+        : chickenType === 'wings'
+        ? 'Только крылья'
+        : 'Только стрипсы'
+
+    const optDesc = `${typeLabel} · ${chickenWeightKg.toFixed(1)} кг`
+    const key = `chicken-weight-${chickenType}-${chickenWeightKg}`
+
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return { ...prev, [key]: { ...existing, qty: existing.qty + 1 } }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: item.id,
+          name: `Хрустящая курица (${chickenWeightKg.toFixed(1)} кг)`,
+          optionsDescription: optDesc,
+          price: calcPrice,
+          qty: 1,
+        },
+      }
+    })
+    close()
+  }
+
+  // Добавление второго блюда с гарниром
+  function handleAddMainWithSide(item: ViewItem) {
+    const sideObj = SIDES_4.find((s) => s.id === selectedSide) || SIDES_4[0]
+    const optDesc = `Гарнир: ${sideObj.name}`
+    const key = `${item.id}-${selectedSide}`
+
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return { ...prev, [key]: { ...existing, qty: existing.qty + 1 } }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: item.id,
+          name: item.name,
+          optionsDescription: optDesc,
+          price: item.rawPrice,
+          qty: 1,
+        },
+      }
+    })
+    close()
+  }
+
   // Отправка заказа прямо на кассу
   async function handleSendOrderToPOS() {
-    if (cartEntries.length === 0) return
+    if (cartList.length === 0) return
 
     const num = nextOrderNumber()
     const dt = receiptDateTime()
-    const orderItems = cartEntries.map((e) => ({
-      id: e.item.id,
-      name: e.item.name,
-      price: e.item.rawPrice,
-      originalPrice: e.item.rawPrice,
+    const orderItems = cartList.map((e) => ({
+      id: e.baseId,
+      name: e.optionsDescription ? `${e.name} (${e.optionsDescription})` : e.name,
+      price: e.price,
+      originalPrice: e.price,
       qty: e.qty,
     }))
 
@@ -203,11 +352,16 @@ export function MenuBoard({
           ? 'Самовывоз'
           : 'Доставка',
       total: totalCartSum,
-      items: orderItems.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
+      items: cartList.map((it) => ({
+        name: it.name,
+        qty: it.qty,
+        price: it.price,
+        options: it.optionsDescription,
+      })),
       time: dt,
     })
 
-    setGuestCart({})
+    setCartItems({})
     setShowCartDrawer(false)
   }
 
@@ -250,7 +404,13 @@ export function MenuBoard({
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {category.items.map((item) => {
-              const inCart = guestCart[item.id] || 0
+              const isCombo = item.id === 'combo-chicken'
+              const isWeightChicken = item.id === 'chicken-1kg'
+              const isMainDish = category.id === 'mains'
+              const isConfigurable = isCombo || isWeightChicken || isMainDish
+
+              // Количество в корзине
+              const simpleItemInCart = cartItems[item.id]?.qty || 0
 
               return (
                 <li key={item.id} className="flex">
@@ -266,9 +426,15 @@ export function MenuBoard({
                           item.available ? '' : 'opacity-40 grayscale'
                         }`}
                       />
-                      {inCart > 0 && (
+                      {simpleItemInCart > 0 && (
                         <span className="absolute top-2.5 left-2.5 flex items-center justify-center rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-bold text-black shadow-md font-mono">
-                          {inCart} шт
+                          {simpleItemInCart} шт
+                        </span>
+                      )}
+                      {isConfigurable && (
+                        <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-md bg-zinc-900/80 dark:bg-black/80 px-2 py-0.5 text-[10px] font-bold text-amber-400 backdrop-blur-md border border-amber-500/30">
+                          <Sliders className="size-3" />
+                          <span>Конструктор</span>
                         </span>
                       )}
                       {item.meta && (
@@ -294,13 +460,22 @@ export function MenuBoard({
                           {item.price}
                         </span>
 
-                        {/* Кнопка быстрого добавления */}
+                        {/* Кнопка добавления / вызова конструктора */}
                         {item.available && (
                           <div onClick={(e) => e.stopPropagation()}>
-                            {inCart === 0 ? (
+                            {isConfigurable ? (
                               <button
                                 type="button"
-                                onClick={(e) => handleAddToCart(item.id, e)}
+                                onClick={() => setOpenItem(item)}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+                              >
+                                <Sliders className="size-3.5" />
+                                <span>Настроить</span>
+                              </button>
+                            ) : simpleItemInCart === 0 ? (
+                              <button
+                                type="button"
+                                onClick={(e) => handleAddSimple(item, e)}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
                               >
                                 <Plus className="size-3.5" />
@@ -310,18 +485,18 @@ export function MenuBoard({
                               <div className="flex items-center gap-1 rounded-xl bg-amber-500 px-1.5 py-1 text-black font-bold shadow-xs">
                                 <button
                                   type="button"
-                                  onClick={(e) => handleRemoveFromCart(item.id, e)}
+                                  onClick={(e) => handleDecrementCart(item.id, e)}
                                   className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
                                   aria-label="Уменьшить"
                                 >
                                   <Minus className="size-3" />
                                 </button>
                                 <span className="min-w-5 text-center text-xs font-bold font-mono">
-                                  {inCart}
+                                  {simpleItemInCart}
                                 </span>
                                 <button
                                   type="button"
-                                  onClick={(e) => handleAddToCart(item.id, e)}
+                                  onClick={(e) => handleAddSimple(item, e)}
                                   className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
                                   aria-label="Увеличить"
                                 >
@@ -347,7 +522,7 @@ export function MenuBoard({
         </section>
       ))}
 
-      {/* Модальное окно просмотра блюда */}
+      {/* Модальное окно просмотра / КОНСТРУКТОР БЛЮДА */}
       {openItem && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-xs sm:items-center sm:p-4"
@@ -379,13 +554,17 @@ export function MenuBoard({
               </button>
             </div>
 
-            <div className="flex flex-col gap-3 p-5 sm:p-6">
+            <div className="flex flex-col gap-3.5 p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-xl sm:text-2xl font-bold leading-tight">
                   {openItem.name}
                 </h3>
                 <span className="text-xl sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-500">
-                  {openItem.price}
+                  {openItem.id === 'chicken-1kg'
+                    ? `${formatNum(chickenWeightKg * 90000)} сум`
+                    : openItem.id === 'combo-chicken'
+                    ? `${formatNum(30000 + (comboIncludeFries ? 10000 : 0) + (comboIncludeDrink ? 5000 : 0))} сум`
+                    : openItem.price}
                 </span>
               </div>
 
@@ -393,59 +572,309 @@ export function MenuBoard({
                 <p className="text-xs font-mono text-muted-foreground">{openItem.meta}</p>
               )}
 
-              {openItem.description && (
-                <div className="border-t border-border/50 pt-2">
-                  <p className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                    {labels.ingredients}
-                  </p>
-                  <p className="leading-relaxed text-sm text-foreground/90">{openItem.description}</p>
+              {/* 1. КОНСТРУКТОР СУПЕР КОМБО */}
+              {openItem.id === 'combo-chicken' && (
+                <div className="space-y-4 border-t border-border/60 pt-3">
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
+                    <p className="font-bold text-amber-700 dark:text-amber-300">
+                      ⚡ Конструктор Комбо (базовая цена 45 000 сум):
+                    </p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      Настройте части комбо под себя — цена пересчитается автоматически!
+                    </p>
+                  </div>
+
+                  {/* Шаг 1: Курица 300г */}
+                  <div>
+                    <label className="text-xs font-bold text-foreground block mb-1.5">
+                      1. Курица (300 г) — 30 000 сум:
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { id: 'mix', label: 'Микс 50/50' },
+                        { id: 'wings', label: 'Крылышки' },
+                        { id: 'strips', label: 'Стрипсы (филе)' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setComboChickenPart(opt.id as any)}
+                          className={`rounded-lg py-2 px-1 text-xs font-semibold border text-center transition cursor-pointer ${
+                            comboChickenPart === opt.id
+                              ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
+                              : 'border-border bg-secondary/30 text-muted-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Шаг 2: Картофель фри */}
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/30 border border-border/50">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">2. Картофель Фри (100г)</p>
+                      <p className="text-[11px] text-muted-foreground">+10 000 сум в чеке</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setComboIncludeFries(!comboIncludeFries)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        comboIncludeFries
+                          ? 'bg-amber-500 text-black'
+                          : 'bg-secondary text-muted-foreground'
+                      }`}
+                    >
+                      {comboIncludeFries ? 'Включён (+10к)' : 'Убрать (-10к)'}
+                    </button>
+                  </div>
+
+                  {/* Шаг 3: Напиток */}
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/30 border border-border/50">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">3. Домашний компот 0.5л</p>
+                      <p className="text-[11px] text-muted-foreground">+5 000 сум в чеке</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setComboIncludeDrink(!comboIncludeDrink)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        comboIncludeDrink
+                          ? 'bg-amber-500 text-black'
+                          : 'bg-secondary text-muted-foreground'
+                      }`}
+                    >
+                      {comboIncludeDrink ? 'Включён (+5к)' : 'Убрать (-5к)'}
+                    </button>
+                  </div>
+
+                  {/* Шаг 4: 2 соуса бесплатно */}
+                  <div>
+                    <label className="text-xs font-bold text-foreground block mb-1.5">
+                      4. Выберите 2 соуса (бесплатно в комплекте):
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[11px] text-muted-foreground block mb-1">Соус 1:</span>
+                        <select
+                          value={comboSauce1}
+                          onChange={(e) => setComboSauce1(e.target.value)}
+                          className="w-full rounded-lg border border-border bg-background p-2 text-xs font-medium outline-none"
+                        >
+                          {SAUCES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-muted-foreground block mb-1">Соус 2:</span>
+                        <select
+                          value={comboSauce2}
+                          onChange={(e) => setComboSauce2(e.target.value)}
+                          className="w-full rounded-lg border border-border bg-background p-2 text-xs font-medium outline-none"
+                        >
+                          {SAUCES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomCombo(openItem)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm font-bold text-black transition active:scale-[0.98] shadow-xs cursor-pointer"
+                  >
+                    <Plus className="size-4" />
+                    <span>
+                      Добавить Комбо ({formatNum(30000 + (comboIncludeFries ? 10000 : 0) + (comboIncludeDrink ? 5000 : 0))} сум)
+                    </span>
+                  </button>
                 </div>
               )}
 
-              {openItem.available ? (
-                <div className="pt-3 flex items-center gap-3">
-                  {(guestCart[openItem.id] || 0) > 0 ? (
-                    <div className="flex items-center gap-3 rounded-xl bg-amber-500 px-4 py-2 text-black font-bold shadow-xs">
+              {/* 2. КОНСТРУКТОР КУРИЦЫ НА РАЗВЕС */}
+              {openItem.id === 'chicken-1kg' && (
+                <div className="space-y-4 border-t border-border/60 pt-3">
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
+                    <p className="font-bold text-amber-700 dark:text-amber-300">
+                      🍗 Курица на вес: 90 000 сум за 1 кг
+                    </p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      Крылья и стрипсы оцениваются одинаково. Можно выбрать любой вес и состав.
+                    </p>
+                  </div>
+
+                  {/* Выбор состава */}
+                  <div>
+                    <label className="text-xs font-bold text-foreground block mb-1.5">
+                      Выберите состав:
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { id: 'mix', label: 'Микс 50/50' },
+                        { id: 'wings', label: 'Только крылья' },
+                        { id: 'strips', label: 'Только стрипсы' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setChickenType(opt.id as any)}
+                          className={`rounded-lg py-2 px-1 text-xs font-semibold border text-center transition cursor-pointer ${
+                            chickenType === opt.id
+                              ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
+                              : 'border-border bg-secondary/30 text-muted-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Выбор веса */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-foreground">
+                        Вес порции:
+                      </label>
+                      <span className="text-sm font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {chickenWeightKg.toFixed(1)} кг = {formatNum(chickenWeightKg * 90000)} сум
+                      </span>
+                    </div>
+
+                    {/* Быстрые кнопки веса */}
+                    <div className="grid grid-cols-5 gap-1 mb-2">
+                      {[0.5, 1.0, 1.2, 1.5, 2.0].map((w) => (
+                        <button
+                          key={w}
+                          type="button"
+                          onClick={() => setChickenWeightKg(w)}
+                          className={`rounded-lg py-1.5 text-xs font-mono font-bold transition cursor-pointer ${
+                            chickenWeightKg === w
+                              ? 'bg-amber-500 text-black shadow-xs'
+                              : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {w} кг
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Точный регулятор +- 100г */}
+                    <div className="flex items-center justify-center gap-3 bg-secondary/30 p-2 rounded-xl border border-border/50">
                       <button
                         type="button"
-                        onClick={() => handleRemoveFromCart(openItem.id)}
-                        className="flex size-7 items-center justify-center rounded-lg bg-black/10 hover:bg-black/20"
+                        onClick={() => setChickenWeightKg((prev) => Math.max(0.3, Number((prev - 0.1).toFixed(1))))}
+                        className="px-3 py-1 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer"
                       >
-                        <Minus className="size-4" />
+                        − 100г
                       </button>
                       <span className="text-sm font-mono font-bold">
-                        {guestCart[openItem.id]} шт
+                        {chickenWeightKg.toFixed(1)} кг ({Math.round(chickenWeightKg * 1000)} г)
                       </span>
                       <button
                         type="button"
-                        onClick={() => handleAddToCart(openItem.id)}
-                        className="flex size-7 items-center justify-center rounded-lg bg-black/10 hover:bg-black/20"
+                        onClick={() => setChickenWeightKg((prev) => Number((prev + 0.1).toFixed(1)))}
+                        className="px-3 py-1 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer"
                       >
-                        <Plus className="size-4" />
+                        + 100г
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddChickenByWeight(openItem)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm font-bold text-black transition active:scale-[0.98] shadow-xs cursor-pointer"
+                  >
+                    <Plus className="size-4" />
+                    <span>Добавить ({formatNum(chickenWeightKg * 90000)} сум)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* 3. ВЫБОР ГАРНИРА ДЛЯ ВТОРЫХ БЛЮД */}
+              {openItem.id !== 'combo-chicken' && openItem.id !== 'chicken-1kg' && (
+                <div>
+                  {openItem.description && (
+                    <div className="border-t border-border/50 pt-2 mb-3">
+                      <p className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                        {labels.ingredients}
+                      </p>
+                      <p className="leading-relaxed text-sm text-foreground/90">{openItem.description}</p>
+                    </div>
+                  )}
+
+                  {/* 4 вида гарнира */}
+                  {openItem.description?.toLowerCase().includes('гарнир') && (
+                    <div className="mb-4 rounded-xl bg-secondary/30 border border-border/60 p-3">
+                      <label className="text-xs font-bold text-foreground block mb-2">
+                        Выберите 1 из 4 гарниров:
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {SIDES_4.map((side) => (
+                          <button
+                            key={side.id}
+                            type="button"
+                            onClick={() => setSelectedSide(side.id)}
+                            className={`rounded-lg py-2 px-2 text-xs font-semibold border text-left transition cursor-pointer ${
+                              selectedSide === side.id
+                                ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
+                                : 'border-border bg-card text-muted-foreground'
+                            }`}
+                          >
+                            {side.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {openItem.available ? (
+                    <div className="pt-2 flex items-center gap-3">
+                      {openItem.description?.toLowerCase().includes('гарнир') ? (
+                        <button
+                          type="button"
+                          onClick={() => handleAddMainWithSide(openItem)}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
+                        >
+                          <Plus className="size-4" />
+                          <span>Добавить с гарниром ({openItem.price})</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleAddSimple(openItem)
+                            close()
+                          }}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
+                        >
+                          <Plus className="size-4" />
+                          <span>Добавить в заказ</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={close}
+                        className="rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium hover:bg-secondary/80 cursor-pointer"
+                      >
+                        Закрыть
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(openItem.id)}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
-                    >
-                      <Plus className="size-4" />
-                      <span>Добавить в заказ</span>
-                    </button>
+                    <p className="rounded-xl bg-secondary px-4 py-3 text-sm text-center text-muted-foreground">
+                      {labels.soldOut}
+                    </p>
                   )}
-                  <button
-                    type="button"
-                    onClick={close}
-                    className="rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium hover:bg-secondary/80 cursor-pointer"
-                  >
-                    Закрыть
-                  </button>
                 </div>
-              ) : (
-                <p className="rounded-xl bg-secondary px-4 py-3 text-sm text-center text-muted-foreground">
-                  {labels.soldOut}
-                </p>
               )}
             </div>
           </div>
@@ -615,24 +1044,27 @@ export function MenuBoard({
 
             {/* Список блюд в корзине */}
             <div className="my-2.5 flex-1 space-y-2 overflow-y-auto pr-1">
-              {cartEntries.map(({ item, qty }) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/30 p-2.5 border border-border/40">
+              {cartList.map((item) => (
+                <div key={item.cartKey} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/30 p-2.5 border border-border/40">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-xs truncate">{item.name}</p>
-                    <p className="text-[11px] font-mono text-muted-foreground">{formatNum(item.rawPrice * qty)} сум</p>
+                    {item.optionsDescription && (
+                      <p className="text-[10px] text-muted-foreground truncate">{item.optionsDescription}</p>
+                    )}
+                    <p className="text-[11px] font-mono text-muted-foreground">{formatNum(item.price * item.qty)} сум</p>
                   </div>
                   <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-1.5 py-0.5">
                     <button
                       type="button"
-                      onClick={() => handleRemoveFromCart(item.id)}
+                      onClick={() => handleDecrementCart(item.cartKey)}
                       className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       <Minus className="size-3" />
                     </button>
-                    <span className="min-w-4 text-center text-xs font-mono font-bold">{qty}</span>
+                    <span className="min-w-4 text-center text-xs font-mono font-bold">{item.qty}</span>
                     <button
                       type="button"
-                      onClick={() => handleAddToCart(item.id)}
+                      onClick={() => handleIncrementCart(item.cartKey)}
                       className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       <Plus className="size-3" />
@@ -652,7 +1084,7 @@ export function MenuBoard({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setGuestCart({})}
+                  onClick={() => setCartItems({})}
                   className="rounded-xl border border-border bg-secondary px-3.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   Очистить
@@ -700,7 +1132,10 @@ export function MenuBoard({
               <div className="space-y-1 py-1">
                 {orderSuccess.items.map((it, idx) => (
                   <div key={idx} className="flex justify-between text-muted-foreground">
-                    <span>{it.name} × {it.qty}</span>
+                    <div>
+                      <span>{it.name} × {it.qty}</span>
+                      {it.options && <p className="text-[10px] text-muted-foreground/80">{it.options}</p>}
+                    </div>
                     <span>{formatNum(it.price * it.qty)} сум</span>
                   </div>
                 ))}
