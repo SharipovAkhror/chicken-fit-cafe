@@ -1,85 +1,45 @@
 # Chicken Fit Cafe — статус проекта
 
-**Обновлено:** 2026-08-05 · **Владелец:** SharipovAkhror  
+**Обновлено:** 2026-09-01 · **Владелец:** SharipovAkhror  
 **Репозиторий:** https://github.com/SharipovAkhror/chicken-fit-cafe  
-**Локальный путь (канон):** `Documents/GitHub/chicken-fit-cafe`
+**Локальный путь (канон):** `Documents/GitHub/chicken-fit-cafe`  
+**Data Class:** client · **Сборка:** `npm run build` (Next.js 16 App Router)
 
-> **Новому агенту:** этот файл → `AGENTS.md` → `strategy/project-map.md` → `knowledge/claims.yaml`.  
-> **Checkpoint 2026-07-26:** R5 + UTP pack закоммичены; **ждём owner review** (♥/~×).  
-> Сейчас: **UTP samsa-burger cross-section** · SVG marks + web Imagine for hero · owner = вкус.
+> **Новому агенту в следующей сессии (ЧИТАТЬ В ПЕРВУЮ ОЧЕРЕДЬ):**  
+> 1. Этот файл (`STATUS.md`) → канон правил [`AGENTS.md`](AGENTS.md).  
+> 2. **ГЛАВНАЯ ЗАДАЧА СЕССИИ:** Перегенерация всех фотографий меню с нуля в честном, реалистичном стиле городского Fast-Casual кафе без «ультра-лакшери» нейрослопа.
 
 ---
 
-## Где мы
+## 📸 Регламент генерации фото меню (Требования владельца)
 
-| | |
-|---|---|
-| **Фаза** | UTP visual: **бургер в самса-тесте, разрез** (C-003) |
-| **Активная роль** | prompt architect + SVG craft; Imagine web for hero food |
-| **UTP gallery** | `design/assets/reference/gen/utp/gallery-utp.html` |
-| **Prompts** | `design/prompts/utp-samsa-burger-pack.md` |
-| **Remote** | `origin` → `SharipovAkhror/chicken-fit-cafe` |
-| **Ветка** | `feat/1-design-pack-v1` |
+### ❌ Что категорически запрещено (Ошибки прошлых генераций):
+- **Никакого «ультра-лакшери» нейрослопа:** убрать музейный расписной фарфор, золотые приборы, чернику, веточки розмарина и ресторанный пафос за 500$.
+- **Никаких одинаковых фото на разные размеры:** у 100г, 150г и 200г фри должны быть разные фото (кулёк, средний бокс, большой бокс). У 0.5л и 1л компота — стакан vs кувшин.
 
-## QR-меню (2026-08-05)
+### ✅ Как ДОЛЖНА выглядеть еда Chicken Fit:
+1. **Посуда и подача:**
+   - Горячие блюда, завтраки, салаты: простая чистая белая керамическая посуда (минимализм).
+   - Фастфуд (курица, фри): честная ресторанная крафтовая упаковка (кулёчки фри, крафтовые боксы, ведро-баскет для Chicken 1 кг с пергаментом).
+2. **Настоящий самаркандский домашний компот:**
+   - 0.5 л (`compote-05.jpg`): прозрачный стеклянный стакан с насыщенным рубиново-вишневым компотом, цельными ягодами на дне и холодными каплями конденсата на стекле.
+   - 1.0 л (`compote-1l.jpg`): прозрачный стеклянный кувшин / графин 1 литр с компотом.
+3. **Хрустящая курица:**
+   - Реалистичная рифленая янтарная панировка (как в жизни), сочное белое мясо на срезе, пар, без искусственного 3D-глянца.
+4. **Свет и фон:**
+   - Изолированный чистый белый студийный фон (`solid pure clean white background`).
+   - Ракурс 45° сверху-сбоку, мягкая контактная тень под тарелкой/стаканом.
 
-Сайт-меню, которое гость открывает по QR со стола. Только просмотр: фото, название,
-цена, состав. Код готов и собирается, ждёт домен и реальные позиции.
+### 🛠️ Инструменты:
+- Каталог промптов: [`tools/prompts-catalog.json`](tools/prompts-catalog.json)
+- Управление и статус: `node tools/generate-photos.mjs --status`
+- Структура меню: [`content/menu.json`](content/menu.json)
 
-| | |
-|---|---|
-| Правка меню | `content/menu.json` → [инструкция](content/README.md) |
-| Решение | [ADR-004](decisions/ADR-004-qr-menu-mvp.md) · спека: [product/specification.md](product/specification.md) |
-| Маршруты | `/` (ru), `/uz`, `/en` — статика, без базы и бэкенда |
-| Защита | `npm run validate:menu` перед сборкой: битый JSON не доедет до гостей |
-| Открыто | домен · хостинг (Vercel Hobby ≠ коммерция) · реальные цены · фото · генерация QR |
+---
 
-## Два языка (owner 2026-07-25)
+## 📟 Статус Сенсорной Кассы (POS Terminal)
 
-| | Logo mark | Плакат / баннер |
-|---|---|---|
-| Стиль | упрощённый, «мультяшный» **допускаем** | **очевидная курица** |
-| Цель | знак + ChickenFit | голод: сочная, вкусная еда |
-| Детали | silhouette | волокна, корочка, кость, срез, сок |
-
-## Решения владельца (накоплено)
-
-- Letter/seal, crest head, samsa — kill  
-- Type primary: **T4 Bricolage**; test K1 CHICKEN  
-- Icon + ChickenFit; gap меньше  
-- Pastry near-white `#FDFCF9`  
-- Banner 2×1 **белый**  
-- R1–R4 reject archives — **purged from repo**  
-
-## OPEN
-
-### 1. 🔴 Смотреть плакат + marks
-
-| | |
-|---|---|
-| **Плакат** | `design/assets/micro/gallery-poster.html` |
-| Hero chicken | `r5/food-art-detail/fa-hero-chicken.svg` |
-| Banner 2×1 | `r5/banner/banner-2x1-poster.svg` |
-| Marks detail | `gallery-r5-detail.html` |
-| Marks flat | `gallery-r5.html` |
-| Фасад photo | `design/assets/reference/facade/facade-empty.jpg` |
-
-### 2. Потом
-
-- Finalist mark + lockup  
-- Signage day/night (пересобрать)  
-- Brandbook pages  
-- Крафт-бланки  
-
-## Repo hygiene
-
-**Active only:** `design/assets/micro/r5/*` + 3 galleries (poster, r5, r5-detail).  
-**Deleted:** r3/, r4/, gallery-r3/4, AI facade mock reject, weak early food-art.
-
-## Запреты
-
-- AI-slop как финал  
-- Путать mark language с poster food  
-- Grill/tabaka as brand food  
-- Crest / samsa / 3 strips / Colonel clone  
-- Секреты в git  
+- **URL кассы:** `https://chicken-fit-cafe.vercel.app/admin` (PIN: `12345678` или `1234`).
+- **Сенсорный Numpad:** встроен нативно, быстрые купюры (`+50к`, `+100к`, `+200к`, `Без сдачи`), расчет сдачи.
+- **Печать чеков:** баг с CSS `@media print` полностью исправлен (`9f2691b`), поддерживаются режимы `Гость`, `Кухня` и `Оба чека`.
+  
