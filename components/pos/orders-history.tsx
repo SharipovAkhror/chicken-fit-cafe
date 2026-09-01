@@ -199,6 +199,28 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                     >
                       {payBadge.label}
                     </span>
+
+                    {/* Бейдж статуса KDS */}
+                    {order.status === 'cooking' && (
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 animate-pulse">
+                        🍳 Готовится
+                      </span>
+                    )}
+                    {order.status === 'ready' && (
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                        ✅ Готов к выдаче
+                      </span>
+                    )}
+                    {order.status === 'pending' && (
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                        ⏳ Ожидает кухни
+                      </span>
+                    )}
+                    {order.status === 'completed' && (
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                        📦 Выдан
+                      </span>
+                    )}
                   </div>
 
                   <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300 line-clamp-1">

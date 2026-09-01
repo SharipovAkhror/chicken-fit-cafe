@@ -14,6 +14,7 @@
 | Операционный менеджер | [`operations-manager.md`](operations-manager.md) | `operations/` |
 | Финансовый аналитик | [`financial-analyst.md`](financial-analyst.md) | `finance/` |
 | Продуктовый разработчик | [`product-developer.md`](product-developer.md) | `product/` |
+| DevOps & SRE инженер | [`devops-engineer.md`](devops-engineer.md) | `tools/`, `supabase/`, инфраструктура |
 
 ## Цепочка зависимостей
 

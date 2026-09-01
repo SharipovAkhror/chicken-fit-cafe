@@ -140,5 +140,6 @@ AI-агент не может сам перевести критичное ре�
 | Операционный менеджер | `agents/operations-manager.md` |
 | Финансовый аналитик | `agents/financial-analyst.md` |
 | Продуктовый разработчик | `agents/product-developer.md` |
+| DevOps & SRE инженер | `agents/devops-engineer.md` |
 
 Общий handoff описан в [`agents/handoff-protocol.md`](agents/handoff-protocol.md).

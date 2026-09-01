@@ -11,6 +11,9 @@ import {
   Sun,
   Moon,
   Tv,
+  ChefHat,
+  Lock,
+  Printer,
 } from 'lucide-react'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
@@ -29,15 +32,22 @@ import {
   nextOrderNumber,
   peekOrderNumber,
   receiptDateTime,
+  type PaperWidth,
+  getStoredPaperWidth,
+  setStoredPaperWidth,
+  getStoredQrEnabled,
+  setStoredQrEnabled,
 } from '@/lib/receipt'
 import {
   createOrder,
   fetchTodayOrders,
+  subscribeToOrders,
   type Order,
   type OrderType,
   type PaymentMethod,
 } from '@/lib/orders'
 import { useTheme } from '@/lib/theme'
+import { useAuth } from './auth-gate'
 import { MenuGrid } from './menu-grid'
 import { CartPanel } from './cart-panel'
 import {
@@ -45,12 +55,14 @@ import {
   ReceiptModal,
   type ReceiptProps,
   type PrintMode,
+  type ShiftThermalData,
 } from './receipt-print'
 import { GarnishMixerModal } from './garnish-mixer-modal'
 import { OrdersHistory } from './orders-history'
 import { ShiftReport } from './shift-report'
 import { MenuManager } from './menu-manager'
 import { QrManager } from './qr-manager'
+import { KdsScreen } from './kds-screen'
 
 type CategoryData = {
   id: string
@@ -101,11 +113,19 @@ function getInitialCategories(): CategoryData[] {
 
 export function PosTerminal() {
   const { isDark, toggleTheme } = useTheme()
+  const { user, lockScreen } = useAuth()
+
   const [categories, setCategories] = useState<CategoryData[]>(getInitialCategories)
-  const [activeTab, setActiveTab] = useState<'pos' | 'orders' | 'shift' | 'menu' | 'qr'>('pos')
+  const [activeTab, setActiveTab] = useState<'pos' | 'kds' | 'orders' | 'shift' | 'menu' | 'qr'>(
+    user?.role === 'kitchen' ? 'kds' : 'pos',
+  )
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? 'chicken')
   const [cart, setCart] = useState<CartItem[]>([])
   const [orderNumber, setOrderNumber] = useState(() => peekOrderNumber())
+
+  // Настройки печати термо-чеков
+  const [paperWidth, setPaperWidth] = useState<PaperWidth>(() => getStoredPaperWidth())
+  const [showReceiptQr, setShowReceiptQr] = useState<boolean>(() => getStoredQrEnabled())
 
   // Параметры текущего заказа
   const [orderType, setOrderType] = useState<OrderType>('takeaway')
@@ -135,12 +155,13 @@ export function PosTerminal() {
     setTodayOrders(orders)
   }, [])
 
+  // Realtime подписка на заказы (Supabase + BroadcastChannel)
   useEffect(() => {
     reloadOrders()
-    const interval = setInterval(() => {
+    const unsubscribe = subscribeToOrders(() => {
       reloadOrders()
-    }, 10000)
-    return () => clearInterval(interval)
+    })
+    return () => unsubscribe()
   }, [reloadOrders])
 
   function persistMenuOverrides(updated: CategoryData[]) {
@@ -246,14 +267,15 @@ export function PosTerminal() {
   }, [])
 
   const handlePrintWithMode = useCallback(
-    (mode: PrintMode) => {
+    (mode: PrintMode, width?: PaperWidth) => {
       if (!receiptData) return
-      setReceiptData((prev) => (prev ? { ...prev, printMode: mode } : null))
+      const targetWidth = width || paperWidth
+      setReceiptData((prev) => (prev ? { ...prev, printMode: mode, paperWidth: targetWidth } : null))
       setTimeout(() => {
         window.print()
       }, 150)
     },
-    [receiptData],
+    [receiptData, paperWidth],
   )
 
   const handleSubmitOrder = useCallback(async () => {
@@ -286,7 +308,10 @@ export function PosTerminal() {
       cashReceived:
         paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
       changeAmount: paymentMethod === 'cash' ? change : undefined,
+      cashierName: user?.name || 'Кассир',
       printMode: 'guest',
+      paperWidth,
+      showQrCode: showReceiptQr,
     }
 
     await createOrder({
@@ -305,8 +330,8 @@ export function PosTerminal() {
       cashReceived:
         paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
       changeAmount: paymentMethod === 'cash' ? change : undefined,
-      createdAt: new Date().toISOString(),
-      status: 'confirmed',
+      cashierName: user?.name || 'Кассир',
+      status: 'pending',
     })
 
     setReceiptData(rData)
@@ -325,6 +350,9 @@ export function PosTerminal() {
     deliveryFee,
     paymentMethod,
     cashReceived,
+    user,
+    paperWidth,
+    showReceiptQr,
     handleClear,
     reloadOrders,
   ])
@@ -347,13 +375,34 @@ export function PosTerminal() {
         paymentMethod: order.paymentMethod,
         cashReceived: order.cashReceived,
         changeAmount: order.changeAmount,
+        cashierName: order.cashierName || user?.name || 'Кассир',
         printMode: mode,
+        paperWidth,
+        showQrCode: showReceiptQr,
       }
 
       setReceiptData(rData)
       setShowReceiptModal(true)
     },
-    [],
+    [paperWidth, showReceiptQr, user],
+  )
+
+  const handlePrintShiftThermal = useCallback(
+    (shiftData: ShiftThermalData) => {
+      const rData: ReceiptProps = {
+        items: [],
+        orderNumber: `S${shiftData.shiftNumber}`,
+        dateTime: receiptDateTime(),
+        printMode: 'shift',
+        paperWidth,
+        shiftData,
+      }
+      setReceiptData(rData)
+      setTimeout(() => {
+        window.print()
+      }, 150)
+    },
+    [paperWidth],
   )
 
   const handleToggleAvailable = useCallback(
@@ -404,6 +453,11 @@ export function PosTerminal() {
     currentSubtotal - currentDiscountAmount - customDiscount + currentDelivery,
   )
 
+  // Количество активных заказов на кухне (pending + cooking)
+  const activeKitchenOrdersCount = todayOrders.filter(
+    (o) => o.status === 'pending' || o.status === 'cooking',
+  ).length
+
   return (
     <>
       <div className="flex h-screen w-full flex-col bg-background font-sans antialiased text-foreground overflow-hidden select-none">
@@ -442,6 +496,29 @@ export function PosTerminal() {
               <ShoppingCart className="size-3.5 text-amber-500" />
               <span>Терминал</span>
             </button>
+
+            {/* Вкладка KDS (Кухня) */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('kds')
+                reloadOrders()
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                activeTab === 'kds'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <ChefHat className="size-3.5 text-orange-500" />
+              <span>Кухня (KDS)</span>
+              {activeKitchenOrdersCount > 0 && (
+                <span className="rounded-full bg-orange-500 text-white px-1.5 py-0.2 text-[10px] font-mono animate-pulse">
+                  {activeKitchenOrdersCount}
+                </span>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => {
@@ -457,6 +534,7 @@ export function PosTerminal() {
               <ClipboardList className="size-3.5 text-blue-500" />
               <span>Заказы ({todayOrders.length})</span>
             </button>
+
             <button
               type="button"
               onClick={() => {
@@ -472,6 +550,7 @@ export function PosTerminal() {
               <BarChart3 className="size-3.5 text-emerald-500" />
               <span>Смена</span>
             </button>
+
             <button
               type="button"
               onClick={() => setActiveTab('menu')}
@@ -484,6 +563,7 @@ export function PosTerminal() {
               <UtensilsCrossed className="size-3.5 text-purple-500" />
               <span>Меню</span>
             </button>
+
             <button
               type="button"
               onClick={() => setActiveTab('qr')}
@@ -498,8 +578,33 @@ export function PosTerminal() {
             </button>
           </nav>
 
-          {/* Правая часть: тема */}
+          {/* Правая часть: кассир, лента, тема, блокировка */}
           <div className="flex items-center gap-2">
+            {/* Переключатель ленты принтера в шапке */}
+            <div className="hidden md:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
+              <Printer className="size-3.5 text-muted-foreground ml-1.5" />
+              <button
+                type="button"
+                onClick={() => {
+                  const next: PaperWidth = paperWidth === '80mm' ? '58mm' : '80mm'
+                  setPaperWidth(next)
+                  setStoredPaperWidth(next)
+                }}
+                className="rounded-md px-2 py-0.5 text-[11px] font-bold text-amber-500 hover:text-amber-400 cursor-pointer"
+                title="Нажмите для переключения ширины термоленты"
+              >
+                {paperWidth === '80mm' ? '80 мм' : '58 мм'}
+              </button>
+            </div>
+
+            {/* Имя пользователя */}
+            {user && (
+              <span className="hidden lg:inline text-xs font-bold text-muted-foreground">
+                {user.name}
+              </span>
+            )}
+
+            {/* Кнопка темы */}
             <button
               type="button"
               onClick={toggleTheme}
@@ -507,6 +612,16 @@ export function PosTerminal() {
               title={isDark ? 'Светлая тема' : 'Тёмная тема'}
             >
               {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4 text-zinc-700" />}
+            </button>
+
+            {/* Быстрая блокировка экрана кассы */}
+            <button
+              type="button"
+              onClick={lockScreen}
+              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-muted-foreground hover:text-destructive hover:border-destructive transition cursor-pointer shadow-2xs"
+              title="Заблокировать кассу (Выход)"
+            >
+              <Lock className="size-3.5" />
             </button>
           </div>
         </header>
@@ -635,6 +750,13 @@ export function PosTerminal() {
             </div>
           )}
 
+          {/* Вкладка KDS (Экран кухни) */}
+          {activeTab === 'kds' && (
+            <div className="flex-1 p-4 sm:p-6 overflow-hidden w-full">
+              <KdsScreen orders={todayOrders} onRefresh={reloadOrders} />
+            </div>
+          )}
+
           {activeTab === 'orders' && (
             <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-4xl mx-auto w-full">
               <OrdersHistory
@@ -647,7 +769,10 @@ export function PosTerminal() {
 
           {activeTab === 'shift' && (
             <div className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-4xl mx-auto w-full">
-              <ShiftReport orders={todayOrders} />
+              <ShiftReport
+                orders={todayOrders}
+                onPrintShiftReport={handlePrintShiftThermal}
+              />
             </div>
           )}
 
@@ -684,6 +809,10 @@ export function PosTerminal() {
           data={receiptData}
           onClose={() => setShowReceiptModal(false)}
           onPrint={handlePrintWithMode}
+          onUpdateSettings={(w, q) => {
+            setPaperWidth(w)
+            setShowReceiptQr(q)
+          }}
         />
       )}
 
@@ -705,7 +834,11 @@ export function PosTerminal() {
           paymentMethod={receiptData.paymentMethod}
           cashReceived={receiptData.cashReceived}
           changeAmount={receiptData.changeAmount}
+          cashierName={receiptData.cashierName}
           printMode={receiptData.printMode}
+          paperWidth={receiptData.paperWidth || paperWidth}
+          showQrCode={receiptData.showQrCode ?? showReceiptQr}
+          shiftData={receiptData.shiftData}
         />
       )}
     </>

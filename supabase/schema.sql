@@ -32,7 +32,7 @@ create table if not exists public.menu_items (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 3. Таблица заказов (касса / POS)
+-- 3. Таблица заказов (касса / POS / KDS)
 create table if not exists public.orders (
   id uuid default gen_random_uuid() primary key,
   order_number text not null,
@@ -41,22 +41,53 @@ create table if not exists public.orders (
   customer_phone text,
   delivery_address text,
   items jsonb not null,
+  subtotal integer,
+  discount_percent integer,
+  discount_amount integer,
+  delivery_fee integer,
   total_amount integer not null,
   payment_method text not null check (payment_method in ('cash', 'click_payme')),
   cash_received integer,
   change_amount integer,
-  status text default 'completed' check (status in ('completed', 'cancelled')),
+  shift_id text,
+  cashier_name text,
+  status text default 'pending' check (status in ('pending', 'cooking', 'ready', 'completed', 'cancelled')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. Индексы для быстрой фильтрации
+-- 4. Таблица кассовых смен (X/Z-отчеты)
+create table if not exists public.shifts (
+  id text primary key,
+  shift_number integer not null,
+  cashier_id text,
+  cashier_name text not null,
+  cashier_role text default 'cashier',
+  opened_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  closed_at timestamp with time zone,
+  initial_cash integer default 0,
+  final_cash integer,
+  total_revenue integer default 0,
+  cash_revenue integer default 0,
+  card_revenue integer default 0,
+  discount_total integer default 0,
+  orders_count integer default 0,
+  status text default 'open' check (status in ('open', 'closed')),
+  notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 5. Индексы для быстрой фильтрации
 create index if not exists idx_menu_items_category on public.menu_items(category_id);
 create index if not exists idx_orders_created_at on public.orders(created_at desc);
+create index if not exists idx_orders_status on public.orders(status);
+create index if not exists idx_orders_shift on public.orders(shift_id);
+create index if not exists idx_shifts_opened_at on public.shifts(opened_at desc);
 
--- 5. Включение Row Level Security (RLS) и политики публичного доступа
+-- 6. Включение Row Level Security (RLS) и политики публичного доступа
 alter table public.categories enable row level security;
 alter table public.menu_items enable row level security;
 alter table public.orders enable row level security;
+alter table public.shifts enable row level security;
 
 -- Политики: чтение доступно всем, запись доступна анонимному ключу (для MVP кассы)
 create policy "Allow public read categories" on public.categories for select using (true);
@@ -72,8 +103,18 @@ create policy "Allow public delete menu_items" on public.menu_items for delete u
 create policy "Allow public read orders" on public.orders for select using (true);
 create policy "Allow public insert orders" on public.orders for insert with check (true);
 create policy "Allow public update orders" on public.orders for update using (true);
+create policy "Allow public delete orders" on public.orders for delete using (true);
 
--- 6. Начальные данные (базовое меню)
+create policy "Allow public read shifts" on public.shifts for select using (true);
+create policy "Allow public insert shifts" on public.shifts for insert with check (true);
+create policy "Allow public update shifts" on public.shifts for update using (true);
+create policy "Allow public delete shifts" on public.shifts for delete using (true);
+
+-- 7. Realtime публикация для синхронизации KDS и кассы
+alter publication supabase_realtime add table public.orders;
+alter publication supabase_realtime add table public.shifts;
+
+-- 8. Начальные данные (базовое меню)
 insert into public.categories (id, title_ru, title_uz, title_en, sort_order)
 values
   ('chicken', 'Курица', 'Tovuq', 'Chicken', 1),

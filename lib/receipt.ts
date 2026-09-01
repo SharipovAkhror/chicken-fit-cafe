@@ -1,11 +1,15 @@
 /**
- * Утилиты для генерации чеков.
+ * Утилиты для генерации чеков и настроек термопечати.
  *
  * Номер заказа — автоинкремент за текущий день.
- * Хранится в localStorage, сбрасывается при смене даты.
+ * Поддержка форматов ленты: 58 мм (узкая) и 80 мм (стандарт).
  */
 
+export type PaperWidth = '58mm' | '80mm'
+
 const STORAGE_KEY = 'chickenfit-pos-order'
+const PAPER_WIDTH_KEY = 'chickenfit-pos-paper-width'
+const QR_ENABLED_KEY = 'chickenfit-pos-receipt-qr'
 
 type StoredCounter = {
   date: string // YYYY-MM-DD
@@ -19,6 +23,42 @@ function todayISO(): string {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+/** Получить сохраненную ширину ленты термопринтера (по умолчанию 80mm). */
+export function getStoredPaperWidth(): PaperWidth {
+  if (typeof window === 'undefined') return '80mm'
+  try {
+    const val = localStorage.getItem(PAPER_WIDTH_KEY)
+    if (val === '58mm' || val === '80mm') return val
+  } catch {}
+  return '80mm'
+}
+
+/** Сохранить ширину ленты термопринтера. */
+export function setStoredPaperWidth(width: PaperWidth): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(PAPER_WIDTH_KEY, width)
+  } catch {}
+}
+
+/** Включен ли QR-код на гостевом чеке (по умолчанию true). */
+export function getStoredQrEnabled(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    const val = localStorage.getItem(QR_ENABLED_KEY)
+    if (val !== null) return val === 'true'
+  } catch {}
+  return true
+}
+
+/** Сохранить настройку QR-кода на чеке. */
+export function setStoredQrEnabled(enabled: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(QR_ENABLED_KEY, String(enabled))
+  } catch {}
 }
 
 /** Получить следующий номер заказа (#001, #002...). Сбрасывается каждый день. */
@@ -63,8 +103,8 @@ export function peekOrderNumber(): string {
 }
 
 /** Время и дата для чека: «13.08.2026  12:45» */
-export function receiptDateTime(): string {
-  const d = new Date()
+export function receiptDateTime(date?: Date): string {
+  const d = date || new Date()
   const day = String(d.getDate()).padStart(2, '0')
   const mon = String(d.getMonth() + 1).padStart(2, '0')
   const year = d.getFullYear()
