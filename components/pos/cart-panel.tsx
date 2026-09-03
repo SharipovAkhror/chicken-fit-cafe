@@ -389,14 +389,30 @@ export function CartPanel({
               </div>
             </div>
 
-            {/* Быстрые пилюли выбора столов */}
+            {/* 8 столов: 1-6 (1 этаж), 7-8 (1.5 этаж) */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'VIP', 'Бар'].map((num) => (
+              <span className="text-[10px] text-muted-foreground font-semibold shrink-0">1 эт:</span>
+              {['1', '2', '3', '4', '5', '6'].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => onSetTableNumber(num)}
-                  className={`min-w-8 h-7 rounded-lg text-[11px] font-mono font-bold transition shrink-0 cursor-pointer ${
+                  className={`min-w-7 h-7 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
+                    tableNumber === num
+                      ? 'bg-amber-500 text-black shadow-xs font-black'
+                      : 'border border-border bg-card text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+              <span className="text-[10px] text-muted-foreground font-semibold shrink-0 ml-1">1.5 эт:</span>
+              {['7', '8'].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => onSetTableNumber(num)}
+                  className={`min-w-7 h-7 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
                     tableNumber === num
                       ? 'bg-amber-500 text-black shadow-xs font-black'
                       : 'border border-border bg-card text-muted-foreground hover:text-foreground'
@@ -704,68 +720,62 @@ export function CartPanel({
           </div>
         </div>
 
-        {/* Кнопки действий r_keeper / iiko */}
+        {/* Кнопки действий */}
         {orderType === 'dine_in' ? (
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-2 gap-1.5">
-              {/* Кнопка: Отправить на кухню / Сохранить дозаказ */}
-              <button
-                type="button"
-                onClick={onSaveToKitchen}
-                disabled={!hasItems}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-orange-400 py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
-              >
-                <ChefHat className="size-4" />
-                <span>{activeOrderId ? '🍳 Дозаказ на кухню' : '🍳 Открыть на кухню'}</span>
-              </button>
-
-              {/* Кнопка: Пречек (счет для гостей) */}
-              <button
-                type="button"
-                onClick={onPrintPrecheck}
-                disabled={!hasItems}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-foreground py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
-              >
-                <FileText className="size-4 text-blue-500" />
-                <span>📄 Пречек (счёт)</span>
-              </button>
-            </div>
-
-            {/* Кнопка: Оплатить и закрыть стол */}
+          <div className="space-y-2">
             <button
               type="button"
               onClick={onSubmitOrder}
               disabled={!hasItems}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
             >
               <Printer className="size-5" />
-              <span>Оплатить и закрыть стол ({formatNum(finalTotal)} сум)</span>
+              <span>Оплатить ({formatNum(finalTotal)} сум)</span>
             </button>
-          </div>
-        ) : (
-          /* Для заказов С собой и Доставка */
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-2 gap-1.5">
+
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={onSaveToKitchen}
                 disabled={!hasItems}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-orange-400 py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
               >
-                <ChefHat className="size-4" />
-                <span>🍳 На кухню</span>
+                <ChefHat className="size-4 text-orange-500" />
+                <span>{activeOrderId ? 'На кухню (дозаказ)' : 'На кухню'}</span>
               </button>
 
               <button
                 type="button"
-                onClick={onSubmitOrder}
+                onClick={onPrintPrecheck}
                 disabled={!hasItems}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black py-2.5 text-xs font-black transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
               >
-                <Printer className="size-4" />
-                <span>Оплатить чек</span>
+                <FileText className="size-4 text-blue-500" />
+                <span>Пречек</span>
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={onSubmitOrder}
+              disabled={!hasItems}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
+            >
+              <Printer className="size-5" />
+              <span>Оплатить ({formatNum(finalTotal)} сум)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onSaveToKitchen}
+              disabled={!hasItems}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
+            >
+              <ChefHat className="size-4 text-orange-500" />
+              <span>Отправить на кухню без оплаты</span>
+            </button>
           </div>
         )}
       </div>

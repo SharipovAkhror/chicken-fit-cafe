@@ -423,20 +423,16 @@ export async function transferOrderTable(orderId: string, newTableNumber: string
   return updateOrder(orderId, { tableNumber: newTableNumber })
 }
 
-/** Стандартный список столов ресторана ChickenFit */
+/** Канонический список столов ChickenFit Cafe (8 столов: 6 на 1 этаже, 2 на 1.5 этаже) */
 export const RESTAURANT_TABLES = [
-  { id: '1', name: 'Стол 1', capacity: 2, zone: 'Основной зал' },
-  { id: '2', name: 'Стол 2', capacity: 4, zone: 'Основной зал' },
-  { id: '3', name: 'Стол 3', capacity: 4, zone: 'Основной зал' },
-  { id: '4', name: 'Стол 4', capacity: 4, zone: 'Основной зал' },
-  { id: '5', name: 'Стол 5', capacity: 6, zone: 'Основной зал' },
-  { id: '6', name: 'Стол 6', capacity: 6, zone: 'Основной зал' },
-  { id: '7', name: 'Стол 7', capacity: 2, zone: 'У окна' },
-  { id: '8', name: 'Стол 8', capacity: 2, zone: 'У окна' },
-  { id: '9', name: 'Стол 9', capacity: 4, zone: 'У окна' },
-  { id: '10', name: 'Стол 10', capacity: 4, zone: 'У окна' },
-  { id: 'VIP', name: 'VIP-зона', capacity: 8, zone: 'VIP' },
-  { id: 'Бар', name: 'Барная стойка', capacity: 3, zone: 'Бар' },
+  { id: '1', name: 'Стол 1', capacity: 4, zone: '1 этаж (Зал)' },
+  { id: '2', name: 'Стол 2', capacity: 4, zone: '1 этаж (Зал)' },
+  { id: '3', name: 'Стол 3', capacity: 4, zone: '1 этаж (Зал)' },
+  { id: '4', name: 'Стол 4', capacity: 4, zone: '1 этаж (Зал)' },
+  { id: '5', name: 'Стол 5', capacity: 6, zone: '1 этаж (Зал)' },
+  { id: '6', name: 'Стол 6', capacity: 6, zone: '1 этаж (Зал)' },
+  { id: '7', name: 'Стол 7', capacity: 4, zone: '1.5 этаж (Верх)' },
+  { id: '8', name: 'Стол 8', capacity: 4, zone: '1.5 этаж (Верх)' },
 ] as const
 
 /** Проверка активных открытых заказов по столам */

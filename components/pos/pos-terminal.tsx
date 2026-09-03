@@ -778,7 +778,7 @@ export function PosTerminal() {
 
           {/* Центральная часть: переключатель вкладок терминала */}
           <nav className="flex items-center gap-1 overflow-x-auto rounded-xl bg-secondary/60 p-1 border border-border">
-            {/* 1. Столы / План зала (r_keeper / iiko) */}
+            {/* 1. Столы / План зала */}
             <button
               type="button"
               onClick={() => {
@@ -791,8 +791,7 @@ export function PosTerminal() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>🪑</span>
-              <span>Столы (Зал)</span>
+              <span>🪑 Столы (8)</span>
               {occupiedTablesCount > 0 && (
                 <span
                   className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
@@ -989,48 +988,45 @@ export function PosTerminal() {
           {activeTab === 'pos' && (
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row w-full">
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                {/* Информационная строка стола r_keeper */}
-                {orderType === 'dine_in' && (
-                  <div className="flex items-center justify-between border-b border-border/80 bg-secondary/30 px-3.5 py-2 text-xs shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-foreground">
-                        🍽️ СТОЛ №{tableNumber}
+                {/* Лаконичная строка стола */}
+                <div className="flex items-center justify-between border-b border-border/80 bg-secondary/30 px-3.5 py-1.5 text-xs shrink-0">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('tables')}
+                      className="flex items-center gap-1 font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <span>← К столам</span>
+                    </button>
+                    <span>·</span>
+                    <span className="font-black text-foreground">
+                      {orderType === 'dine_in'
+                        ? `Стол №${tableNumber}${tableNumber > '6' ? ' (1.5 эт)' : ''}`
+                        : orderType === 'takeaway'
+                        ? 'С собой'
+                        : 'Доставка'}
+                    </span>
+                    {activeOrderId && (
+                      <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                        (Чек #{todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber})
                       </span>
-                      {activeOrderId ? (
-                        <span className="rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 text-[11px] border border-amber-500/30">
-                          🟡 Открытый счёт #{todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber}
-                        </span>
-                      ) : (
-                        <span className="rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 text-[11px] border border-emerald-500/30">
-                          🟢 Новый стол
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {activeOrderId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const ord = todayOrders.find((o) => o.id === activeOrderId)
-                            if (ord) handleOpenTransferModal(ord)
-                          }}
-                          className="flex items-center gap-1 rounded-lg border border-border bg-card hover:bg-secondary px-2.5 py-1 text-xs font-bold transition cursor-pointer"
-                        >
-                          <ArrowRightLeft className="size-3.5 text-amber-500" />
-                          <span>Перенести стол</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('tables')}
-                        className="flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black px-3 py-1 text-xs font-bold transition cursor-pointer shadow-2xs"
-                      >
-                        <span>🪑 К плану столов</span>
-                      </button>
-                    </div>
+                    )}
                   </div>
-                )}
+
+                  {activeOrderId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ord = todayOrders.find((o) => o.id === activeOrderId)
+                        if (ord) handleOpenTransferModal(ord)
+                      }}
+                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+                    >
+                      <ArrowRightLeft className="size-3 text-amber-500" />
+                      <span>Перенести</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Сетка меню */}
                 <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-20 lg:pb-4">
