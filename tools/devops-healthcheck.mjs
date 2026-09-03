@@ -98,8 +98,14 @@ async function runHealthCheck() {
   console.log('   ✅ Локальный буфер:    LocalStorage Mirror (чеки сохраняются при любых сетевых сбоях)')
   console.log('   ✅ Realtime канал:     Supabase PostgreSQL changes (для удаленного мониторинга)')
 
-  console.log('\n========================================================================')
-  const overall = routesOk && sbStatus.connected ? '🟢 ВСЕ СИСТЕМЫ В НОРМЕ (SLA 100%)' : '🟡 ТРЕБУЕТСЯ МИГРАЦИЯ SHIFTS'
+  let overall = '🟢 ВСЕ СИСТЕМЫ В НОРМЕ (SLA 100%)'
+  if (!routesOk && !sbStatus.connected) {
+    overall = '🔴 ЛОКАЛЬНЫЙ СЕРВЕР И БАЗА ДАННЫХ НЕДОСТУПНЫ'
+  } else if (!routesOk) {
+    overall = '⚪ ЛОКАЛЬНЫЙ ДЕВ-СЕРВЕР НЕ ЗАПУЩЕН (npm run dev) · ОБЛАЧНАЯ БАЗА В НОРМЕ'
+  } else if (!sbStatus.connected) {
+    overall = '🟡 ОБЛАЧНАЯ БАЗА НЕДОСТУПНА · АКТИВЕН OFFLINE-РЕЖИМ'
+  }
   console.log(`ИТОГОВЫЙ СТАТУС: ${overall}`)
   console.log('========================================================================\n')
 }
