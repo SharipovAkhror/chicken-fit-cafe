@@ -22,7 +22,7 @@ import {
 import type { OrderType, PaymentMethod } from '@/lib/orders'
 import { SimpleQR } from '@/lib/qr-generator'
 
-export type PrintMode = 'guest' | 'kitchen' | 'both' | 'shift'
+export type PrintMode = 'guest' | 'kitchen' | 'both' | 'shift' | 'precheck'
 
 export type ShiftThermalData = {
   type: 'X' | 'Z' // X = interim check, Z = final close of shift
@@ -146,9 +146,10 @@ export function ReceiptPrint({
             <div className={`${is58mm ? 'text-[9px]' : 'text-[10px]'} text-black/80`}>
               Тел: +998 (93) 380-2002
             </div>
-            <div className="my-1 border-t border-dashed border-black/70" />
-            <div className={`${is58mm ? 'text-[10px]' : 'text-[11px]'} font-black`}>
-              ЧЕК #{orderNumber} · {orderTypeLabel}
+            <div className={`${is58mm ? 'text-[10px]' : 'text-[11px]'} font-black uppercase`}>
+              {printMode === 'precheck'
+                ? `ПРЕЧЕК (СЧЁТ) #${orderNumber} · ${orderTypeLabel}`
+                : `ЧЕК #${orderNumber} · ${orderTypeLabel}`}
             </div>
             <div className={`${is58mm ? 'text-[8.5px]' : 'text-[9px]'} text-black/70 mt-0.5`}>
               {dateTime} · {cashierName}
@@ -251,9 +252,19 @@ export function ReceiptPrint({
           )}
 
           {/* Подвал и линия авто-отрезки */}
-          <div className="text-center text-[9px] font-bold pt-1">
-            Спасибо за заказ! Ждем вас снова!
-          </div>
+          {printMode === 'precheck' ? (
+            <div className="text-center text-[8.5px] font-black border-t border-dashed border-black pt-1 my-1">
+              *** ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ СТОЛА ***
+              <br />
+              НЕ ЯВЛЯЕТСЯ ФИСКАЛЬНЫМ ЧЕКОМ
+              <br />
+              ПОЖАЛУЙСТА, ОПЛАТИТЕ НА КАССЕ
+            </div>
+          ) : (
+            <div className="text-center text-[9px] font-bold pt-1">
+              Спасибо за заказ! Ждем вас снова!
+            </div>
+          )}
           <div className="receipt-tear-off">
             ✂ - - - - - - - - - - - - - - - - - - - - - - - -
           </div>

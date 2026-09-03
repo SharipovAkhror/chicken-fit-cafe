@@ -17,6 +17,9 @@ import {
   ShoppingBag,
   Truck,
   Delete,
+  ChefHat,
+  FileText,
+  ArrowRightLeft,
 } from 'lucide-react'
 import type { CartItem } from '@/lib/cart'
 import { lineTotal, cartTotal } from '@/lib/cart'
@@ -50,6 +53,12 @@ type Props = {
   onClear: () => void
   onSubmitOrder: () => void
   onCloseMobile?: () => void
+  activeOrderId?: string | null
+  isTableOccupied?: boolean
+  onSaveToKitchen?: () => void
+  onPrintPrecheck?: () => void
+  onOpenTransferModal?: () => void
+  onBackToTables?: () => void
 }
 
 function formatNum(n: number): string {
@@ -210,6 +219,12 @@ export function CartPanel({
   onClear,
   onSubmitOrder,
   onCloseMobile,
+  activeOrderId,
+  isTableOccupied,
+  onSaveToKitchen,
+  onPrintPrecheck,
+  onOpenTransferModal,
+  onBackToTables,
 }: Props) {
   const [showAddCustom, setShowAddCustom] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -331,24 +346,66 @@ export function CartPanel({
           </button>
         </div>
 
-        {/* Столы */}
+        {/* Столы (r_keeper / iiko style) */}
         {orderType === 'dine_in' && (
-          <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1">
-            <span className="text-xs text-muted-foreground shrink-0 font-medium">Стол:</span>
-            {['1', '2', '3', '4', '5', '6', '7', '8', 'Бар'].map((num) => (
-              <button
-                key={num}
-                type="button"
-                onClick={() => onSetTableNumber(num)}
-                className={`min-w-8 h-8 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
-                  tableNumber === num
-                    ? 'bg-amber-500 text-black shadow-xs'
-                    : 'border border-border bg-card text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {num}
-              </button>
-            ))}
+          <div className="mt-2 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-foreground">
+                  Стол №{tableNumber}
+                </span>
+                {activeOrderId ? (
+                  <span className="rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 text-[10px] font-bold border border-amber-500/30">
+                    🟡 Открыт (#{orderNumber})
+                  </span>
+                ) : (
+                  <span className="rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[10px] font-bold border border-emerald-500/30">
+                    🟢 Новый стол
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1">
+                {activeOrderId && onOpenTransferModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenTransferModal}
+                    title="Перенести заказ на другой свободный стол"
+                    className="flex items-center gap-1 rounded-lg border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-[10.5px] font-bold transition cursor-pointer"
+                  >
+                    <ArrowRightLeft className="size-3 text-amber-500" />
+                    <span>Перенести</span>
+                  </button>
+                )}
+                {onBackToTables && (
+                  <button
+                    type="button"
+                    onClick={onBackToTables}
+                    className="flex items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-1 text-[10.5px] font-bold transition cursor-pointer"
+                  >
+                    <span>🪑 К столам</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Быстрые пилюли выбора столов */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'VIP', 'Бар'].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => onSetTableNumber(num)}
+                  className={`min-w-8 h-7 rounded-lg text-[11px] font-mono font-bold transition shrink-0 cursor-pointer ${
+                    tableNumber === num
+                      ? 'bg-amber-500 text-black shadow-xs font-black'
+                      : 'border border-border bg-card text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -647,15 +704,70 @@ export function CartPanel({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onSubmitOrder}
-          disabled={!hasItems}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-bold text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
-        >
-          <Printer className="size-5" />
-          <span>Оформить и напечатать чек</span>
-        </button>
+        {/* Кнопки действий r_keeper / iiko */}
+        {orderType === 'dine_in' ? (
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              {/* Кнопка: Отправить на кухню / Сохранить дозаказ */}
+              <button
+                type="button"
+                onClick={onSaveToKitchen}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-orange-400 py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+              >
+                <ChefHat className="size-4" />
+                <span>{activeOrderId ? '🍳 Дозаказ на кухню' : '🍳 Открыть на кухню'}</span>
+              </button>
+
+              {/* Кнопка: Пречек (счет для гостей) */}
+              <button
+                type="button"
+                onClick={onPrintPrecheck}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-foreground py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+              >
+                <FileText className="size-4 text-blue-500" />
+                <span>📄 Пречек (счёт)</span>
+              </button>
+            </div>
+
+            {/* Кнопка: Оплатить и закрыть стол */}
+            <button
+              type="button"
+              onClick={onSubmitOrder}
+              disabled={!hasItems}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
+            >
+              <Printer className="size-5" />
+              <span>Оплатить и закрыть стол ({formatNum(finalTotal)} сум)</span>
+            </button>
+          </div>
+        ) : (
+          /* Для заказов С собой и Доставка */
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={onSaveToKitchen}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-orange-400 py-2.5 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+              >
+                <ChefHat className="size-4" />
+                <span>🍳 На кухню</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onSubmitOrder}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black py-2.5 text-xs font-black transition active:scale-98 disabled:opacity-30 cursor-pointer shadow-xs"
+              >
+                <Printer className="size-4" />
+                <span>Оплатить чек</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

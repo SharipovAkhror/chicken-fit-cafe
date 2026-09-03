@@ -421,12 +421,15 @@
 
   /* Print modes visibility */
   .print-mode-guest .kitchen-receipt-print,
-  .print-mode-guest .shift-receipt-print {
+  .print-mode-guest .shift-receipt-print,
+  .print-mode-precheck .kitchen-receipt-print,
+  .print-mode-precheck .shift-receipt-print {
     display: none !important;
     visibility: hidden !important;
   }
 
-  .print-mode-guest .guest-receipt-print {
+  .print-mode-guest .guest-receipt-print,
+  .print-mode-precheck .guest-receipt-print {
     display: block !important;
     visibility: visible !important;
   }

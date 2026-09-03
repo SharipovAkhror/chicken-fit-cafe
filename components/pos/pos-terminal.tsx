@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
   ShoppingCart,
@@ -14,6 +14,10 @@ import {
   ChefHat,
   Lock,
   Printer,
+  ArrowRightLeft,
+  X,
+  FileText,
+  CheckCircle2,
 } from 'lucide-react'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
@@ -40,8 +44,12 @@ import {
 } from '@/lib/receipt'
 import {
   createOrder,
+  updateOrder,
+  transferOrderTable,
   fetchTodayOrders,
   subscribeToOrders,
+  getActiveOrdersByTables,
+  RESTAURANT_TABLES,
   type Order,
   type OrderType,
   type PaymentMethod,
@@ -63,6 +71,7 @@ import { ShiftReport } from './shift-report'
 import { MenuManager } from './menu-manager'
 import { QrManager } from './qr-manager'
 import { KdsScreen } from './kds-screen'
+import { TablePlan } from './table-plan'
 
 type CategoryData = {
   id: string
@@ -116,8 +125,8 @@ export function PosTerminal() {
   const { user, lockScreen } = useAuth()
 
   const [categories, setCategories] = useState<CategoryData[]>(getInitialCategories)
-  const [activeTab, setActiveTab] = useState<'pos' | 'kds' | 'orders' | 'shift' | 'menu' | 'qr'>(
-    user?.role === 'kitchen' ? 'kds' : 'pos',
+  const [activeTab, setActiveTab] = useState<'tables' | 'pos' | 'kds' | 'orders' | 'shift' | 'menu' | 'qr'>(
+    user?.role === 'kitchen' ? 'kds' : 'tables',
   )
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? 'chicken')
   const [cart, setCart] = useState<CartItem[]>([])
@@ -127,9 +136,12 @@ export function PosTerminal() {
   const [paperWidth, setPaperWidth] = useState<PaperWidth>(() => getStoredPaperWidth())
   const [showReceiptQr, setShowReceiptQr] = useState<boolean>(() => getStoredQrEnabled())
 
-  // Параметры текущего заказа
-  const [orderType, setOrderType] = useState<OrderType>('takeaway')
+  // Параметры текущего заказа и стола (r_keeper / iiko)
+  const [orderType, setOrderType] = useState<OrderType>('dine_in')
   const [tableNumber, setTableNumber] = useState<string>('1')
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
+  const [transferModalOrder, setTransferModalOrder] = useState<Order | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [customerPhone, setCustomerPhone] = useState<string>('')
   const [deliveryAddress, setDeliveryAddress] = useState<string>('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
@@ -146,6 +158,22 @@ export function PosTerminal() {
 
   // История заказов за сегодня
   const [todayOrders, setTodayOrders] = useState<Order[]>([])
+
+  // Карта активных открытых счетов по столам (r_keeper / iiko)
+  const activeOrdersByTables = useMemo(() => {
+    return getActiveOrdersByTables(todayOrders)
+  }, [todayOrders])
+
+  const occupiedTablesCount = useMemo(() => {
+    return Object.keys(activeOrdersByTables).length
+  }, [activeOrdersByTables])
+
+  const currentActiveOrder = useMemo(() => {
+    if (orderType !== 'dine_in') return null
+    return activeOrdersByTables[tableNumber] || null
+  }, [orderType, tableNumber, activeOrdersByTables])
+
+  const isCurrentTableOccupied = Boolean(currentActiveOrder)
 
   // Данные для печати текущего чека
   const [receiptData, setReceiptData] = useState<ReceiptProps | null>(null)
@@ -259,6 +287,7 @@ export function PosTerminal() {
 
   const handleClear = useCallback(() => {
     setCart(clearCart())
+    setActiveOrderId(null)
     setCashReceived(0)
     setDiscountPercent(0)
     setCustomDiscount(0)
@@ -278,10 +307,241 @@ export function PosTerminal() {
     [receiptData, paperWidth],
   )
 
+  // ─── ВЫБОР СТОЛА И ЗАКАЗОВ (r_keeper / iiko) ────────────────
+  const handleSelectTable = useCallback((tableId: string, activeOrder?: Order) => {
+    setOrderType('dine_in')
+    setTableNumber(tableId)
+    if (activeOrder) {
+      setCart([...activeOrder.items])
+      setActiveOrderId(activeOrder.id)
+      setDiscountPercent(activeOrder.discountPercent || 0)
+      setCustomDiscount(activeOrder.discountAmount || 0)
+      setPaymentMethod(activeOrder.paymentMethod || 'cash')
+    } else {
+      setCart([])
+      setActiveOrderId(null)
+      setDiscountPercent(0)
+      setCustomDiscount(0)
+    }
+    setActiveTab('pos')
+  }, [])
+
+  const handleSelectFastOrder = useCallback((type: 'takeaway' | 'delivery') => {
+    setOrderType(type)
+    setCart([])
+    setActiveOrderId(null)
+    setDiscountPercent(0)
+    setCustomDiscount(0)
+    setActiveTab('pos')
+  }, [])
+
+  const handleSetTableNumber = useCallback((num: string) => {
+    setTableNumber(num)
+    const existing = activeOrdersByTables[num]
+    if (existing) {
+      setCart([...existing.items])
+      setActiveOrderId(existing.id)
+      setDiscountPercent(existing.discountPercent || 0)
+      setCustomDiscount(existing.discountAmount || 0)
+    } else {
+      if (activeOrderId) {
+        setCart([])
+        setActiveOrderId(null)
+        setDiscountPercent(0)
+        setCustomDiscount(0)
+      }
+    }
+  }, [activeOrdersByTables, activeOrderId])
+
+  const handleSetOrderType = useCallback((type: OrderType) => {
+    setOrderType(type)
+    if (type !== 'dine_in') {
+      setActiveOrderId(null)
+    } else {
+      const existing = activeOrdersByTables[tableNumber]
+      if (existing) {
+        setCart([...existing.items])
+        setActiveOrderId(existing.id)
+      }
+    }
+  }, [activeOrdersByTables, tableNumber])
+
+  const handleOpenTransferModal = useCallback((order: Order) => {
+    setTransferModalOrder(order)
+  }, [])
+
+  const handleConfirmTransfer = useCallback(async (newTableId: string) => {
+    if (!transferModalOrder) return
+    const orderId = transferModalOrder.id
+    const prevTable = transferModalOrder.tableNumber
+    await transferOrderTable(orderId, newTableId)
+    setTransferModalOrder(null)
+    if (activeOrderId === orderId) {
+      setTableNumber(newTableId)
+    }
+    await reloadOrders()
+    setToastMessage(`Счёт #${transferModalOrder.orderNumber} перенесён: Стол ${prevTable} ➔ Стол ${newTableId}`)
+    setTimeout(() => setToastMessage(null), 3500)
+  }, [transferModalOrder, activeOrderId, reloadOrders])
+
+  const handleDirectPay = useCallback((order: Order) => {
+    setOrderType('dine_in')
+    setTableNumber(order.tableNumber || '1')
+    setCart([...order.items])
+    setActiveOrderId(order.id)
+    setDiscountPercent(order.discountPercent || 0)
+    setCustomDiscount(order.discountAmount || 0)
+    setPaymentMethod(order.paymentMethod || 'cash')
+    setActiveTab('pos')
+  }, [])
+
+  // ─── ОТПРАВИТЬ НА КУХНЮ / СОХРАНИТЬ ДОЗАКАЗ ──────────────────
+  const handleSaveToKitchen = useCallback(async () => {
+    if (cart.length === 0) return
+
+    const dt = receiptDateTime()
+    const subtotal = cartTotal(cart)
+    const pctDiscount =
+      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
+    const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
+    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
+
+    if (activeOrderId) {
+      // Дозаказ к существующему открытому столу
+      const existing = todayOrders.find((o) => o.id === activeOrderId)
+      await updateOrder(activeOrderId, {
+        items: [...cart],
+        subtotal,
+        discountAmount: totalDiscount,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        total: finalTotal,
+      })
+
+      const kitchenTicket: ReceiptProps = {
+        items: [...cart],
+        orderNumber: existing?.orderNumber || peekOrderNumber(),
+        dateTime: dt,
+        orderType,
+        tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+        subtotal,
+        total: finalTotal,
+        cashierName: user?.name || 'Кассир',
+        printMode: 'kitchen',
+        paperWidth,
+      }
+      setReceiptData(kitchenTicket)
+      setTimeout(() => {
+        window.print()
+      }, 150)
+
+      setToastMessage(`Дозаказ на Стол №${tableNumber} отправлен на кухню!`)
+      setTimeout(() => setToastMessage(null), 3500)
+    } else {
+      // Открытие нового заказа на стол
+      const num = nextOrderNumber()
+      await createOrder({
+        orderNumber: num,
+        type: orderType,
+        tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+        customerPhone: orderType === 'delivery' ? customerPhone : undefined,
+        deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+        items: [...cart],
+        subtotal,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
+        deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+        total: finalTotal,
+        paymentMethod,
+        cashierName: user?.name || 'Кассир',
+        status: 'pending',
+      })
+
+      const kitchenTicket: ReceiptProps = {
+        items: [...cart],
+        orderNumber: num,
+        dateTime: dt,
+        orderType,
+        tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+        subtotal,
+        total: finalTotal,
+        cashierName: user?.name || 'Кассир',
+        printMode: 'kitchen',
+        paperWidth,
+      }
+      setReceiptData(kitchenTicket)
+      setTimeout(() => {
+        window.print()
+      }, 150)
+
+      setOrderNumber(peekOrderNumber())
+      setToastMessage(`Стол №${tableNumber} открыт! Заказ передан на кухню.`)
+      setTimeout(() => setToastMessage(null), 3500)
+    }
+
+    handleClear()
+    setActiveOrderId(null)
+    reloadOrders()
+    setActiveTab('tables')
+  }, [
+    cart,
+    activeOrderId,
+    todayOrders,
+    discountPercent,
+    customDiscount,
+    orderType,
+    deliveryFee,
+    tableNumber,
+    customerPhone,
+    deliveryAddress,
+    paymentMethod,
+    user,
+    paperWidth,
+    handleClear,
+    reloadOrders,
+  ])
+
+  // ─── ПРЕЧЕК / ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ ───────────────────────────
+  const handlePrintPrecheck = useCallback(() => {
+    if (cart.length === 0) return
+    const subtotal = cartTotal(cart)
+    const pctDiscount =
+      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
+    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount))
+
+    const activeOrderObj = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
+    const num = activeOrderObj ? activeOrderObj.orderNumber : orderNumber
+
+    const precheckData: ReceiptProps = {
+      items: [...cart],
+      orderNumber: num,
+      dateTime: receiptDateTime(),
+      orderType: 'dine_in',
+      tableNumber,
+      subtotal,
+      discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
+      discountPercent: discountPercent > 0 ? discountPercent : undefined,
+      total: finalTotal,
+      cashierName: user?.name || 'Кассир',
+      printMode: 'precheck',
+      paperWidth,
+      showQrCode: false,
+    }
+
+    setReceiptData(precheckData)
+    setTimeout(() => {
+      window.print()
+    }, 150)
+
+    setToastMessage(`Пречек для Стола №${tableNumber} отправлен на печать!`)
+    setTimeout(() => setToastMessage(null), 3500)
+  }, [cart, discountPercent, customDiscount, activeOrderId, todayOrders, orderNumber, tableNumber, user, paperWidth])
+
+  // ─── ОПЛАТИТЬ И ЗАКРЫТЬ СТОЛ ────────────────────────────────
   const handleSubmitOrder = useCallback(async () => {
     if (cart.length === 0) return
 
-    const num = nextOrderNumber()
     const dt = receiptDateTime()
     const subtotal = cartTotal(cart)
     const pctDiscount =
@@ -290,6 +550,45 @@ export function PosTerminal() {
     const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
     const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
     const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
+
+    let num = orderNumber
+    if (activeOrderId) {
+      const existing = todayOrders.find((o) => o.id === activeOrderId)
+      num = existing?.orderNumber || num
+      await updateOrder(activeOrderId, {
+        items: [...cart],
+        subtotal,
+        discountAmount: totalDiscount,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+        total: finalTotal,
+        paymentMethod,
+        cashReceived: paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
+        changeAmount: paymentMethod === 'cash' ? change : undefined,
+        status: 'completed',
+      })
+    } else {
+      num = nextOrderNumber()
+      await createOrder({
+        orderNumber: num,
+        type: orderType,
+        tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+        customerPhone: orderType === 'delivery' ? customerPhone : undefined,
+        deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+        items: [...cart],
+        subtotal,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
+        deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+        total: finalTotal,
+        paymentMethod,
+        cashReceived:
+          paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
+        changeAmount: paymentMethod === 'cash' ? change : undefined,
+        cashierName: user?.name || 'Кассир',
+        status: 'completed',
+      })
+    }
 
     const rData: ReceiptProps = {
       items: [...cart],
@@ -314,33 +613,17 @@ export function PosTerminal() {
       showQrCode: showReceiptQr,
     }
 
-    await createOrder({
-      orderNumber: num,
-      type: orderType,
-      tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
-      customerPhone: orderType === 'delivery' ? customerPhone : undefined,
-      deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
-      items: [...cart],
-      subtotal,
-      discountPercent: discountPercent > 0 ? discountPercent : undefined,
-      discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
-      deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
-      total: finalTotal,
-      paymentMethod,
-      cashReceived:
-        paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
-      changeAmount: paymentMethod === 'cash' ? change : undefined,
-      cashierName: user?.name || 'Кассир',
-      status: 'pending',
-    })
-
     setReceiptData(rData)
     setShowReceiptModal(true)
     setOrderNumber(peekOrderNumber())
     handleClear()
+    setActiveOrderId(null)
     reloadOrders()
   }, [
     cart,
+    activeOrderId,
+    todayOrders,
+    orderNumber,
     orderType,
     tableNumber,
     customerPhone,
@@ -495,6 +778,33 @@ export function PosTerminal() {
 
           {/* Центральная часть: переключатель вкладок терминала */}
           <nav className="flex items-center gap-1 overflow-x-auto rounded-xl bg-secondary/60 p-1 border border-border">
+            {/* 1. Столы / План зала (r_keeper / iiko) */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('tables')
+                reloadOrders()
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                activeTab === 'tables'
+                  ? 'bg-amber-500 text-black shadow-xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>🪑</span>
+              <span>Столы (Зал)</span>
+              {occupiedTablesCount > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
+                    activeTab === 'tables' ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
+                  }`}
+                >
+                  {occupiedTablesCount}
+                </span>
+              )}
+            </button>
+
+            {/* 2. Меню и набор заказа */}
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
@@ -505,7 +815,14 @@ export function PosTerminal() {
               }`}
             >
               <ShoppingCart className="size-3.5 text-amber-500" />
-              <span>Терминал</span>
+              <span>Заказ</span>
+              {orderType === 'dine_in' ? (
+                <span className="text-[10px] text-amber-500 font-mono font-bold">№{tableNumber}</span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">
+                  ({orderType === 'takeaway' ? 'С собой' : 'Доставка'})
+                </span>
+              )}
             </button>
 
             {/* Вкладка KDS (Кухня) */}
@@ -655,24 +972,87 @@ export function PosTerminal() {
 
         {/* Главная рабочая область */}
         <div className="flex min-h-0 flex-1 overflow-hidden relative">
+          {/* 1. ПЛАН ЗАЛА И СТОЛОВ (r_keeper / iiko) */}
+          {activeTab === 'tables' && (
+            <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-16 lg:pb-4 w-full">
+              <TablePlan
+                orders={todayOrders}
+                onSelectTable={handleSelectTable}
+                onSelectFastOrder={handleSelectFastOrder}
+                onOpenTransferModal={handleOpenTransferModal}
+                onDirectPay={handleDirectPay}
+              />
+            </div>
+          )}
+
+          {/* 2. ТЕРМИНАЛ / МЕНЮ И ЧЕК */}
           {activeTab === 'pos' && (
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row w-full">
-              {/* Сетка меню */}
-              <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-20 lg:pb-4">
-                <MenuGrid
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  onCategoryChange={setActiveCategory}
-                  onAddItem={handleAddItem}
-                  onOpenGarnishMixer={handleOpenGarnishMixer}
-                />
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {/* Информационная строка стола r_keeper */}
+                {orderType === 'dine_in' && (
+                  <div className="flex items-center justify-between border-b border-border/80 bg-secondary/30 px-3.5 py-2 text-xs shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-foreground">
+                        🍽️ СТОЛ №{tableNumber}
+                      </span>
+                      {activeOrderId ? (
+                        <span className="rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 text-[11px] border border-amber-500/30">
+                          🟡 Открытый счёт #{todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber}
+                        </span>
+                      ) : (
+                        <span className="rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 text-[11px] border border-emerald-500/30">
+                          🟢 Новый стол
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {activeOrderId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ord = todayOrders.find((o) => o.id === activeOrderId)
+                            if (ord) handleOpenTransferModal(ord)
+                          }}
+                          className="flex items-center gap-1 rounded-lg border border-border bg-card hover:bg-secondary px-2.5 py-1 text-xs font-bold transition cursor-pointer"
+                        >
+                          <ArrowRightLeft className="size-3.5 text-amber-500" />
+                          <span>Перенести стол</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('tables')}
+                        className="flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black px-3 py-1 text-xs font-bold transition cursor-pointer shadow-2xs"
+                      >
+                        <span>🪑 К плану столов</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Сетка меню */}
+                <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-20 lg:pb-4">
+                  <MenuGrid
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    onCategoryChange={setActiveCategory}
+                    onAddItem={handleAddItem}
+                    onOpenGarnishMixer={handleOpenGarnishMixer}
+                  />
+                </div>
               </div>
 
               {/* Панель оформления и корзины (справа) */}
               <aside className="hidden lg:block w-full lg:w-[25rem] xl:w-[27rem] shrink-0 border-l border-border p-3 sm:p-4 overflow-y-auto bg-card/50">
                 <CartPanel
                   items={cart}
-                  orderNumber={orderNumber}
+                  orderNumber={
+                    activeOrderId
+                      ? todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber
+                      : orderNumber
+                  }
                   orderType={orderType}
                   tableNumber={tableNumber}
                   customerPhone={customerPhone}
@@ -682,8 +1062,17 @@ export function PosTerminal() {
                   discountPercent={discountPercent}
                   customDiscount={customDiscount}
                   deliveryFee={deliveryFee}
-                  onSetOrderType={setOrderType}
-                  onSetTableNumber={setTableNumber}
+                  activeOrderId={activeOrderId}
+                  isTableOccupied={isCurrentTableOccupied}
+                  onSaveToKitchen={handleSaveToKitchen}
+                  onPrintPrecheck={handlePrintPrecheck}
+                  onOpenTransferModal={() => {
+                    const ord = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
+                    if (ord) handleOpenTransferModal(ord)
+                  }}
+                  onBackToTables={() => setActiveTab('tables')}
+                  onSetOrderType={handleSetOrderType}
+                  onSetTableNumber={handleSetTableNumber}
                   onSetCustomerPhone={setCustomerPhone}
                   onSetDeliveryAddress={setDeliveryAddress}
                   onSetPaymentMethod={setPaymentMethod}
@@ -706,7 +1095,11 @@ export function PosTerminal() {
                   <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card p-4 border-t border-border shadow-2xl">
                     <CartPanel
                       items={cart}
-                      orderNumber={orderNumber}
+                      orderNumber={
+                        activeOrderId
+                          ? todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber
+                          : orderNumber
+                      }
                       orderType={orderType}
                       tableNumber={tableNumber}
                       customerPhone={customerPhone}
@@ -716,8 +1109,17 @@ export function PosTerminal() {
                       discountPercent={discountPercent}
                       customDiscount={customDiscount}
                       deliveryFee={deliveryFee}
-                      onSetOrderType={setOrderType}
-                      onSetTableNumber={setTableNumber}
+                      activeOrderId={activeOrderId}
+                      isTableOccupied={isCurrentTableOccupied}
+                      onSaveToKitchen={handleSaveToKitchen}
+                      onPrintPrecheck={handlePrintPrecheck}
+                      onOpenTransferModal={() => {
+                        const ord = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
+                        if (ord) handleOpenTransferModal(ord)
+                      }}
+                      onBackToTables={() => setActiveTab('tables')}
+                      onSetOrderType={handleSetOrderType}
+                      onSetTableNumber={handleSetTableNumber}
                       onSetCustomerPhone={setCustomerPhone}
                       onSetDeliveryAddress={setDeliveryAddress}
                       onSetPaymentMethod={setPaymentMethod}
@@ -851,6 +1253,74 @@ export function PosTerminal() {
           showQrCode={receiptData.showQrCode ?? showReceiptQr}
           shiftData={receiptData.shiftData}
         />
+      )}
+
+      {/* Модальное окно переноса стола (r_keeper / iiko style) */}
+      {transferModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-border/80 pb-3">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className="size-5 text-amber-500" />
+                <h3 className="text-base font-bold text-foreground">
+                  Перенос счёта #{transferModalOrder.orderNumber}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTransferModalOrder(null)}
+                className="rounded-lg p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Текущий стол: <span className="font-bold text-foreground">Стол {transferModalOrder.tableNumber}</span>
+                <br />
+                Выберите новый свободный стол для переноса:
+              </p>
+
+              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
+                {RESTAURANT_TABLES.filter(
+                  (t) =>
+                    t.id !== transferModalOrder.tableNumber &&
+                    !activeOrdersByTables[t.id],
+                ).map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleConfirmTransfer(t.id)}
+                    className="flex flex-col items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 p-3 text-xs font-bold transition active:scale-95 cursor-pointer"
+                  >
+                    <span className="text-sm font-black text-foreground">{t.name}</span>
+                    <span className="text-[10px] text-muted-foreground">{t.zone}</span>
+                    <span className="text-[10px] text-emerald-500 font-semibold mt-1">🟢 Свободен</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border/60 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setTransferModalOrder(null)}
+                className="rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Всплывающее уведомление (Toast) */}
+      {toastMessage && (
+        <div className="fixed top-16 right-4 z-50 rounded-xl bg-emerald-600 text-white font-bold px-4 py-3 shadow-2xl flex items-center gap-2 text-xs animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="size-4 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
       )}
     </>
   )

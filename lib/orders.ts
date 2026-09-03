@@ -376,6 +376,84 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   return updated
 }
 
+/** Полное обновление заказа (изменение блюд, дозаказ, перенос стола, скидки, оплата) */
+export async function updateOrder(orderId: string, updates: Partial<Order>): Promise<Order | null> {
+  const local = getLocalOrders()
+  const existing = local.find((o) => o.id === orderId)
+  if (!existing) return null
+
+  const updated: Order = {
+    ...existing,
+    ...updates,
+  }
+
+  saveLocalOrder(updated)
+  broadcastOrderEvent('update', updated)
+
+  if (supabase) {
+    try {
+      const payload: Record<string, unknown> = {}
+      if (updates.status !== undefined) payload.status = updates.status
+      if (updates.tableNumber !== undefined) payload.table_number = updates.tableNumber
+      if (updates.items !== undefined) payload.items = updates.items
+      if (updates.subtotal !== undefined) payload.subtotal = updates.subtotal
+      if (updates.discountPercent !== undefined) payload.discount_percent = updates.discountPercent
+      if (updates.discountAmount !== undefined) payload.discount_amount = updates.discountAmount
+      if (updates.deliveryFee !== undefined) payload.delivery_fee = updates.deliveryFee
+      if (updates.total !== undefined) payload.total_amount = updates.total
+      if (updates.paymentMethod !== undefined) payload.payment_method = updates.paymentMethod
+      if (updates.cashReceived !== undefined) payload.cash_received = updates.cashReceived
+      if (updates.changeAmount !== undefined) payload.change_amount = updates.changeAmount
+      if (updates.cashierName !== undefined) payload.cashier_name = updates.cashierName
+      if (updates.type !== undefined) payload.order_type = updates.type
+
+      if (Object.keys(payload).length > 0) {
+        await supabase.from('orders').update(payload).eq('id', orderId)
+      }
+    } catch (err) {
+      console.warn('Supabase updateOrder failed, updated locally:', err)
+    }
+  }
+
+  return updated
+}
+
+/** Перенос активного заказа на другой стол */
+export async function transferOrderTable(orderId: string, newTableNumber: string): Promise<Order | null> {
+  return updateOrder(orderId, { tableNumber: newTableNumber })
+}
+
+/** Стандартный список столов ресторана ChickenFit */
+export const RESTAURANT_TABLES = [
+  { id: '1', name: 'Стол 1', capacity: 2, zone: 'Основной зал' },
+  { id: '2', name: 'Стол 2', capacity: 4, zone: 'Основной зал' },
+  { id: '3', name: 'Стол 3', capacity: 4, zone: 'Основной зал' },
+  { id: '4', name: 'Стол 4', capacity: 4, zone: 'Основной зал' },
+  { id: '5', name: 'Стол 5', capacity: 6, zone: 'Основной зал' },
+  { id: '6', name: 'Стол 6', capacity: 6, zone: 'Основной зал' },
+  { id: '7', name: 'Стол 7', capacity: 2, zone: 'У окна' },
+  { id: '8', name: 'Стол 8', capacity: 2, zone: 'У окна' },
+  { id: '9', name: 'Стол 9', capacity: 4, zone: 'У окна' },
+  { id: '10', name: 'Стол 10', capacity: 4, zone: 'У окна' },
+  { id: 'VIP', name: 'VIP-зона', capacity: 8, zone: 'VIP' },
+  { id: 'Бар', name: 'Барная стойка', capacity: 3, zone: 'Бар' },
+] as const
+
+/** Проверка активных открытых заказов по столам */
+export function getActiveOrdersByTables(orders: Order[]): Record<string, Order> {
+  const map: Record<string, Order> = {}
+  for (const o of orders) {
+    if (
+      o.type === 'dine_in' &&
+      o.tableNumber &&
+      (o.status === 'pending' || o.status === 'cooking' || o.status === 'ready')
+    ) {
+      map[o.tableNumber] = o
+    }
+  }
+  return map
+}
+
 /** Заказы за сегодня (с учетом активной смены и местного времени) */
 export async function fetchTodayOrders(): Promise<Order[]> {
   const current = getCurrentShift()
