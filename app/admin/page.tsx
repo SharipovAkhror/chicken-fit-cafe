@@ -25,7 +25,7 @@ import { ShiftReport } from '@/components/pos/shift-report'
 import { MenuManager } from '@/components/pos/menu-manager'
 import { QrManager } from '@/components/pos/qr-manager'
 import { PosTerminal } from '@/components/pos/pos-terminal'
-import { ReceiptPrint, type ReceiptProps, type ShiftThermalData } from '@/components/pos/receipt-print'
+import { ReceiptPrint, type ReceiptProps, type ShiftThermalData, type PrintMode } from '@/components/pos/receipt-print'
 import { receiptDateTime, getStoredPaperWidth } from '@/lib/receipt'
 
 type CategoryData = {
@@ -137,16 +137,55 @@ function AdminContent() {
   )
 
   const handleAddNewItem = useCallback(
-    (categoryId: string, item: Omit<MenuItem, 'id'>) => {
-      const id = `item-${Date.now()}`
-      const newItem: MenuItem = { ...item, id }
+    (item: {
+      id: string
+      categoryId: string
+      name: string
+      price: number
+      description: string
+    }) => {
+      const newItem: MenuItem = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        available: true,
+      }
       const updated = categories.map((cat) =>
-        cat.id === categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
+        cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
       )
       persistMenuOverrides(updated)
     },
     [categories],
   )
+
+  const handleReprint = useCallback((order: Order, mode: PrintMode = 'guest') => {
+    const rData: ReceiptProps = {
+      items: order.items,
+      orderNumber: order.orderNumber,
+      dateTime: receiptDateTime(new Date(order.createdAt)),
+      orderType: order.type,
+      tableNumber: order.tableNumber,
+      customerPhone: order.customerPhone,
+      deliveryAddress: order.deliveryAddress,
+      subtotal: order.subtotal,
+      discountAmount: order.discountAmount ?? 0,
+      discountPercent: order.discountPercent,
+      deliveryFee: order.deliveryFee ?? 0,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      cashReceived: order.cashReceived,
+      changeAmount: order.changeAmount,
+      cashierName: order.cashierName || user?.name || 'Администратор',
+      printMode: mode,
+      paperWidth: getStoredPaperWidth(),
+      showQrCode: true,
+    }
+    setReceiptData(rData)
+    setTimeout(() => {
+      window.print()
+    }, 150)
+  }, [user])
 
   const handlePrintShiftThermal = useCallback((shiftData: ShiftThermalData) => {
     const rData: ReceiptProps = {
@@ -320,7 +359,7 @@ function AdminContent() {
 
         {activeTab === 'orders' && (
           <div className="h-full max-w-5xl mx-auto overflow-hidden">
-            <OrdersHistory orders={todayOrders} onReprint={() => {}} onRefresh={reloadOrders} />
+            <OrdersHistory orders={todayOrders} onReprint={handleReprint} onRefresh={reloadOrders} />
           </div>
         )}
 

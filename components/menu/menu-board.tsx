@@ -95,6 +95,29 @@ function Thumb({
   )
 }
 
+function isGarnishItem(item: ViewItem): boolean {
+  const desc = (item.description || '').toLowerCase()
+  const name = (item.name || '').toLowerCase()
+  const id = item.id.toLowerCase()
+  return (
+    desc.includes('гарнир') ||
+    desc.includes('garnir') ||
+    desc.includes('side') ||
+    name.includes('гарнир') ||
+    name.includes('котлет') ||
+    name.includes('гуляш') ||
+    name.includes('тефтел') ||
+    name.includes('купат') ||
+    name.includes('окороч') ||
+    id.startsWith('cutlet') ||
+    id.startsWith('goulash') ||
+    id.startsWith('tefteli') ||
+    id.startsWith('kiev-cutlet') ||
+    id.startsWith('kupaty') ||
+    id.startsWith('chicken-roast')
+  )
+}
+
 export function MenuBoard({
   categories,
   labels,
@@ -336,10 +359,14 @@ export function MenuBoard({
     await createOrder({
       orderNumber: num,
       type: orderType,
-      tableNumber: orderType === 'dine_in' ? selectedTable : destination,
+      tableNumber: orderType === 'dine_in' ? selectedTable : undefined,
+      customerPhone: customerPhone.trim() || undefined,
+      deliveryAddress: orderType === 'delivery' ? deliveryAddress.trim() || undefined : undefined,
       items: orderItems,
+      subtotal: totalCartSum,
       total: totalCartSum,
       paymentMethod: 'cash',
+      cashierName: customerName.trim() ? `Гость (${customerName.trim()})` : 'Онлайн-заказ',
     })
 
     setOrderSuccess({
@@ -815,7 +842,7 @@ export function MenuBoard({
                   )}
 
                   {/* 4 вида гарнира */}
-                  {openItem.description?.toLowerCase().includes('гарнир') && (
+                  {isGarnishItem(openItem) && (
                     <div className="mb-4 rounded-xl bg-secondary/30 border border-border/60 p-3">
                       <label className="text-xs font-bold text-foreground block mb-2">
                         Выберите 1 из 4 гарниров:
@@ -841,7 +868,7 @@ export function MenuBoard({
 
                   {openItem.available ? (
                     <div className="pt-2 flex items-center gap-3">
-                      {openItem.description?.toLowerCase().includes('гарнир') ? (
+                      {isGarnishItem(openItem) ? (
                         <button
                           type="button"
                           onClick={() => handleAddMainWithSide(openItem)}

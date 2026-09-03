@@ -217,10 +217,11 @@ export function CartPanel({
   const [showNumpad, setShowNumpad] = useState(false)
 
   const subtotal = cartTotal(items)
-  const percentDiscountAmount = discountPercent > 0 ? (subtotal * discountPercent) / 100 : 0
-  const totalDiscountAmount = percentDiscountAmount + (customDiscount || 0)
+  const percentDiscountAmount =
+    discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+  const totalDiscountAmount = Math.round(percentDiscountAmount + (customDiscount || 0))
   const activeDeliveryFee = orderType === 'delivery' ? deliveryFee : 0
-  const finalTotal = Math.max(0, subtotal - totalDiscountAmount + activeDeliveryFee)
+  const finalTotal = Math.max(0, Math.round(subtotal - totalDiscountAmount + activeDeliveryFee))
   const hasItems = items.length > 0
   const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
 

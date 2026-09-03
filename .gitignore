@@ -21,3 +21,4 @@ node_modules
 .vscode/
 .claude/
 supabase/.temp/
+*.tsbuildinfo

@@ -48,10 +48,14 @@ export function ShiftReport({ orders, onPrintShiftReport }: Props) {
   const [actualCashInput, setActualCashInput] = useState('')
   const [closeNotesInput, setCloseNotesInput] = useState('')
 
-  // Заказы текущей смены
+  // Заказы текущей смены (строгая привязка по shiftId или дате открытия смены)
   const shiftOrders = useMemo(() => {
     if (!currentShift) return orders
-    return orders.filter((o) => !o.shiftId || o.shiftId === currentShift.id)
+    return orders.filter((o) => {
+      if (o.shiftId === currentShift.id) return true
+      if (!o.shiftId && o.createdAt >= currentShift.openedAt) return true
+      return false
+    })
   }, [orders, currentShift])
 
   const stats = useMemo(() => {
@@ -71,7 +75,8 @@ export function ShiftReport({ orders, onPrintShiftReport }: Props) {
   }
 
   async function handleCloseShift() {
-    const cash = parseInt(actualCashInput, 10) || expectedCashInDrawer
+    const parsed = parseInt(actualCashInput, 10)
+    const cash = !isNaN(parsed) && actualCashInput.trim() !== '' ? parsed : expectedCashInDrawer
     const shift = await closeShift({ finalCash: cash, notes: closeNotesInput })
     setCurrentShift(null)
     setShiftsHistory(getLocalShifts())
@@ -396,11 +401,23 @@ export function ShiftReport({ orders, onPrintShiftReport }: Props) {
             </div>
             <div className="rounded-xl bg-secondary/40 p-3 space-y-1 text-xs font-mono">
               <div className="flex justify-between text-muted-foreground">
-                <span>Ожидаемо в ящике:</span>
-                <span className="font-bold text-foreground">{formatNum(expectedCashInDrawer)} сум</span>
+                <span>Начальный размен:</span>
+                <span className="font-bold text-foreground">{formatNum(currentShift?.initialCash || 0)} сум</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Выручка за смену:</span>
+                <span>Выручка наличными:</span>
+                <span className="font-bold text-emerald-500">+{formatNum(stats.cashRevenue)} сум</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground border-t border-border/40 pt-1 font-bold">
+                <span>Ожидаемо в ящике:</span>
+                <span className="text-foreground">{formatNum(expectedCashInDrawer)} сум</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Click / Payme (безнал):</span>
+                <span className="text-cyan-500 font-bold">{formatNum(stats.clickRevenue)} сум</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Общая выручка:</span>
                 <span className="font-bold text-amber-500">{formatNum(stats.totalRevenue)} сум</span>
               </div>
             </div>
@@ -413,6 +430,18 @@ export function ShiftReport({ orders, onPrintShiftReport }: Props) {
                   onChange={(e) => setActualCashInput(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-border bg-background p-2.5 outline-none font-mono font-bold"
                 />
+                {actualCashInput !== '' && !isNaN(parseInt(actualCashInput, 10)) && (
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono font-bold p-1.5 rounded-lg bg-secondary/60">
+                    <span className="text-muted-foreground">Кассовая разница:</span>
+                    {parseInt(actualCashInput, 10) - expectedCashInDrawer === 0 ? (
+                      <span className="text-emerald-500">Сходится (0 сум)</span>
+                    ) : parseInt(actualCashInput, 10) - expectedCashInDrawer > 0 ? (
+                      <span className="text-emerald-500">Излишек: +{formatNum(parseInt(actualCashInput, 10) - expectedCashInDrawer)} сум</span>
+                    ) : (
+                      <span className="text-red-500">Недостача: {formatNum(parseInt(actualCashInput, 10) - expectedCashInDrawer)} сум</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="font-semibold text-muted-foreground">Примечание / Комментарий</label>

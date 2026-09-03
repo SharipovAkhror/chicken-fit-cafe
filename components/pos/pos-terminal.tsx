@@ -285,10 +285,10 @@ export function PosTerminal() {
     const dt = receiptDateTime()
     const subtotal = cartTotal(cart)
     const pctDiscount =
-      discountPercent > 0 ? (subtotal * discountPercent) / 100 : 0
-    const totalDiscount = pctDiscount + (customDiscount || 0)
+      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
     const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
-    const finalTotal = Math.max(0, subtotal - totalDiscount + activeDelivery)
+    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
     const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
 
     const rData: ReceiptProps = {
@@ -432,11 +432,22 @@ export function PosTerminal() {
   )
 
   const handleAddNewItem = useCallback(
-    (categoryId: string, item: Omit<MenuItem, 'id'>) => {
-      const id = `item-${Date.now()}`
-      const newItem: MenuItem = { ...item, id }
+    (item: {
+      id: string
+      categoryId: string
+      name: string
+      price: number
+      description: string
+    }) => {
+      const newItem: MenuItem = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        available: true,
+      }
       const updated = categories.map((cat) =>
-        cat.id === categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
+        cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
       )
       persistMenuOverrides(updated)
     },
@@ -446,11 +457,11 @@ export function PosTerminal() {
   const totalCartCount = cartCount(cart)
   const currentSubtotal = cartTotal(cart)
   const currentDiscountAmount =
-    discountPercent > 0 ? (currentSubtotal * discountPercent) / 100 : 0
+    discountPercent > 0 ? Math.round((currentSubtotal * discountPercent) / 100) : 0
   const currentDelivery = orderType === 'delivery' ? deliveryFee : 0
   const currentFinalTotal = Math.max(
     0,
-    currentSubtotal - currentDiscountAmount - customDiscount + currentDelivery,
+    Math.round(currentSubtotal - currentDiscountAmount - (customDiscount || 0) + currentDelivery),
   )
 
   // Количество активных заказов на кухне (pending + cooking)

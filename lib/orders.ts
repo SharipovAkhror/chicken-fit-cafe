@@ -212,7 +212,11 @@ export async function closeShift(options: {
   if (!current) return null
 
   const todayOrders = await fetchTodayOrders()
-  const shiftOrders = todayOrders.filter((o) => !o.shiftId || o.shiftId === current.id)
+  const shiftOrders = todayOrders.filter((o) => {
+    if (o.shiftId === current.id) return true
+    if (!o.shiftId && o.createdAt >= current.openedAt) return true
+    return false
+  })
   const stats = calculateDailyStats(shiftOrders)
 
   const closedShift: Shift = {
@@ -372,17 +376,23 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   return updated
 }
 
-/** Заказы за сегодня */
+/** Заказы за сегодня (с учетом активной смены и местного времени) */
 export async function fetchTodayOrders(): Promise<Order[]> {
-  const todayStr = new Date().toISOString().split('T')[0]
+  const current = getCurrentShift()
+  const now = new Date()
+  const startOfLocalDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString()
+  const todayLocalStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   if (supabase) {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .gte('created_at', `${todayStr}T00:00:00.000Z`)
-        .order('created_at', { ascending: false })
+      let query = supabase.from('orders').select('*')
+      if (current?.id) {
+        query = query.or(`shift_id.eq.${current.id},created_at.gte.${startOfLocalDay}`)
+      } else {
+        query = query.gte('created_at', startOfLocalDay)
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false })
 
       if (!error && data) {
         return data.map((row) => ({
@@ -413,7 +423,14 @@ export async function fetchTodayOrders(): Promise<Order[]> {
   }
 
   const local = getLocalOrders()
-  return local.filter((o) => o.createdAt.startsWith(todayStr))
+  return local.filter((o) => {
+    if (current && (o.shiftId === current.id || o.createdAt >= current.openedAt)) {
+      return true
+    }
+    const orderDate = new Date(o.createdAt)
+    const orderLocalStr = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`
+    return orderLocalStr === todayLocalStr
+  })
 }
 
 /** Подписка на Realtime заказы (Supabase + BroadcastChannel fallback) */
@@ -504,13 +521,13 @@ export function calculateDailyStats(orders: Order[]): DailyStats {
   for (const o of orders) {
     if (o.status === 'cancelled') continue
     stats.orderCount += 1
-    stats.totalRevenue += o.total
-    stats.totalDiscount += o.discountAmount || 0
+    stats.totalRevenue += Math.round(o.total)
+    stats.totalDiscount += Math.round(o.discountAmount || 0)
 
     if (o.paymentMethod === 'cash') {
-      stats.cashRevenue += o.total
+      stats.cashRevenue += Math.round(o.total)
     } else {
-      stats.clickRevenue += o.total
+      stats.clickRevenue += Math.round(o.total)
     }
 
     if (o.type === 'dine_in') stats.dineInCount += 1
@@ -522,7 +539,7 @@ export function calculateDailyStats(orders: Order[]): DailyStats {
         itemsMap[it.name] = { qty: 0, revenue: 0 }
       }
       itemsMap[it.name].qty += it.qty
-      itemsMap[it.name].revenue += it.price * it.qty
+      itemsMap[it.name].revenue += Math.round(it.price * it.qty)
     }
   }
 

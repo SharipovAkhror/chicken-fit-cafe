@@ -27,14 +27,22 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
   const [filterType, setFilterType] = useState<OrderType | 'all'>('all')
   const [search, setSearch] = useState('')
 
-  // Метрики смены
-  const totalRevenue = useMemo(() => {
-    return orders.reduce((sum, o) => sum + o.total, 0)
+  // Метрики смены (только не отмененные заказы для точности учета)
+  const activeOrders = useMemo(() => {
+    return orders.filter((o) => o.status !== 'cancelled')
   }, [orders])
 
+  const cancelledCount = useMemo(() => {
+    return orders.filter((o) => o.status === 'cancelled').length
+  }, [orders])
+
+  const totalRevenue = useMemo(() => {
+    return activeOrders.reduce((sum, o) => sum + o.total, 0)
+  }, [activeOrders])
+
   const avgCheck = useMemo(() => {
-    return orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0
-  }, [totalRevenue, orders.length])
+    return activeOrders.length > 0 ? Math.round(totalRevenue / activeOrders.length) : 0
+  }, [totalRevenue, activeOrders.length])
 
   const filteredOrders = useMemo(() => {
     let list = orders
@@ -90,9 +98,14 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-3 shadow-xs">
           <p className="text-[11px] font-semibold text-zinc-400">Чеков</p>
           <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-white mt-0.5">
-            {orders.length}{' '}
+            {activeOrders.length}{' '}
             <span className="text-[10px] font-normal text-zinc-400">зак.</span>
           </p>
+          {cancelledCount > 0 && (
+            <p className="text-[10px] text-red-500 font-semibold mt-0.5">
+              (отменено: {cancelledCount})
+            </p>
+          )}
         </div>
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-3 shadow-xs">
           <p className="text-[11px] font-semibold text-zinc-400">Средний чек</p>

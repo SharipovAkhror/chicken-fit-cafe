@@ -176,13 +176,15 @@ export function ReceiptPrint({
                   <td className="py-0.5 pr-1 align-top">
                     <div className={`${is58mm ? 'text-[9.5px]' : 'text-[10.5px]'}`}>
                       <span className="font-bold">{item.name}</span>
-                      {item.qty > 1 && <span className="font-black"> ×{item.qty}</span>}
+                      {item.qty > 1 && (
+                        <span className="font-black"> ×{item.qty} ({receiptPrice(item.price)})</span>
+                      )}
                     </div>
                     {item.notes && item.notes !== item.name && (
                       <div className="text-[8.5px] text-black/80 pl-1">↳ {item.notes}</div>
                     )}
                   </td>
-                  <td className={`${is58mm ? 'text-[9.5px]' : 'text-[10.5px]'} py-0.5 text-right font-black whitespace-nowrap align-top`}>
+                  <td className={`${is58mm ? 'text-[9.5px]' : 'text-[10.5px]'}`}>
                     {receiptPrice(lineTotal(item))}
                   </td>
                 </tr>
@@ -220,10 +222,16 @@ export function ReceiptPrint({
             </div>
             <div className="flex justify-between text-[9px] mt-0.5 font-semibold">
               <span>Оплата: {paymentMethod === 'cash' ? 'Наличные' : 'Click / Payme (QR)'}</span>
-              {paymentMethod === 'cash' && changeAmount !== undefined && changeAmount > 0 && (
-                <span className="font-bold">Сдача: {receiptPrice(changeAmount)} сум</span>
+              {paymentMethod === 'cash' && cashReceived !== undefined && cashReceived > 0 && (
+                <span>Получено: {receiptPrice(cashReceived)} сум</span>
               )}
             </div>
+            {paymentMethod === 'cash' && changeAmount !== undefined && changeAmount > 0 && (
+              <div className="flex justify-between text-[9.5px] font-black text-black pt-0.5">
+                <span>СДАЧА ГОСТЮ:</span>
+                <span>{receiptPrice(changeAmount)} сум</span>
+              </div>
+            )}
           </div>
 
           {/* Динамический QR-код на чек */}
@@ -358,9 +366,25 @@ export function ReceiptPrint({
                 <span>В зале: {shiftData.dineInCount} · С собой: {shiftData.takeawayCount} · Доставка: {shiftData.deliveryCount}</span>
               </div>
               {shiftData.finalCash !== undefined && (
-                <div className="flex justify-between border-t border-black pt-1 font-black text-[10px]">
-                  <span>Итого наличных в ящике:</span>
-                  <span>{receiptPrice(shiftData.finalCash)} сум</span>
+                <div className="border-t border-black pt-1 space-y-0.5 text-[9.5px]">
+                  <div className="flex justify-between">
+                    <span>Ожидалось в кассе:</span>
+                    <span className="font-bold">{receiptPrice(shiftData.initialCash + shiftData.cashRevenue)} сум</span>
+                  </div>
+                  <div className="flex justify-between font-black">
+                    <span>Фактически в ящике:</span>
+                    <span>{receiptPrice(shiftData.finalCash)} сум</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Кассовая разница:</span>
+                    <span>
+                      {shiftData.finalCash === shiftData.initialCash + shiftData.cashRevenue
+                        ? '0 сум (сходится)'
+                        : shiftData.finalCash > shiftData.initialCash + shiftData.cashRevenue
+                        ? `+${receiptPrice(shiftData.finalCash - (shiftData.initialCash + shiftData.cashRevenue))} сум (излишек)`
+                        : `-${receiptPrice(Math.abs(shiftData.finalCash - (shiftData.initialCash + shiftData.cashRevenue)))} сум (недостача)`}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -555,7 +579,9 @@ export function ReceiptModal({
                   <div key={it.id} className="flex justify-between items-start gap-1 border-b border-border/30 pb-0.5">
                     <div className="min-w-0">
                       <span className="font-bold">{it.name}</span>
-                      {it.qty > 1 && <span className="font-black"> ×{it.qty}</span>}
+                      {it.qty > 1 && (
+                        <span className="font-black text-foreground/80"> ×{it.qty} ({receiptPrice(it.price)})</span>
+                      )}
                       {it.notes && it.notes !== it.name && (
                         <p className="text-[9.5px] text-amber-500">↳ {it.notes}</p>
                       )}
@@ -595,10 +621,16 @@ export function ReceiptModal({
 
                 <div className="flex justify-between text-[10px] text-muted-foreground pt-0.5">
                   <span>Оплата: {data.paymentMethod === 'cash' ? 'Наличные' : 'Click / QR'}</span>
-                  {data.paymentMethod === 'cash' && data.changeAmount !== undefined && data.changeAmount > 0 && (
-                    <span className="text-emerald-500 font-bold">Сдача: {receiptPrice(data.changeAmount)} сум</span>
+                  {data.paymentMethod === 'cash' && data.cashReceived !== undefined && data.cashReceived > 0 && (
+                    <span>Получено: {receiptPrice(data.cashReceived)} сум</span>
                   )}
                 </div>
+                {data.paymentMethod === 'cash' && data.changeAmount !== undefined && data.changeAmount > 0 && (
+                  <div className="flex justify-between text-[11px] font-bold text-emerald-500 pt-0.5">
+                    <span>СДАЧА ГОСТЮ:</span>
+                    <span>{receiptPrice(data.changeAmount)} сум</span>
+                  </div>
+                )}
 
                 {/* QR превью */}
                 {showQr && qrSvg && (
