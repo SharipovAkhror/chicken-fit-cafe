@@ -24,6 +24,7 @@ type Props = {
 }
 
 const DISHES_WITH_SIDE = new Set([
+  'cutlet-homemade',
   'cutlet-chicken',
   'goulash',
   'tefteli',
@@ -185,36 +186,7 @@ export function MenuGrid({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
-            {/* Карточка конструктора гарниров (внутри сетки без лишнего баннера) */}
-            {onOpenGarnishMixer && (activeCategory === 'sides' || !activeCategory) && !search && (
-              <button
-                type="button"
-                onClick={() => onOpenGarnishMixer('half')}
-                className="group flex flex-col justify-between rounded-xl border-2 border-amber-500/60 bg-amber-500/10 p-3 text-left transition-all hover:border-amber-500 hover:bg-amber-500/15 active:scale-[0.98] cursor-pointer shadow-2xs min-h-[110px] touch-manipulation"
-              >
-                <div className="space-y-1.5 w-full">
-                  <div className="aspect-[4/3] w-full flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                    <Utensils className="size-7" />
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black leading-tight text-foreground">
-                    Сборный гарнир
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground line-clamp-1">
-                    Один или 50/50: Рис, Гречка, Пюре, Фри
-                  </p>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between border-t border-amber-500/30 pt-2 w-full">
-                  <span className="text-xs sm:text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
-                    23к / 35к <span className="text-[10px] font-normal text-muted-foreground">сум</span>
-                  </span>
-                  <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500 text-black text-xs font-bold">
-                    <Plus className="size-4" />
-                  </span>
-                </div>
-              </button>
-            )}
-
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map(({ item, categoryId }) => {
               const name =
                 typeof item.name === 'string'

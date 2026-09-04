@@ -65,6 +65,7 @@ const SIDES_4 = [
 const SAUCES = ['Чесночный', 'Томатный', 'Сырный', 'Кисло-сладкий']
 
 const DISHES_WITH_SIDE = new Set([
+  'cutlet-homemade',
   'cutlet-chicken',
   'goulash',
   'tefteli',
@@ -76,8 +77,7 @@ const DISHES_WITH_SIDE = new Set([
 function hasSideChoice(item: ViewItem): boolean {
   return (
     DISHES_WITH_SIDE.has(item.id) ||
-    (item.name || '').toLowerCase().includes('с гарниром') ||
-    (item.description || '').toLowerCase().includes('с гарниром')
+    (item.name || '').toLowerCase().includes('с гарниром')
   )
 }
 

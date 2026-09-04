@@ -140,6 +140,15 @@ export function setPrice(
   return cart.map((c) => (c.id === id ? { ...c, price: Math.max(0, price) } : c))
 }
 
+/** Изменить примечание / комментарий позиции (для кухни). */
+export function setNotes(
+  cart: CartItem[],
+  id: string,
+  notes: string,
+): CartItem[] {
+  return cart.map((c) => (c.id === id ? { ...c, notes } : c))
+}
+
 /** Сумма позиции (цена × количество). */
 export function lineTotal(item: CartItem): number {
   return item.price * item.qty

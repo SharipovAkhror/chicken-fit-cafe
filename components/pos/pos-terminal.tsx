@@ -26,6 +26,7 @@ import {
   removeItem,
   setQty,
   setPrice,
+  setNotes,
   clearCart,
   cartTotal,
   cartCount,
@@ -476,6 +477,10 @@ export function PosTerminal() {
 
   const handleSetPrice = useCallback((id: string, price: number) => {
     setCart((prev) => setPrice(prev, id, price))
+  }, [])
+
+  const handleSetNotes = useCallback((id: string, notes: string) => {
+    setCart((prev) => setNotes(prev, id, notes))
   }, [])
 
   const handleRemove = useCallback((id: string) => {
@@ -1063,33 +1068,33 @@ export function PosTerminal() {
     <>
       <div className="flex h-screen w-full flex-col bg-background font-sans antialiased text-foreground overflow-hidden select-none">
         {/* Верхняя панель навигации POS */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 backdrop-blur-md z-10 shadow-2xs">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/95 px-2.5 sm:px-4 backdrop-blur-md z-10 shadow-2xs gap-1.5">
           {/* Левая часть: логотип и статус */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => {
                 setActiveTab('tables')
                 reloadOrders()
               }}
-              className="flex items-center gap-2 font-black tracking-wider text-foreground text-left cursor-pointer active:scale-95 transition touch-manipulation"
+              className="flex items-center gap-1.5 sm:gap-2 font-black tracking-wider text-foreground text-left cursor-pointer active:scale-95 transition touch-manipulation"
               title="Перейти к столам"
             >
               <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500 font-black text-black text-xs shadow-xs">
                 CF
               </span>
-              <span className="hidden sm:inline font-black text-sm tracking-tight">
-                CHICKEN<span className="text-amber-500">FIT</span> POS
+              <span className="hidden md:inline font-black text-sm tracking-tight">
+                CHICKEN<span className="text-amber-500">FIT</span>
               </span>
             </button>
-            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="hidden xl:inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>ОНЛАЙН</span>
             </span>
           </div>
 
           {/* Центральная часть: 5 основных канонических вкладок POS */}
-          <nav className="flex items-center gap-1 rounded-xl bg-secondary/60 p-1 border border-border touch-manipulation">
+          <nav className="flex items-center gap-0.5 sm:gap-1 rounded-xl bg-secondary/60 p-1 border border-border touch-manipulation overflow-x-auto [&::-webkit-scrollbar]:hidden shrink-0">
             {/* 1. Столы / План зала */}
             <button
               type="button"
@@ -1097,7 +1102,7 @@ export function PosTerminal() {
                 setActiveTab('tables')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
                 activeTab === 'tables'
                   ? 'bg-amber-500 text-black shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
@@ -1120,7 +1125,7 @@ export function PosTerminal() {
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
                 activeTab === 'pos'
                   ? 'bg-amber-500 text-black shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
@@ -1131,7 +1136,7 @@ export function PosTerminal() {
               {orderType === 'dine_in' ? (
                 <span className="text-[11px] font-mono font-bold opacity-90">№{tableNumber}</span>
               ) : (
-                <span className="text-[10px] opacity-80">
+                <span className="hidden sm:inline text-[10px] opacity-80">
                   ({orderType === 'takeaway' ? 'С собой' : 'Доставка'})
                 </span>
               )}
@@ -1144,14 +1149,14 @@ export function PosTerminal() {
                 setActiveTab('kds')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
                 activeTab === 'kds'
                   ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <ChefHat className="size-3.5 text-orange-500" />
-              <span>Кухня</span>
+              <span className="hidden sm:inline">Кухня</span>
               {activeKitchenOrdersCount > 0 && (
                 <span className="rounded-full bg-orange-500 text-white px-1.5 py-0.2 text-[10px] font-mono animate-pulse">
                   {activeKitchenOrdersCount}
@@ -1166,14 +1171,15 @@ export function PosTerminal() {
                 setActiveTab('orders')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
                 activeTab === 'orders'
                   ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <ClipboardList className="size-3.5 text-blue-500" />
-              <span>Чеки ({todayOrders.length})</span>
+              <span className="hidden sm:inline">Чеки</span>
+              <span className="text-[10px] font-mono opacity-80">({todayOrders.length})</span>
             </button>
 
             {/* 5. Кассовая смена */}
@@ -1183,21 +1189,21 @@ export function PosTerminal() {
                 setActiveTab('shift')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
                 activeTab === 'shift'
                   ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <BarChart3 className="size-3.5 text-emerald-500" />
-              <span>Смена</span>
+              <span className="hidden sm:inline">Смена</span>
             </button>
           </nav>
 
           {/* Правая часть: кассир, термолента, админ, тема, блокировка */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Переключатель ленты принтера */}
-            <div className="hidden md:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
+            <div className="hidden lg:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
               <Printer className="size-3.5 text-muted-foreground ml-1.5" />
               <button
                 type="button"
@@ -1215,7 +1221,7 @@ export function PosTerminal() {
 
             {/* Имя пользователя */}
             {user && (
-              <span className="hidden xl:inline text-xs font-bold text-muted-foreground">
+              <span className="hidden 2xl:inline text-xs font-bold text-muted-foreground">
                 {user.name}
               </span>
             )}
@@ -1225,7 +1231,7 @@ export function PosTerminal() {
               <Link
                 href="/admin"
                 className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-border bg-secondary/60 hover:bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground hover:text-foreground transition touch-manipulation"
-                title="Панель управляющего (Меню, QR, Расширенные настройки)"
+                title="Панель управляющего"
               >
                 <span>Админ</span>
               </Link>
@@ -1257,7 +1263,7 @@ export function PosTerminal() {
         <div className="flex min-h-0 flex-1 overflow-hidden relative">
           {/* 1. ПЛАН ЗАЛА И СТОЛОВ (r_keeper / iiko) */}
           {activeTab === 'tables' && (
-            <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-16 lg:pb-4 w-full">
+            <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 pb-16 lg:pb-4 w-full">
               <TablePlan
                 orders={todayOrders}
                 onSelectTable={handleSelectTable}
@@ -1271,11 +1277,11 @@ export function PosTerminal() {
 
           {/* 2. ТЕРМИНАЛ / МЕНЮ И ЧЕК */}
           {activeTab === 'pos' && (
-            <div className="flex min-h-0 flex-1 flex-col lg:flex-row w-full">
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row w-full overflow-hidden">
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {/* Лаконичная строка стола */}
-                <div className="flex items-center justify-between border-b border-border bg-secondary/20 px-3.5 sm:px-4 py-2 text-xs shrink-0">
-                  <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-between border-b border-border bg-secondary/20 px-3 sm:px-4 py-2 text-xs shrink-0">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -1285,10 +1291,10 @@ export function PosTerminal() {
                       className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:border-amber-500 active:scale-95 transition cursor-pointer touch-manipulation shadow-2xs"
                     >
                       <ArrowLeft className="size-3.5" />
-                      <span>План зала</span>
+                      <span>Столы</span>
                     </button>
                     <span className="text-muted-foreground/40 font-mono">|</span>
-                    <span className="font-black text-sm text-foreground">
+                    <span className="font-black text-xs sm:text-sm text-foreground truncate max-w-[200px] sm:max-w-none">
                       {orderType === 'dine_in'
                         ? `Стол №${tableNumber}${parseInt(tableNumber, 10) > 6 ? ' (1.5 эт)' : ''}`
                         : orderType === 'takeaway'
@@ -1309,16 +1315,16 @@ export function PosTerminal() {
                         const ord = todayOrders.find((o) => o.id === activeOrderId)
                         if (ord) handleOpenTransferModal(ord)
                       }}
-                      className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:border-amber-500 transition cursor-pointer touch-manipulation shadow-2xs"
+                      className="flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:border-amber-500 transition cursor-pointer touch-manipulation shadow-2xs"
                     >
-                      <ArrowRightLeft className="size-3.5 text-amber-500" />
+                      <ArrowRightLeft className="size-3 text-amber-500" />
                       <span>Перенести</span>
                     </button>
                   )}
                 </div>
 
                 {/* Сетка меню */}
-                <div className="flex-1 overflow-hidden p-3 sm:p-4 pb-20 lg:pb-4">
+                <div className="flex-1 overflow-hidden p-2.5 sm:p-4 pb-20 md:pb-4">
                   <MenuGrid
                     categories={categories}
                     activeCategory={activeCategory}
@@ -1330,7 +1336,7 @@ export function PosTerminal() {
               </div>
 
               {/* Панель оформления и корзины (справа) */}
-              <aside className="hidden lg:flex flex-col w-full lg:w-[25rem] xl:w-[27rem] shrink-0 border-l border-border p-2.5 sm:p-3 overflow-hidden bg-card/50 h-full">
+              <aside className="hidden md:flex flex-col w-72 lg:w-80 xl:w-[24rem] shrink-0 border-l border-border p-2 sm:p-3 overflow-hidden bg-card/50 h-full">
                 <CartPanel
                   items={cart}
                   orderNumber={
@@ -1369,6 +1375,7 @@ export function PosTerminal() {
                   onSetDeliveryFee={setDeliveryFee}
                   onSetQty={handleSetQty}
                   onSetPrice={handleSetPrice}
+                  onSetNotes={handleSetNotes}
                   onRemove={handleRemove}
                   onAddCustomItem={handleAddCustomItem}
                   onClear={handleClear}
@@ -1378,8 +1385,8 @@ export function PosTerminal() {
 
               {/* Мобильная всплывающая корзина */}
               {showMobileCart && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-xs lg:hidden">
-                  <div className="h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card p-4 border-t border-border shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-xs md:hidden">
+                  <div className="h-[90vh] w-full max-w-lg rounded-t-3xl bg-card p-3 sm:p-4 border-t border-border shadow-2xl overflow-hidden flex flex-col">
                     <CartPanel
                       items={cart}
                       orderNumber={
@@ -1418,6 +1425,7 @@ export function PosTerminal() {
                       onSetDeliveryFee={setDeliveryFee}
                       onSetQty={handleSetQty}
                       onSetPrice={handleSetPrice}
+                      onSetNotes={handleSetNotes}
                       onRemove={handleRemove}
                       onAddCustomItem={handleAddCustomItem}
                       onClear={handleClear}
@@ -1430,21 +1438,21 @@ export function PosTerminal() {
 
               {/* Плавающая кнопка корзины на мобильных экранах */}
               {totalCartCount > 0 && !showMobileCart && (
-                <div className="fixed bottom-3 inset-x-3 z-40 lg:hidden">
+                <div className="fixed bottom-3 inset-x-3 z-40 md:hidden">
                   <button
                     type="button"
                     onClick={() => setShowMobileCart(true)}
-                    className="flex w-full items-center justify-between rounded-xl bg-amber-500 p-4 text-black font-bold shadow-2xl active:scale-98 transition cursor-pointer"
+                    className="flex w-full items-center justify-between rounded-2xl bg-amber-500 p-3.5 text-black font-bold shadow-2xl active:scale-98 transition cursor-pointer touch-manipulation"
                   >
                     <div className="flex items-center gap-2">
                       <span className="flex size-7 items-center justify-center rounded-lg bg-black text-amber-400 text-xs font-mono font-bold">
                         {totalCartCount}
                       </span>
-                      <span>Оформить чек</span>
+                      <span className="text-sm font-black">Чек</span>
                     </div>
-                    <div className="flex items-center gap-1.5 font-mono">
+                    <div className="flex items-center gap-1.5 font-mono text-sm font-black">
                       <span>{formatNum(currentFinalTotal)} сум</span>
-                      <ArrowRight className="size-3.5" />
+                      <ArrowRight className="size-4" />
                     </div>
                   </button>
                 </div>
