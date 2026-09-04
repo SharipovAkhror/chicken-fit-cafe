@@ -17,9 +17,27 @@ type Props = {
     name: string
     price: number
     category?: string
+    notes?: string
+    isKitchen?: boolean
   }) => void
   onOpenGarnishMixer?: (initialSize?: 'half' | 'full') => void
 }
+
+const DISHES_WITH_SIDE = new Set([
+  'cutlet-chicken',
+  'goulash',
+  'tefteli',
+  'kiev-cutlet',
+  'chicken-roast',
+  'kupaty',
+])
+
+const QUICK_SIDES = [
+  { id: 'puree', name: 'Картофельное пюре', icon: '🥔' },
+  { id: 'rice', name: 'Рис отварной', icon: '🍚' },
+  { id: 'buckwheat', name: 'Гречка', icon: '🌾' },
+  { id: 'macaroni', name: 'Макароны', icon: '🍝' },
+]
 
 function formatNum(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -33,6 +51,11 @@ export function MenuGrid({
   onOpenGarnishMixer,
 }: Props) {
   const [search, setSearch] = useState('')
+  const [quickSideDish, setQuickSideDish] = useState<{
+    item: MenuItem
+    categoryId: string
+    name: string
+  } | null>(null)
 
   const allItems = useMemo(() => {
     const list: Array<{ item: MenuItem; categoryTitle: string; categoryId: string }> = []
@@ -74,19 +97,23 @@ export function MenuGrid({
         ? item.name
         : item.name.ru ?? Object.values(item.name)[0] ?? ''
 
-    // Если кликнули на позицию гарнира или раздел sides — открываем конструктор миксов
-    if (
-      onOpenGarnishMixer &&
-      (categoryId === 'sides' ||
-        item.id.startsWith('side-') ||
-        name.toLowerCase().includes('гарнир'))
-    ) {
-      const initialSize =
-        item.id.includes('full') || item.price >= 35000 ? 'full' : 'half'
-      onOpenGarnishMixer(initialSize)
+    // Если это отдельный сборный гарнир из раздела sides:
+    if (categoryId === 'sides' || item.id.startsWith('side-')) {
+      if (onOpenGarnishMixer) {
+        const initialSize =
+          item.id.includes('full') || item.price >= 35000 ? 'full' : 'half'
+        onOpenGarnishMixer(initialSize)
+        return
+      }
+    }
+
+    // Если это горячее блюдо с обязательным выбором гарнира — быстрый селектор в 1 тап:
+    if (DISHES_WITH_SIDE.has(item.id) || name.toLowerCase().includes('с гарниром')) {
+      setQuickSideDish({ item, categoryId, name })
       return
     }
 
+    // Все остальные блюда (комбо, супы, шашлык, чай, напитки, салаты) добавляются СРАЗУ В 1 КЛИК
     onAddItem({
       id: item.id,
       name,
@@ -245,6 +272,73 @@ export function MenuGrid({
           </div>
         )}
       </div>
+
+      {/* Быстрый выбор гарнира в 1 клик для кассира (без запары и подменю) */}
+      {quickSideDish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                  1 клик — выбор гарнира
+                </span>
+                <h3 className="text-sm sm:text-base font-black text-foreground">
+                  {quickSideDish.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickSideDish(null)}
+                className="flex size-8 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground active:scale-90 transition cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {QUICK_SIDES.map((side) => (
+                <button
+                  key={side.id}
+                  type="button"
+                  onClick={() => {
+                    onAddItem({
+                      id: `${quickSideDish.item.id}-${side.id}`,
+                      name: quickSideDish.name,
+                      price: quickSideDish.item.price,
+                      category: quickSideDish.categoryId,
+                      notes: `Гарнир: ${side.name}`,
+                    })
+                    setQuickSideDish(null)
+                  }}
+                  className="flex items-center gap-2.5 p-3 rounded-2xl border-2 border-border bg-card hover:border-amber-500 hover:bg-amber-500/10 active:scale-95 transition text-left cursor-pointer touch-manipulation min-h-[54px]"
+                >
+                  <span className="text-xl" aria-hidden="true">{side.icon}</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground leading-tight">
+                    {side.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onAddItem({
+                  id: quickSideDish.item.id,
+                  name: quickSideDish.name,
+                  price: quickSideDish.item.price,
+                  category: quickSideDish.categoryId,
+                  notes: 'Без гарнира',
+                })
+                setQuickSideDish(null)
+              }}
+              className="w-full py-2.5 rounded-xl border border-border bg-secondary/50 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-95 transition text-center cursor-pointer"
+            >
+              Подать без гарнира
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -147,8 +147,12 @@ export function MenuBoard({
 
   // Состояние для выбора гарнира к вторым блюдам
   const [selectedSide, setSelectedSide] = useState<string>('puree')
+  const [pendingSideDish, setPendingSideDish] = useState<ViewItem | null>(null)
 
-  const close = useCallback(() => setOpenItem(null), [])
+  const close = useCallback(() => {
+    setOpenItem(null)
+    setPendingSideDish(null)
+  }, [])
 
   // Чтение параметра стола из URL (?table=2)
   useEffect(() => {
@@ -221,6 +225,86 @@ export function MenuBoard({
       return {
         ...prev,
         [key]: { ...existing, qty: existing.qty + 1 },
+      }
+    })
+  }
+
+  // Подсчёт количества блюда в корзине по baseId
+  const getItemQtyInCart = useCallback(
+    (baseId: string): number => {
+      return Object.values(cartItems)
+        .filter((it) => it.baseId === baseId)
+        .reduce((sum, it) => sum + it.qty, 0)
+    },
+    [cartItems],
+  )
+
+  // Уменьшение количества блюда по baseId
+  function handleDecrementByBaseId(baseId: string, e?: React.MouseEvent) {
+    if (e) e.stopPropagation()
+    setCartItems((prev) => {
+      const items = Object.entries(prev).filter(([, it]) => it.baseId === baseId)
+      if (items.length === 0) return prev
+      const [lastCartKey, lastItem] = items[items.length - 1]
+      if (lastItem.qty <= 1) {
+        const next = { ...prev }
+        delete next[lastCartKey]
+        return next
+      }
+      return {
+        ...prev,
+        [lastCartKey]: { ...lastItem, qty: lastItem.qty - 1 },
+      }
+    })
+  }
+
+  // Быстрый выбор гарнира в 1 тап
+  function handleSelectQuickSide(sideId: string) {
+    if (!pendingSideDish) return
+    const sideObj = SIDES_4.find((s) => s.id === sideId) || SIDES_4[0]
+    const optDesc = `Гарнир: ${sideObj.name}`
+    const key = `${pendingSideDish.id}-${sideId}`
+
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return { ...prev, [key]: { ...existing, qty: existing.qty + 1 } }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: pendingSideDish.id,
+          name: pendingSideDish.name,
+          optionsDescription: optDesc,
+          price: pendingSideDish.rawPrice,
+          qty: 1,
+        },
+      }
+    })
+    setPendingSideDish(null)
+  }
+
+  // Добавление комбо в 1 клик (готовый сбалансированный состав по умолчанию)
+  function handleAddDefaultCombo(item: ViewItem, e?: React.MouseEvent) {
+    if (e) e.stopPropagation()
+    const key = 'combo-chicken-default'
+    const optDesc = 'Курица 300г (Микс) · Фри 100г · Компот 0.5л · Чесночный, Томатный'
+    setCartItems((prev) => {
+      const existing = prev[key]
+      if (existing) {
+        return { ...prev, [key]: { ...existing, qty: existing.qty + 1 } }
+      }
+      return {
+        ...prev,
+        [key]: {
+          cartKey: key,
+          baseId: item.id,
+          name: 'Супер Комбо Chicken',
+          optionsDescription: optDesc,
+          price: 45000,
+          qty: 1,
+        },
       }
     })
   }
@@ -438,10 +522,7 @@ export function MenuBoard({
               const isCombo = item.id === 'combo-chicken'
               const isWeightChicken = item.id === 'chicken-1kg'
               const isMainWithSide = hasSideChoice(item)
-              const isConfigurable = isCombo || isWeightChicken || isMainWithSide
-
-              // Количество в корзине
-              const simpleItemInCart = cartItems[item.id]?.qty || 0
+              const qtyInCart = getItemQtyInCart(item.id)
 
               return (
                 <li key={item.id} className="flex">
@@ -457,17 +538,9 @@ export function MenuBoard({
                           item.available ? '' : 'opacity-40 grayscale'
                         }`}
                       />
-                      {simpleItemInCart > 0 && (
-                        <span className="absolute top-2.5 left-2.5 flex items-center justify-center rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-bold text-black shadow-md font-mono">
-                          {simpleItemInCart} шт
-                        </span>
-                      )}
-                      {isConfigurable && (
-                        <span
-                          title="Выбор опций"
-                          className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-xl bg-black/80 text-amber-400 backdrop-blur-md border border-amber-500/40 shadow-xs"
-                        >
-                          <Utensils className="size-3.5" />
+                      {qtyInCart > 0 && (
+                        <span className="absolute top-2.5 left-2.5 flex items-center justify-center rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-black text-black shadow-md font-mono">
+                          {qtyInCart} шт
                         </span>
                       )}
                       {item.meta && (
@@ -488,52 +561,112 @@ export function MenuBoard({
                         </p>
                       )}
 
-                      <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-border/40">
-                        <span className="text-base sm:text-lg font-bold font-mono text-foreground">
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-3 border-t border-border/40">
+                        <span className="text-base sm:text-lg font-black font-mono text-foreground">
                           {item.price}
                         </span>
 
-                        {/* Кнопка добавления / вызова опций */}
+                        {/* Кнопка добавления в 1 клик */}
                         {item.available && (
                           <div onClick={(e) => e.stopPropagation()}>
-                            {isConfigurable ? (
-                              <button
-                                type="button"
-                                onClick={() => setOpenItem(item)}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
-                              >
-                                <Utensils className="size-3.5" />
-                                <span>Выбрать</span>
-                              </button>
-                            ) : simpleItemInCart === 0 ? (
-                              <button
-                                type="button"
-                                onClick={(e) => handleAddSimple(item, e)}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
-                              >
-                                <Plus className="size-3.5" />
-                                <span>В заказ</span>
-                              </button>
-                            ) : (
-                              <div className="flex items-center gap-1 rounded-xl bg-amber-500 px-1.5 py-1 text-black font-bold shadow-xs">
+                            {qtyInCart === 0 ? (
+                              isMainWithSide ? (
                                 <button
                                   type="button"
-                                  onClick={(e) => handleDecrementCart(item.id, e)}
-                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
-                                  aria-label="Уменьшить"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setPendingSideDish(item)
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 text-xs font-black transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
                                 >
-                                  <Minus className="size-3" />
+                                  <Plus className="size-3.5 stroke-[3]" />
+                                  <span>+ Гарнир</span>
                                 </button>
-                                <span className="min-w-5 text-center text-xs font-bold font-mono">
-                                  {simpleItemInCart}
-                                </span>
+                              ) : isCombo ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleAddDefaultCombo(item, e)}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 text-xs font-black transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
+                                  >
+                                    <Plus className="size-3.5 stroke-[3]" />
+                                    <span>В заказ</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setOpenItem(item)
+                                    }}
+                                    className="text-[11px] font-bold text-muted-foreground hover:text-foreground underline underline-offset-2 p-1 cursor-pointer"
+                                  >
+                                    Состав
+                                  </button>
+                                </div>
+                              ) : isWeightChicken ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setChickenWeightKg(1.0)
+                                      handleAddChickenByWeight(item)
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 text-xs font-black transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
+                                  >
+                                    <Plus className="size-3.5 stroke-[3]" />
+                                    <span>1 кг</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setOpenItem(item)
+                                    }}
+                                    className="text-[11px] font-bold text-muted-foreground hover:text-foreground underline underline-offset-2 p-1 cursor-pointer"
+                                  >
+                                    Вес
+                                  </button>
+                                </div>
+                              ) : (
                                 <button
                                   type="button"
                                   onClick={(e) => handleAddSimple(item, e)}
-                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 text-xs font-black transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
+                                >
+                                  <Plus className="size-3.5 stroke-[3]" />
+                                  <span>В заказ</span>
+                                </button>
+                              )
+                            ) : (
+                              <div className="flex items-center gap-1 rounded-xl bg-amber-500 px-1.5 py-1 text-black font-black shadow-xs">
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDecrementByBaseId(item.id, e)}
+                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer touch-manipulation active:scale-90"
+                                  aria-label="Уменьшить"
+                                >
+                                  <Minus className="size-3.5 stroke-[3]" />
+                                </button>
+                                <span className="min-w-5 text-center text-xs font-black font-mono">
+                                  {qtyInCart}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    if (isMainWithSide) {
+                                      e.stopPropagation()
+                                      setPendingSideDish(item)
+                                    } else if (isCombo) {
+                                      handleAddDefaultCombo(item, e)
+                                    } else {
+                                      handleAddSimple(item, e)
+                                    }
+                                  }}
+                                  className="flex size-6 items-center justify-center rounded-lg hover:bg-black/10 cursor-pointer touch-manipulation active:scale-90"
                                   aria-label="Увеличить"
                                 >
-                                  <Plus className="size-3" />
+                                  <Plus className="size-3.5 stroke-[3]" />
                                 </button>
                               </div>
                             )}
@@ -554,6 +687,53 @@ export function MenuBoard({
           </ul>
         </section>
       ))}
+
+      {/* Шторка быстрого выбора гарнира в 1 клик (без запары и подменю) */}
+      {pendingSideDish && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-xs select-none"
+          onClick={() => setPendingSideDish(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-border bg-card p-5 shadow-2xl space-y-4 animate-in fade-in slide-in-from-bottom duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                  1 тап — гарнир включён в цену
+                </span>
+                <h3 className="text-base font-black text-foreground leading-tight">
+                  {pendingSideDish.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingSideDish(null)}
+                className="flex size-8 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground active:scale-90 transition cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {SIDES_4.map((side) => (
+                <button
+                  key={side.id}
+                  type="button"
+                  onClick={() => handleSelectQuickSide(side.id)}
+                  className="flex items-center gap-2.5 p-3 rounded-2xl border-2 border-border bg-card hover:border-amber-500 hover:bg-amber-500/10 active:scale-95 transition text-left cursor-pointer touch-manipulation min-h-[56px]"
+                >
+                  <span className="text-2xl" aria-hidden="true">{side.icon}</span>
+                  <span className="text-xs sm:text-sm font-bold text-foreground leading-tight">
+                    {side.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Модальное окно просмотра / КОНСТРУКТОР БЛЮДА */}
       {openItem && (
