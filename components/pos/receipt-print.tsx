@@ -809,32 +809,32 @@ export function ReceiptModal({
         </div>
 
         {/* Кнопки печати */}
-        <div className="border-t border-border bg-secondary/40 p-2.5 space-y-1.5">
-          <div className="grid grid-cols-2 gap-1.5">
+        <div className="border-t border-border bg-secondary/40 p-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => onPrint('guest', paperWidth)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-2.5 text-xs font-bold text-black shadow-xs transition cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-xs sm:text-sm font-black text-black shadow-xs transition cursor-pointer active:scale-95 touch-manipulation"
             >
-              <Printer className="size-3.5" />
+              <Printer className="size-4" />
               <span>Чек гостю</span>
             </button>
 
             <button
               type="button"
               onClick={() => onPrint('kitchen', paperWidth)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-secondary hover:bg-secondary/80 py-2.5 text-xs font-bold text-foreground border border-border shadow-xs transition cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-card hover:bg-secondary py-3 text-xs sm:text-sm font-bold text-foreground border border-border shadow-xs transition cursor-pointer active:scale-95 touch-manipulation"
             >
-              <ChefHat className="size-3.5 text-amber-500" />
+              <ChefHat className="size-4 text-amber-500" />
               <span>Кухня</span>
             </button>
           </div>
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => onPrint('both', paperWidth)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 py-2 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-500/25 transition cursor-pointer active:scale-95 touch-manipulation"
             >
               <Zap className="size-3.5" />
               <span>Оба чека (Гость + Кухня)</span>
@@ -843,7 +843,7 @@ export function ReceiptModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+              className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer active:scale-95 touch-manipulation"
             >
               Закрыть
             </button>

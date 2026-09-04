@@ -6,11 +6,8 @@ import {
   ShoppingCart,
   ClipboardList,
   BarChart3,
-  UtensilsCrossed,
-  QrCode,
   Sun,
   Moon,
-  Tv,
   ChefHat,
   Lock,
   Printer,
@@ -1066,29 +1063,33 @@ export function PosTerminal() {
     <>
       <div className="flex h-screen w-full flex-col bg-background font-sans antialiased text-foreground overflow-hidden select-none">
         {/* Верхняя панель навигации POS */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-5 backdrop-blur-md z-10 shadow-2xs">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/95 px-3 sm:px-4 backdrop-blur-md z-10 shadow-2xs">
           {/* Левая часть: логотип и статус */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-black tracking-wider text-foreground group"
-              title="Перейти на клиентский сайт меню"
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('tables')
+                reloadOrders()
+              }}
+              className="flex items-center gap-2 font-black tracking-wider text-foreground text-left cursor-pointer active:scale-95 transition touch-manipulation"
+              title="Перейти к столам"
             >
-              <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500 font-black text-black text-sm shadow-xs group-hover:scale-105 transition">
+              <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500 font-black text-black text-xs shadow-xs">
                 CF
               </span>
-              <span className="hidden sm:inline font-bold text-base">
+              <span className="hidden sm:inline font-black text-sm tracking-tight">
                 CHICKEN<span className="text-amber-500">FIT</span> POS
               </span>
-            </Link>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 border border-emerald-500/20">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
+            </button>
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>ОНЛАЙН</span>
             </span>
           </div>
 
-          {/* Центральная часть: переключатель вкладок терминала */}
-          <nav className="flex items-center gap-1 overflow-x-auto rounded-xl bg-secondary/60 p-1 border border-border">
+          {/* Центральная часть: 5 основных канонических вкладок POS */}
+          <nav className="flex items-center gap-1 rounded-xl bg-secondary/60 p-1 border border-border touch-manipulation">
             {/* 1. Столы / План зала */}
             <button
               type="button"
@@ -1096,14 +1097,14 @@ export function PosTerminal() {
                 setActiveTab('tables')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
                 activeTab === 'tables'
                   ? 'bg-amber-500 text-black shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <LayoutGrid className="size-3.5" />
-              <span>Столы (8)</span>
+              <span>Столы</span>
               {occupiedTablesCount > 0 && (
                 <span
                   className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
@@ -1119,38 +1120,38 @@ export function PosTerminal() {
             <button
               type="button"
               onClick={() => setActiveTab('pos')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
                 activeTab === 'pos'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-amber-500 text-black shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <ShoppingCart className="size-3.5 text-amber-500" />
+              <ShoppingCart className="size-3.5" />
               <span>Заказ</span>
               {orderType === 'dine_in' ? (
-                <span className="text-[10px] text-amber-500 font-mono font-bold">№{tableNumber}</span>
+                <span className="text-[11px] font-mono font-bold opacity-90">№{tableNumber}</span>
               ) : (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[10px] opacity-80">
                   ({orderType === 'takeaway' ? 'С собой' : 'Доставка'})
                 </span>
               )}
             </button>
 
-            {/* Вкладка KDS (Кухня) */}
+            {/* 3. Экран кухни (KDS) */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('kds')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
                 activeTab === 'kds'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <ChefHat className="size-3.5 text-orange-500" />
-              <span>Кухня (KDS)</span>
+              <span>Кухня</span>
               {activeKitchenOrdersCount > 0 && (
                 <span className="rounded-full bg-orange-500 text-white px-1.5 py-0.2 text-[10px] font-mono animate-pulse">
                   {activeKitchenOrdersCount}
@@ -1158,68 +1159,44 @@ export function PosTerminal() {
               )}
             </button>
 
+            {/* 4. Заказы (История чеков) */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('orders')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
                 activeTab === 'orders'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <ClipboardList className="size-3.5 text-blue-500" />
-              <span>Заказы ({todayOrders.length})</span>
+              <span>Чеки ({todayOrders.length})</span>
             </button>
 
+            {/* 5. Кассовая смена */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('shift')
                 reloadOrders()
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
                 activeTab === 'shift'
-                  ? 'bg-card text-foreground shadow-xs'
+                  ? 'bg-card text-foreground shadow-xs font-black'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <BarChart3 className="size-3.5 text-emerald-500" />
               <span>Смена</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('menu')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                activeTab === 'menu'
-                  ? 'bg-card text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <UtensilsCrossed className="size-3.5 text-purple-500" />
-              <span>Меню</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('qr')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                activeTab === 'qr'
-                  ? 'bg-card text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <QrCode className="size-3.5 text-orange-500" />
-              <span>QR Столы</span>
-            </button>
           </nav>
 
-          {/* Правая часть: кассир, лента, тема, блокировка */}
-          <div className="flex items-center gap-2">
-            {/* Переключатель ленты принтера в шапке */}
+          {/* Правая часть: кассир, термолента, админ, тема, блокировка */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Переключатель ленты принтера */}
             <div className="hidden md:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
               <Printer className="size-3.5 text-muted-foreground ml-1.5" />
               <button
@@ -1229,8 +1206,8 @@ export function PosTerminal() {
                   setPaperWidth(next)
                   setStoredPaperWidth(next)
                 }}
-                className="rounded-md px-2 py-0.5 text-[11px] font-bold text-amber-500 hover:text-amber-400 cursor-pointer"
-                title="Нажмите для переключения ширины термоленты"
+                className="rounded-md px-2 py-0.5 text-[11px] font-bold text-amber-500 hover:text-amber-400 cursor-pointer touch-manipulation"
+                title="Переключить ширину термоленты"
               >
                 {paperWidth === '80mm' ? '80 мм' : '58 мм'}
               </button>
@@ -1238,16 +1215,27 @@ export function PosTerminal() {
 
             {/* Имя пользователя */}
             {user && (
-              <span className="hidden lg:inline text-xs font-bold text-muted-foreground">
+              <span className="hidden xl:inline text-xs font-bold text-muted-foreground">
                 {user.name}
               </span>
+            )}
+
+            {/* Кнопка перехода в Админ-панель (для администраторов) */}
+            {user?.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-border bg-secondary/60 hover:bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground hover:text-foreground transition touch-manipulation"
+                title="Панель управляющего (Меню, QR, Расширенные настройки)"
+              >
+                <span>Админ</span>
+              </Link>
             )}
 
             {/* Кнопка темы */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-foreground transition hover:border-amber-500 cursor-pointer shadow-2xs"
+              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-foreground transition hover:border-amber-500 cursor-pointer shadow-2xs touch-manipulation"
               title={isDark ? 'Светлая тема' : 'Тёмная тема'}
             >
               {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4 text-zinc-700" />}
@@ -1257,29 +1245,13 @@ export function PosTerminal() {
             <button
               type="button"
               onClick={lockScreen}
-              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-muted-foreground hover:text-destructive hover:border-destructive transition cursor-pointer shadow-2xs"
+              className="flex items-center justify-center size-8 rounded-lg border border-border bg-secondary text-muted-foreground hover:text-destructive hover:border-destructive transition cursor-pointer shadow-2xs touch-manipulation"
               title="Заблокировать кассу (Выход)"
             >
               <Lock className="size-3.5" />
             </button>
           </div>
         </header>
-
-        {/* Индикатор внешнего табло покупателя (Customer Pole Display) */}
-        <div className="bg-zinc-950 text-red-500 border-b border-zinc-800 px-4 py-1 flex items-center justify-between text-xs font-mono select-none">
-          <div className="flex items-center gap-2">
-            <span className="inline-block size-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[11px] text-zinc-400 font-sans font-semibold inline-flex items-center gap-1">
-              <Tv className="size-3 text-zinc-400" />
-              <span>ТАБЛО ПОКУПАТЕЛЯ:</span>
-            </span>
-          </div>
-          <div className="font-bold tracking-widest text-red-500 bg-black px-3 py-0.5 rounded border border-red-950">
-            {currentFinalTotal > 0
-              ? `K OPLATE: ${formatNum(currentFinalTotal)} UZS`
-              : 'CHICKEN FIT CAFE • 0.00 UZS'}
-          </div>
-        </div>
 
         {/* Главная рабочая область */}
         <div className="flex min-h-0 flex-1 overflow-hidden relative">
@@ -1302,27 +1274,30 @@ export function PosTerminal() {
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row w-full">
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {/* Лаконичная строка стола */}
-                <div className="flex items-center justify-between border-b border-border/80 bg-secondary/30 px-3.5 py-1.5 text-xs shrink-0">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between border-b border-border bg-secondary/20 px-3.5 sm:px-4 py-2 text-xs shrink-0">
+                  <div className="flex items-center gap-2.5">
                     <button
                       type="button"
-                      onClick={() => setActiveTab('tables')}
-                      className="inline-flex items-center gap-1 font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+                      onClick={() => {
+                        setActiveTab('tables')
+                        reloadOrders()
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:border-amber-500 active:scale-95 transition cursor-pointer touch-manipulation shadow-2xs"
                     >
                       <ArrowLeft className="size-3.5" />
-                      <span>Карта зала</span>
+                      <span>План зала</span>
                     </button>
-                    <span>·</span>
-                    <span className="font-black text-foreground">
+                    <span className="text-muted-foreground/40 font-mono">|</span>
+                    <span className="font-black text-sm text-foreground">
                       {orderType === 'dine_in'
-                        ? `Стол №${tableNumber}${tableNumber > '6' ? ' (1.5 эт)' : ''}`
+                        ? `Стол №${tableNumber}${parseInt(tableNumber, 10) > 6 ? ' (1.5 эт)' : ''}`
                         : orderType === 'takeaway'
-                        ? 'С собой'
+                        ? 'Заказ с собой'
                         : 'Доставка'}
                     </span>
                     {activeOrderId && (
-                      <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                        (Чек #{todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber})
+                      <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-bold">
+                        #{todayOrders.find((o) => o.id === activeOrderId)?.orderNumber || orderNumber}
                       </span>
                     )}
                   </div>
@@ -1334,9 +1309,9 @@ export function PosTerminal() {
                         const ord = todayOrders.find((o) => o.id === activeOrderId)
                         if (ord) handleOpenTransferModal(ord)
                       }}
-                      className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+                      className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold text-foreground hover:border-amber-500 transition cursor-pointer touch-manipulation shadow-2xs"
                     >
-                      <ArrowRightLeft className="size-3 text-amber-500" />
+                      <ArrowRightLeft className="size-3.5 text-amber-500" />
                       <span>Перенести</span>
                     </button>
                   )}

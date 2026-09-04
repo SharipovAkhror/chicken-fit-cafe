@@ -98,49 +98,49 @@ function CartLine({
   }
 
   return (
-    <div className="group flex flex-col gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 p-2.5 transition hover:border-amber-500/40">
+    <div className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-3 transition hover:border-amber-500/40 shadow-2xs">
       {/* Название + сумма строки */}
       <div className="flex items-start justify-between gap-2">
         <div className="leading-snug min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate block">
+          <span className="text-xs sm:text-sm font-bold text-foreground truncate block">
             {item.name}
           </span>
           {item.notes && item.notes !== item.name && (
-            <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+            <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
               ↳ {item.notes}
             </p>
           )}
         </div>
-        <span className="shrink-0 text-xs sm:text-sm font-bold font-mono text-zinc-900 dark:text-white">
+        <span className="shrink-0 text-xs sm:text-sm font-black font-mono text-foreground">
           {formatNum(lineTotal(item))} сум
         </span>
       </div>
 
       {/* Управление количеством и ценой */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 shadow-2xs">
+        <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/50 p-0.5 shadow-2xs">
           <button
             type="button"
             onClick={() => onSetQty(item.id, item.qty - 1)}
-            className="flex size-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+            className="flex size-9 items-center justify-center rounded-lg text-foreground hover:bg-card active:scale-90 transition cursor-pointer touch-manipulation"
             aria-label="Уменьшить"
           >
-            <Minus className="size-3.5" />
+            <Minus className="size-4" />
           </button>
-          <span className="min-w-6 text-center text-xs font-bold font-mono text-zinc-900 dark:text-white">
+          <span className="min-w-7 text-center text-sm font-black font-mono text-foreground">
             {item.qty}
           </span>
           <button
             type="button"
             onClick={() => onSetQty(item.id, item.qty + 1)}
-            className="flex size-7 items-center justify-center rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+            className="flex size-9 items-center justify-center rounded-lg text-foreground hover:bg-card active:scale-90 transition cursor-pointer touch-manipulation"
             aria-label="Увеличить"
           >
-            <Plus className="size-3.5" />
+            <Plus className="size-4" />
           </button>
         </div>
 
-        <span className="text-zinc-400 text-xs font-mono">×</span>
+        <span className="text-muted-foreground text-xs font-mono">×</span>
 
         {editingPrice ? (
           <div className="flex items-center gap-1">
@@ -154,14 +154,14 @@ function CartLine({
                 if (e.key === 'Escape') setEditingPrice(false)
               }}
               autoFocus
-              className="w-20 rounded-lg border border-amber-500 bg-white dark:bg-zinc-800 px-1.5 py-1 text-xs font-bold font-mono text-amber-600 dark:text-amber-300 outline-none"
+              className="w-24 rounded-lg border border-amber-500 bg-card px-2 py-1 text-xs font-bold font-mono text-amber-600 dark:text-amber-300 outline-none"
             />
             <button
               type="button"
               onClick={commitPrice}
-              className="p-1 rounded-md bg-amber-500 text-black text-xs font-bold"
+              className="p-1.5 rounded-md bg-amber-500 text-black text-xs font-bold cursor-pointer"
             >
-              <Check className="size-3" />
+              <Check className="size-3.5" />
             </button>
           </div>
         ) : (
@@ -169,14 +169,14 @@ function CartLine({
             type="button"
             onClick={startEditPrice}
             title="Нажмите для изменения цены единицы"
-            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-mono transition hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${
+            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-mono transition hover:bg-secondary cursor-pointer touch-manipulation ${
               modified
                 ? 'font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10'
-                : 'text-zinc-500 dark:text-zinc-400'
+                : 'text-muted-foreground'
             }`}
           >
             <span>{formatNum(item.price)}</span>
-            <Edit2 className="size-2.5 opacity-60" />
+            <Edit2 className="size-3 opacity-60" />
           </button>
         )}
 
@@ -185,10 +185,10 @@ function CartLine({
         <button
           type="button"
           onClick={() => onRemove(item.id)}
-          className="flex size-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-500 transition cursor-pointer"
+          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/15 hover:text-destructive active:scale-90 transition cursor-pointer touch-manipulation"
           title="Удалить"
         >
-          <Trash2 className="size-3.5" />
+          <Trash2 className="size-4" />
         </button>
       </div>
     </div>
@@ -317,129 +317,96 @@ export function CartPanel({
           <button
             type="button"
             onClick={() => onSetOrderType('dine_in')}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 transition cursor-pointer touch-manipulation ${
               orderType === 'dine_in'
-                ? 'bg-card font-bold text-foreground shadow-xs'
+                ? 'bg-card font-black text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Utensils className="size-3.5" />
+            <Utensils className="size-4 text-amber-500" />
             <span>В зале</span>
           </button>
           <button
             type="button"
             onClick={() => onSetOrderType('takeaway')}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 transition cursor-pointer touch-manipulation ${
               orderType === 'takeaway'
-                ? 'bg-card font-bold text-foreground shadow-xs'
+                ? 'bg-card font-black text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <ShoppingBag className="size-3.5" />
+            <ShoppingBag className="size-4 text-amber-500" />
             <span>С собой</span>
           </button>
           <button
             type="button"
             onClick={() => onSetOrderType('delivery')}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-2 transition cursor-pointer touch-manipulation ${
               orderType === 'delivery'
-                ? 'bg-card font-bold text-foreground shadow-xs'
+                ? 'bg-card font-black text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Truck className="size-3.5" />
+            <Truck className="size-4 text-emerald-500" />
             <span>Доставка</span>
           </button>
         </div>
 
         {/* Столы (r_keeper / iiko style) */}
         {orderType === 'dine_in' && (
-          <div className="mt-2 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-foreground">
-                  Стол №{tableNumber}
+          <div className="mt-2.5 rounded-xl border border-border/80 bg-secondary/30 p-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-foreground">
+                Стол №{tableNumber}
+                <span className="text-[11px] font-normal text-muted-foreground ml-1">
+                  ({parseInt(tableNumber, 10) > 6 ? '1.5 эт' : '1 эт'})
                 </span>
-                {orderStatus === 'completed' ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 px-2 py-0.5 text-[10px] font-bold border border-blue-500/20">
-                    <span className="size-1.5 rounded-full bg-blue-500" />
-                    <span>ЗАКРЫТ #{orderNumber}</span>
-                  </span>
-                ) : orderStatus === 'precheck' ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[10px] font-bold border border-amber-500/20">
-                    <span className="size-1.5 rounded-full bg-amber-500" />
-                    <span>СЧЁТ #{orderNumber}</span>
-                  </span>
-                ) : activeOrderId ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-orange-500/10 text-orange-700 dark:text-orange-300 px-2 py-0.5 text-[10px] font-bold border border-orange-500/20">
-                    <span className="size-1.5 rounded-full bg-orange-500 animate-pulse" />
-                    <span>КУХНЯ #{orderNumber}</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 px-2 py-0.5 text-[10px] font-bold border border-zinc-500/20">
-                    <span className="size-1.5 rounded-full bg-zinc-400" />
-                    <span>ЧЕРНОВИК</span>
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1">
-                {activeOrderId && onOpenTransferModal && (
-                  <button
-                    type="button"
-                    onClick={onOpenTransferModal}
-                    title="Перенести заказ на другой свободный стол"
-                    className="flex items-center gap-1 rounded-lg border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-[10.5px] font-bold transition cursor-pointer"
-                  >
-                    <ArrowRightLeft className="size-3 text-amber-500" />
-                    <span>Перенести</span>
-                  </button>
-                )}
-                {onBackToTables && (
-                  <button
-                    type="button"
-                    onClick={onBackToTables}
-                    className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-[10.5px] font-bold transition cursor-pointer"
-                  >
-                    <LayoutGrid className="size-3 text-amber-500" />
-                    <span>Карта зала</span>
-                  </button>
-                )}
-              </div>
+              </span>
+              {orderStatus === 'completed' ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-300 px-2 py-0.5 text-[10px] font-bold border border-blue-500/30">
+                  <span className="size-1.5 rounded-full bg-blue-500" />
+                  <span>ЗАКРЫТ</span>
+                </span>
+              ) : orderStatus === 'precheck' ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-300 px-2 py-0.5 text-[10px] font-bold border border-amber-500/30">
+                  <span className="size-1.5 rounded-full bg-amber-500" />
+                  <span>СЧЁТ</span>
+                </span>
+              ) : activeOrderId ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-300 px-2 py-0.5 text-[10px] font-bold border border-orange-500/30">
+                  <span className="size-1.5 rounded-full bg-orange-500 animate-pulse" />
+                  <span>КУХНЯ</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold border border-emerald-500/30">
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
+                  <span>НОВЫЙ</span>
+                </span>
+              )}
             </div>
 
-            {/* 8 столов: 1-6 (1 этаж), 7-8 (1.5 этаж) */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              <span className="text-[10px] text-muted-foreground font-semibold shrink-0">1 эт:</span>
-              {['1', '2', '3', '4', '5', '6'].map((num) => (
+            <div className="flex items-center gap-1.5">
+              {activeOrderId && onOpenTransferModal && (
                 <button
-                  key={num}
                   type="button"
-                  onClick={() => onSetTableNumber(num)}
-                  className={`min-w-7 h-7 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
-                    tableNumber === num
-                      ? 'bg-amber-500 text-black shadow-xs font-black'
-                      : 'border border-border bg-card text-muted-foreground hover:text-foreground'
-                  }`}
+                  onClick={onOpenTransferModal}
+                  title="Перенести счёт на другой свободный стол"
+                  className="flex items-center gap-1 rounded-lg border border-border bg-card hover:bg-secondary px-2.5 py-1 text-xs font-bold transition cursor-pointer touch-manipulation shadow-2xs"
                 >
-                  {num}
+                  <ArrowRightLeft className="size-3 text-amber-500" />
+                  <span>Перенести</span>
                 </button>
-              ))}
-              <span className="text-[10px] text-muted-foreground font-semibold shrink-0 ml-1">1.5 эт:</span>
-              {['7', '8'].map((num) => (
+              )}
+              {onBackToTables && (
                 <button
-                  key={num}
                   type="button"
-                  onClick={() => onSetTableNumber(num)}
-                  className={`min-w-7 h-7 rounded-lg text-xs font-mono font-bold transition shrink-0 cursor-pointer ${
-                    tableNumber === num
-                      ? 'bg-amber-500 text-black shadow-xs font-black'
-                      : 'border border-border bg-card text-muted-foreground hover:text-foreground'
-                  }`}
+                  onClick={onBackToTables}
+                  className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-bold transition cursor-pointer touch-manipulation shadow-2xs"
                 >
-                  {num}
+                  <LayoutGrid className="size-3.5 text-amber-500" />
+                  <span>План зала</span>
                 </button>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -555,7 +522,7 @@ export function CartPanel({
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-5 gap-1">
+            <div className="grid grid-cols-5 gap-1.5">
               {[0, 5, 10, 15, 20].map((pct) => (
                 <button
                   key={pct}
@@ -564,9 +531,9 @@ export function CartPanel({
                     onSetDiscountPercent(pct)
                     onSetCustomDiscount(0)
                   }}
-                  className={`rounded-lg py-1 text-xs font-mono font-bold transition cursor-pointer ${
+                  className={`rounded-xl py-2 text-xs font-mono font-bold transition-all cursor-pointer touch-manipulation active:scale-95 ${
                     discountPercent === pct && customDiscount === 0
-                      ? 'bg-emerald-500 text-black shadow-xs'
+                      ? 'bg-emerald-500 text-black shadow-xs font-black'
                       : 'border border-border bg-secondary/50 text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -577,32 +544,32 @@ export function CartPanel({
           </div>
 
           {/* Метод оплаты */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-secondary/50 p-1 text-xs font-semibold">
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-border/70 bg-secondary/50 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => {
                 onSetPaymentMethod('cash')
                 if (!cashReceived) onSetCashReceived(finalTotal)
               }}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-2 rounded-lg py-2.5 transition cursor-pointer touch-manipulation ${
                 paymentMethod === 'cash'
-                  ? 'bg-card font-bold text-foreground shadow-xs'
+                  ? 'bg-card font-black text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Banknote className="size-3.5 text-amber-500" />
+              <Banknote className="size-4 text-amber-500" />
               <span>Наличные</span>
             </button>
             <button
               type="button"
               onClick={() => onSetPaymentMethod('click_payme')}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 transition cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-2 rounded-lg py-2.5 transition cursor-pointer touch-manipulation ${
                 paymentMethod === 'click_payme'
-                  ? 'bg-card font-bold text-foreground shadow-xs'
+                  ? 'bg-card font-black text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <CreditCard className="size-3.5 text-blue-500" />
+              <CreditCard className="size-4 text-blue-500" />
               <span>Карта / QR</span>
             </button>
           </div>
@@ -615,7 +582,7 @@ export function CartPanel({
                 <button
                   type="button"
                   onClick={() => setShowNumpad(!showNumpad)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-background border border-border px-2.5 py-1 text-xs font-mono font-bold text-amber-600 dark:text-amber-400 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-card border border-border px-3 py-1.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-400 cursor-pointer touch-manipulation shadow-2xs"
                 >
                   <span>{cashReceived > 0 ? formatNum(cashReceived) : '0'} сум</span>
                   <Edit2 className="size-3 opacity-60" />
@@ -623,32 +590,32 @@ export function CartPanel({
               </div>
 
               {/* Быстрые купюры */}
-              <div className="grid grid-cols-4 gap-1">
+              <div className="grid grid-cols-4 gap-1.5">
                 <button
                   type="button"
                   onClick={() => onSetCashReceived(finalTotal)}
-                  className="rounded-lg bg-amber-500/15 border border-amber-500/30 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 cursor-pointer text-center"
+                  className="rounded-xl bg-amber-500/15 border border-amber-500/30 py-2 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
                   Без сдачи
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddBill(50000)}
-                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                  className="rounded-xl border border-border bg-card py-2 text-xs font-mono font-bold hover:bg-secondary active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
                   +50к
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddBill(100000)}
-                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                  className="rounded-xl border border-border bg-card py-2 text-xs font-mono font-bold hover:bg-secondary active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
                   +100к
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddBill(200000)}
-                  className="rounded-lg border border-border bg-background py-1 text-[11px] font-mono font-bold hover:bg-secondary cursor-pointer text-center"
+                  className="rounded-xl border border-border bg-card py-2 text-xs font-mono font-bold hover:bg-secondary active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
                   +200к
                 </button>
@@ -657,13 +624,13 @@ export function CartPanel({
               {/* Сенсорная цифровая клавиатура (On-Screen Numpad) */}
               {showNumpad && (
                 <div className="pt-2 border-t border-border/60">
-                  <div className="grid grid-cols-3 gap-1 mb-1">
+                  <div className="grid grid-cols-3 gap-1.5 mb-1">
                     {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((n) => (
                       <button
                         key={n}
                         type="button"
                         onClick={() => handleNumpadPress(n)}
-                        className="h-10 rounded-lg bg-card border border-border/80 text-sm font-bold font-mono hover:bg-secondary active:scale-95 transition cursor-pointer"
+                        className="h-11 rounded-xl bg-card border border-border/80 text-base font-bold font-mono hover:bg-secondary active:scale-95 transition cursor-pointer touch-manipulation"
                       >
                         {n}
                       </button>
@@ -671,21 +638,21 @@ export function CartPanel({
                     <button
                       type="button"
                       onClick={handleNumpadClear}
-                      className="h-10 rounded-lg bg-destructive/15 text-destructive text-xs font-bold hover:bg-destructive/25 cursor-pointer"
+                      className="h-11 rounded-xl bg-destructive/15 text-destructive text-xs font-bold hover:bg-destructive/25 active:scale-95 transition cursor-pointer touch-manipulation"
                     >
                       СБРОС
                     </button>
                     <button
                       type="button"
                       onClick={() => handleNumpadPress('0')}
-                      className="h-10 rounded-lg bg-card border border-border/80 text-sm font-bold font-mono hover:bg-secondary cursor-pointer"
+                      className="h-11 rounded-xl bg-card border border-border/80 text-base font-bold font-mono hover:bg-secondary active:scale-95 transition cursor-pointer touch-manipulation"
                     >
                       0
                     </button>
                     <button
                       type="button"
                       onClick={handleNumpadBackspace}
-                      className="h-10 flex items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="h-11 flex items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground active:scale-95 transition cursor-pointer touch-manipulation"
                     >
                       <Delete className="size-4" />
                     </button>
@@ -697,7 +664,7 @@ export function CartPanel({
               {cashReceived > finalTotal && (
                 <div className="flex items-baseline justify-between pt-1.5 border-t border-border/60 font-mono">
                   <span className="text-xs text-emerald-500 font-bold">СДАЧА ГОСТЮ:</span>
-                  <span className="text-base font-bold text-emerald-500">
+                  <span className="text-lg font-black text-emerald-500">
                     {formatNum(change)} сум
                   </span>
                 </div>
@@ -709,7 +676,7 @@ export function CartPanel({
 
       {/* 4. Итого и кнопка быстрой печати чека */}
       <div className="mt-2 border-t border-border/70 pt-2.5">
-        <div className="space-y-1 mb-2 font-mono">
+        <div className="space-y-1 mb-2.5 font-mono">
           {subtotal !== finalTotal && (
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Сумма блюд:</span>
@@ -732,43 +699,33 @@ export function CartPanel({
             <span className="text-xs font-bold text-muted-foreground tracking-wider uppercase font-sans">
               ИТОГО:
             </span>
-            <span className="text-xl font-bold text-amber-600 dark:text-amber-500">
+            <span className="text-2xl font-black text-amber-600 dark:text-amber-500">
               {formatNum(finalTotal)}{' '}
               <span className="text-xs font-normal text-muted-foreground">сум</span>
             </span>
           </div>
         </div>
 
-        {/* Кнопки действий */}
+        {/* Кнопки действий (Каноническая эргономика POS) */}
         {orderType === 'dine_in' ? (
           <div className="space-y-2">
             {orderStatus === 'completed' && onReopenOrder ? (
               <button
                 type="button"
                 onClick={onReopenOrder}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 py-3 text-xs sm:text-sm font-bold text-white transition active:scale-[0.98] cursor-pointer shadow-sm shadow-blue-500/20"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 py-3.5 text-xs sm:text-sm font-bold text-white transition active:scale-[0.98] cursor-pointer shadow-sm shadow-blue-500/20 touch-manipulation"
               >
                 <RotateCcw className="size-4" />
                 <span>Возобновить обслуживание стола</span>
               </button>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={onSubmitOrder}
-                  disabled={!hasItems}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
-                >
-                  <Printer className="size-5" />
-                  <span>Оплатить и закрыть ({formatNum(finalTotal)} сум)</span>
-                </button>
-
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={onSaveToKitchen}
                     disabled={!hasItems}
-                    className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 text-xs sm:text-sm font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer touch-manipulation shadow-2xs"
                   >
                     <ChefHat className="size-4 text-orange-500" />
                     <span>{activeOrderId ? 'На кухню (дозаказ)' : 'На кухню'}</span>
@@ -778,12 +735,22 @@ export function CartPanel({
                     type="button"
                     onClick={onPrintPrecheck}
                     disabled={!hasItems}
-                    className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 text-xs sm:text-sm font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer touch-manipulation shadow-2xs"
                   >
                     <FileText className="size-4 text-blue-500" />
                     <span>{orderStatus === 'precheck' ? 'Повтор счёта' : 'Выдать счёт'}</span>
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={onSubmitOrder}
+                  disabled={!hasItems}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20 touch-manipulation"
+                >
+                  <Printer className="size-5" />
+                  <span>Оплатить и закрыть ({formatNum(finalTotal)} сум)</span>
+                </button>
               </>
             )}
           </div>
@@ -793,7 +760,7 @@ export function CartPanel({
               <button
                 type="button"
                 onClick={onReopenOrder}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 py-3 text-xs sm:text-sm font-bold text-white transition active:scale-[0.98] cursor-pointer shadow-sm shadow-blue-500/20"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 py-3.5 text-xs sm:text-sm font-bold text-white transition active:scale-[0.98] cursor-pointer shadow-sm shadow-blue-500/20 touch-manipulation"
               >
                 <RotateCcw className="size-4" />
                 <span>Возобновить заказ</span>
@@ -804,7 +771,7 @@ export function CartPanel({
                   type="button"
                   onClick={onSubmitOrder}
                   disabled={!hasItems}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20"
+                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20 touch-manipulation"
                 >
                   <Printer className="size-5" />
                   <span>Оплатить ({formatNum(finalTotal)} сум)</span>
@@ -814,7 +781,7 @@ export function CartPanel({
                   type="button"
                   onClick={onSaveToKitchen}
                   disabled={!hasItems}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-secondary text-foreground py-2.5 text-xs sm:text-sm font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer touch-manipulation shadow-2xs"
                 >
                   <ChefHat className="size-4 text-orange-500" />
                   <span>Отправить на кухню без оплаты</span>

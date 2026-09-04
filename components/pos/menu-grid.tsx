@@ -122,7 +122,7 @@ export function MenuGrid({
 
         {/* Кнопки категорий */}
         {!search && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1.5 touch-manipulation [&::-webkit-scrollbar]:hidden">
             {categories.map((cat) => {
               const isActive = cat.id === activeCategory
               return (
@@ -130,9 +130,9 @@ export function MenuGrid({
                   key={cat.id}
                   type="button"
                   onClick={() => onCategoryChange(cat.id)}
-                  className={`shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  className={`shrink-0 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 touch-manipulation ${
                     isActive
-                      ? 'bg-amber-500 text-black shadow-xs font-bold'
+                      ? 'bg-amber-500 text-black shadow-xs font-black'
                       : 'border border-border bg-card text-muted-foreground hover:text-foreground hover:border-amber-500/40'
                   }`}
                 >
@@ -143,41 +143,6 @@ export function MenuGrid({
           </div>
         )}
       </div>
-
-      {/* Быстрая кнопка запуска конструктора гарниров */}
-      {onOpenGarnishMixer && (activeCategory === 'sides' || activeCategory === 'mains') && !search && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-              <Sliders className="size-4" />
-            </div>
-            <div>
-              <h4 className="text-xs sm:text-sm font-bold text-foreground">
-                Конструктор & Миксер гарнира
-              </h4>
-              <p className="text-[11px] text-muted-foreground">
-                Полпорции (23 000 сум) · 1 порция (35 000 сум) · Рис, Гречка, Макароны, Пюре
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-1.5 self-end sm:self-auto">
-            <button
-              type="button"
-              onClick={() => onOpenGarnishMixer('half')}
-              className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-black hover:bg-amber-400 transition cursor-pointer shadow-xs"
-            >
-              Полпорции (23к)
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenGarnishMixer('full')}
-              className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-1.5 text-xs font-bold hover:opacity-90 transition cursor-pointer shadow-xs"
-            >
-              1 порция (35к)
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Сетка блюд */}
       <div className="flex-1 overflow-y-auto pr-0.5">
@@ -193,7 +158,36 @@ export function MenuGrid({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
+            {/* Карточка конструктора гарниров (внутри сетки без лишнего баннера) */}
+            {onOpenGarnishMixer && (activeCategory === 'sides' || !activeCategory) && !search && (
+              <button
+                type="button"
+                onClick={() => onOpenGarnishMixer('half')}
+                className="group flex flex-col justify-between rounded-xl border-2 border-amber-500/60 bg-amber-500/10 p-3 text-left transition-all hover:border-amber-500 hover:bg-amber-500/15 active:scale-[0.98] cursor-pointer shadow-2xs min-h-[110px] touch-manipulation"
+              >
+                <div className="space-y-1.5 w-full">
+                  <div className="aspect-[4/3] w-full flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    <Sliders className="size-7" />
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-black leading-tight text-foreground">
+                    Конструктор гарнира
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">
+                    Микс: Рис / Гречка / Пюре / Макароны
+                  </p>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between border-t border-amber-500/30 pt-2 w-full">
+                  <span className="text-xs sm:text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
+                    23к / 35к <span className="text-[10px] font-normal text-muted-foreground">сум</span>
+                  </span>
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500 text-black text-xs font-bold">
+                    <Plus className="size-4" />
+                  </span>
+                </div>
+              </button>
+            )}
+
             {filteredItems.map(({ item, categoryId }) => {
               const name =
                 typeof item.name === 'string'
@@ -208,7 +202,7 @@ export function MenuGrid({
                   key={item.id}
                   type="button"
                   onClick={() => handleItemClick(item, categoryId)}
-                  className="group flex flex-col justify-between rounded-xl border border-border/70 bg-card p-2.5 sm:p-3 text-left transition-all hover:border-amber-500/50 hover:shadow-xs active:scale-[0.98] cursor-pointer shadow-2xs min-h-[90px]"
+                  className="group flex flex-col justify-between rounded-xl border border-border/70 bg-card p-2.5 sm:p-3 text-left transition-all hover:border-amber-500/50 hover:shadow-xs active:scale-[0.98] cursor-pointer shadow-2xs min-h-[110px] touch-manipulation"
                 >
                   <div className="space-y-1.5 w-full">
                     {item.image ? (
@@ -241,8 +235,8 @@ export function MenuGrid({
                       {formatNum(item.price)}{' '}
                       <span className="text-[10px] font-normal text-muted-foreground">сум</span>
                     </span>
-                    <span className="flex size-6 items-center justify-center rounded-md bg-amber-500/10 text-xs font-bold text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition">
-                      <Plus className="size-3.5" />
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500/15 text-xs font-bold text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-black transition">
+                      <Plus className="size-4" />
                     </span>
                   </div>
                 </button>
