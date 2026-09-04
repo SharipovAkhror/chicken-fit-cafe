@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { Printer, Wifi, Download, Copy } from 'lucide-react'
 import { SimpleQR } from '@/lib/qr-generator'
 
 type Props = {
@@ -71,13 +72,14 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
           <button
             type="button"
             onClick={() => setBatchMode(!batchMode)}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer ${
               batchMode
                 ? 'bg-amber-500 text-black'
                 : 'bg-white/10 text-white hover:bg-white/15'
             }`}
           >
-            {batchMode ? '✓ Режим серии (1–' + batchCount + ')' : '🖨️ Серия столов'}
+            <Printer className="size-3.5" />
+            <span>{batchMode ? `Серия (1–${batchCount})` : 'Серия столов'}</span>
           </button>
           <button
             type="button"
@@ -194,8 +196,8 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
 
             {/* Логотип */}
             <div className="relative mb-2 flex items-center justify-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500 text-xl shadow">
-                🍗
+              <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500 text-xs font-black text-black shadow">
+                CF
               </div>
               <span className="text-2xl font-black tracking-tight text-zinc-950">
                 Chicken<span className="text-amber-500">Fit</span>
@@ -229,7 +231,10 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
             {/* Wi-Fi плашка */}
             {showWifi && (
               <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200/80 p-2.5 text-[11px] text-zinc-700">
-                <p className="font-bold text-amber-900">📶 Гостевой Wi-Fi</p>
+                <p className="font-bold text-amber-900 inline-flex items-center gap-1">
+                  <Wifi className="size-3.5 text-amber-700" />
+                  <span>Гостевой Wi-Fi</span>
+                </p>
                 <p className="text-zinc-600 mt-0.5">
                   Сеть: <span className="font-semibold text-zinc-900">{wifiName}</span> · Пароль: <span className="font-semibold text-zinc-900">{wifiPass}</span>
                 </p>
@@ -247,9 +252,10 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
             <button
               type="button"
               onClick={() => handleDownloadSvg(table, currentUrl)}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-800 dark:text-white transition hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-800 dark:text-white transition hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer shadow-xs"
             >
-              📥 Скачать SVG QR
+              <Download className="size-3.5" />
+              <span>Скачать SVG QR</span>
             </button>
             <button
               type="button"
@@ -257,9 +263,10 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
                 navigator.clipboard.writeText(currentUrl)
                 alert('Ссылка скопирована: ' + currentUrl)
               }}
-              className="rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20 cursor-pointer"
             >
-              📋 Скопировать ссылку
+              <Copy className="size-3.5" />
+              <span>Скопировать ссылку</span>
             </button>
           </div>
         </div>
@@ -282,7 +289,9 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
                 className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-white p-5 text-center text-zinc-950 shadow-md print:break-inside-avoid print:page-break-inside-avoid"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-xl">🍗</span>
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500 text-xs font-black text-black">
+                    CF
+                  </span>
                   <span className="text-xl font-black text-zinc-950">
                     Chicken<span className="text-amber-500">Fit</span>
                   </span>

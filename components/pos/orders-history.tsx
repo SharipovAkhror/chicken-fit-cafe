@@ -1,6 +1,19 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import {
+  RefreshCw,
+  Search,
+  Utensils,
+  ShoppingBag,
+  Truck,
+  Banknote,
+  CreditCard,
+  RotateCcw,
+  Printer,
+  ChefHat,
+  MapPin,
+} from 'lucide-react'
 import type { Order, OrderType } from '@/lib/orders'
 import type { PrintMode } from './receipt-print'
 
@@ -8,6 +21,7 @@ type Props = {
   orders: Order[]
   onReprint: (order: Order, mode?: PrintMode) => void
   onRefresh: () => void
+  onReopenOrder?: (order: Order) => void
 }
 
 function formatNum(n: number): string {
@@ -23,7 +37,7 @@ function formatTime(iso: string): string {
   }
 }
 
-export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
+export function OrdersHistory({ orders, onReprint, onRefresh, onReopenOrder }: Props) {
   const [filterType, setFilterType] = useState<OrderType | 'all'>('all')
   const [search, setSearch] = useState('')
 
@@ -79,9 +93,9 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
         <button
           type="button"
           onClick={onRefresh}
-          className="flex items-center gap-1.5 self-start sm:self-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-bold transition hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shadow-xs"
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-bold transition hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shadow-xs"
         >
-          <span>🔄</span>
+          <RefreshCw className="size-3.5" />
           <span>Обновить</span>
         </button>
       </div>
@@ -119,9 +133,7 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
       {/* Поиск и фильтры по типу заказа */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-            🔍
-          </span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400" />
           <input
             type="text"
             value={search}
@@ -134,23 +146,27 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
         <div className="flex gap-1 overflow-x-auto pb-1">
           {[
             { id: 'all', label: `Все (${orders.length})` },
-            { id: 'dine_in', label: '🍽️ В зале' },
-            { id: 'takeaway', label: '🛍️ С собой' },
-            { id: 'delivery', label: '🛵 Доставка' },
-          ].map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilterType(f.id as OrderType | 'all')}
-              className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition cursor-pointer ${
-                filterType === f.id
-                  ? 'bg-amber-500 text-black shadow-xs'
-                  : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+            { id: 'dine_in', label: 'В зале', icon: Utensils },
+            { id: 'takeaway', label: 'С собой', icon: ShoppingBag },
+            { id: 'delivery', label: 'Доставка', icon: Truck },
+          ].map((f) => {
+            const Icon = f.icon
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilterType(f.id as OrderType | 'all')}
+                className={`shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                  filterType === f.id
+                    ? 'bg-amber-500 text-black shadow-xs'
+                    : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                }`}
+              >
+                {Icon && <Icon className="size-3.5" />}
+                <span>{f.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -162,31 +178,36 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
           </div>
         ) : (
           filteredOrders.map((order) => {
-            const typeBadge =
+            const typeConfig =
               order.type === 'dine_in'
                 ? {
-                    label: `🍽️ Стол ${order.tableNumber || '1'}`,
-                    bg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+                    Icon: Utensils,
+                    label: `Стол ${order.tableNumber || '1'}`,
+                    className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
                   }
                 : order.type === 'delivery'
                 ? {
-                    label: `🛵 Доставка (${order.customerPhone || '—'})`,
-                    bg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                    Icon: Truck,
+                    label: `Доставка (${order.customerPhone || '—'})`,
+                    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
                   }
                 : {
-                    label: '🛍️ Навынос',
-                    bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+                    Icon: ShoppingBag,
+                    label: 'Навынос',
+                    className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
                   }
 
-            const payBadge =
+            const payConfig =
               order.paymentMethod === 'cash'
                 ? {
-                    label: '💵 Наличные',
-                    bg: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300',
+                    Icon: Banknote,
+                    label: 'Наличные',
+                    className: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700',
                   }
                 : {
-                    label: '💳 Click/Payme',
-                    bg: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300',
+                    Icon: CreditCard,
+                    label: 'Click / Payme',
+                    className: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20',
                   }
 
             return (
@@ -196,42 +217,48 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
               >
                 <div className="space-y-1.5 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-black text-amber-600 dark:text-amber-400 text-sm">
+                    <span className="font-black text-amber-600 dark:text-amber-400 text-sm font-mono">
                       {order.orderNumber}
                     </span>
                     <span className="text-xs font-semibold text-zinc-400">
                       {formatTime(order.createdAt)}
                     </span>
                     <span
-                      className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${typeBadge.bg}`}
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${typeConfig.className}`}
                     >
-                      {typeBadge.label}
+                      <typeConfig.Icon className="size-3" />
+                      <span>{typeConfig.label}</span>
                     </span>
                     <span
-                      className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${payBadge.bg}`}
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${payConfig.className}`}
                     >
-                      {payBadge.label}
+                      <payConfig.Icon className="size-3" />
+                      <span>{payConfig.label}</span>
                     </span>
 
                     {/* Бейдж статуса KDS */}
                     {order.status === 'cooking' && (
-                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 animate-pulse">
-                        🍳 Готовится
+                      <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                        <span className="size-1.5 rounded-full bg-orange-500 animate-pulse" />
+                        <span>КУХНЯ</span>
                       </span>
                     )}
                     {order.status === 'ready' && (
-                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        ✅ Готов к выдаче
+                      <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                        <span>ГОТОВ К ВЫДАЧЕ</span>
                       </span>
                     )}
                     {order.status === 'pending' && (
-                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                        ⏳ Ожидает кухни
+                      <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                        <span className="size-1.5 rounded-full bg-blue-500" />
+                        <span>ОЖИДАЕТ КУХНИ</span>
                       </span>
                     )}
                     {order.status === 'completed' && (
-                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                        📦 Выдан
+                      <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700">
+                        <span className="size-1.5 rounded-full bg-zinc-400" />
+                        <span>ВЫДАН</span>
                       </span>
                     )}
                   </div>
@@ -243,15 +270,16 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                   </div>
 
                   {order.deliveryAddress && (
-                    <div className="text-[11px] text-zinc-400">
-                      📍 {order.deliveryAddress}
+                    <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+                      <MapPin className="size-3 shrink-0" />
+                      <span>{order.deliveryAddress}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 pt-2 sm:border-0 sm:pt-0 shrink-0">
                   <div className="text-right">
-                    <span className="text-base font-black text-zinc-900 dark:text-white">
+                    <span className="text-base font-black font-mono text-zinc-900 dark:text-white">
                       {formatNum(order.total)}{' '}
                       <span className="text-xs font-normal text-zinc-400">
                         сум
@@ -264,15 +292,27 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                     )}
                   </div>
 
-                  {/* Кнопки печати: Гость и Кухня */}
+                  {/* Кнопки печати и возобновления */}
                   <div className="flex items-center gap-1.5">
+                    {order.status === 'completed' && onReopenOrder && (
+                      <button
+                        type="button"
+                        onClick={() => onReopenOrder(order)}
+                        title="Открыть стол / заказ заново"
+                        className="inline-flex items-center gap-1 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2.5 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
+                      >
+                        <RotateCcw className="size-3" />
+                        <span className="hidden md:inline">Возобновить</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => onReprint(order, 'guest')}
                       title="Печать гостевого чека"
-                      className="flex items-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-800 dark:text-white transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-xs font-bold text-zinc-800 dark:text-white transition hover:bg-amber-500 hover:text-black cursor-pointer shadow-xs"
                     >
-                      <span>🖨️</span>
+                      <Printer className="size-3.5" />
                       <span>Гость</span>
                     </button>
 
@@ -280,9 +320,9 @@ export function OrdersHistory({ orders, onReprint, onRefresh }: Props) {
                       type="button"
                       onClick={() => onReprint(order, 'kitchen')}
                       title="Печать кухонного бегунка (без цен)"
-                      className="flex items-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-2 text-xs font-bold transition hover:opacity-85 cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black px-3 py-2 text-xs font-bold transition hover:opacity-85 cursor-pointer shadow-xs"
                     >
-                      <span>👨‍🍳</span>
+                      <ChefHat className="size-3.5" />
                       <span>Кухня</span>
                     </button>
                   </div>

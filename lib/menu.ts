@@ -15,6 +15,10 @@ export type MenuItem = {
   kcal?: number
   weight?: number
   sort_order?: number
+  calories?: number
+  protein?: number
+  fat?: number
+  carbs?: number
 }
 
 export type MenuCategory = {

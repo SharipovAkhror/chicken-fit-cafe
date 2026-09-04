@@ -1,6 +1,6 @@
 {
   "$schema": "./menu.schema.json",
-  "updated": "2026-08-23",
+  "updated": "2026-09-04",
   "currency": "UZS",
   "cafe": {
     "name": "Cafe ChickenFit",
@@ -189,6 +189,24 @@
           "image": "/menu/belyashi.jpg",
           "weight": 100,
           "kcal": 240,
+          "available": true
+        },
+        {
+          "id": "somsa",
+          "name": {
+            "ru": "Сомса с мясом",
+            "uz": "Go'shtli somsa",
+            "en": "Meat Somsa"
+          },
+          "description": {
+            "ru": "Хрустящая слоёная сомса с сочной начинкой из рубленого мяса и лука",
+            "uz": "Qarsildoq qatlama xamir va sersuv go'shtli qiymali somsa",
+            "en": "Crispy flaky pastry stuffed with seasoned minced beef"
+          },
+          "price": 8000,
+          "image": "/menu/somsa.jpg",
+          "weight": 130,
+          "kcal": 290,
           "available": true
         },
         {
@@ -434,6 +452,24 @@
           "weight": 350,
           "kcal": 240,
           "available": true
+        },
+        {
+          "id": "lagman",
+          "name": {
+            "ru": "Лагман",
+            "uz": "Lag'mon",
+            "en": "Lagman"
+          },
+          "description": {
+            "ru": "Тянутая домашняя лапша, сочная говядина, сладкий перец, томаты и насыщенный пряный бульон",
+            "uz": "Cho'zma xamir, mol go'shti, sabzavotlar va xushbo'y ziravorli sho'rva",
+            "en": "Hand-pulled noodles with tender beef, bell peppers and rich savory broth"
+          },
+          "price": 35000,
+          "image": "/menu/lagman.jpg",
+          "weight": 400,
+          "kcal": 460,
+          "available": true
         }
       ]
     },
@@ -520,14 +556,14 @@
         {
           "id": "kiev-cutlet",
           "name": {
-            "ru": "Котлета по-Киевски с гарниром",
-            "uz": "Kiyevcha kotlet garnir bilan",
-            "en": "Chicken Kiev with Side"
+            "ru": "Котлета по-киевски (1 порция)",
+            "uz": "Kiyevcha kotlet (1 porsiya)",
+            "en": "Chicken Kiev (1 portion)"
           },
           "description": {
-            "ru": "Хрустящая куриная котлета с сыром и сливочным маслом внутри",
-            "uz": "Sariyog' va pishloqli qarsildoq tovuq kotleti",
-            "en": "Crispy breaded chicken breast filled with melted herb butter"
+            "ru": "Хрустящая куриная котлета с сыром и сливочным маслом внутри (с гарниром на выбор)",
+            "uz": "Sariyog' va pishloqli qarsildoq tovuq kotleti garnir bilan",
+            "en": "Crispy breaded chicken breast filled with melted butter served with side"
           },
           "price": 40000,
           "image": "/menu/kiev-cutlet.jpg",
@@ -536,21 +572,21 @@
           "available": true
         },
         {
-          "id": "chicken-vegetables",
+          "id": "kazan-kabob",
           "name": {
-            "ru": "Сочная Курица с овощами",
-            "uz": "Sabzavotli sersuv tovuq",
-            "en": "Chicken with Vegetables"
+            "ru": "Казон кабоб",
+            "uz": "Qozon kabob",
+            "en": "Kazan Kabob"
           },
           "description": {
-            "ru": "Кусочки куриного филе, тушеные с болгарским перцем, томатами и луком",
-            "uz": "Pomidor, bulg'or qalampiri va piyoz bilan pishirilgan tovuq",
-            "en": "Tender chicken fillets stewed with bell peppers, tomatoes and herbs"
+            "ru": "Обжаренное сочное мясо с нежным золотистым томлёным картофелем и лучком",
+            "uz": "Qovurilgan shirali go'sht va tilla rang mayin kartoshka",
+            "en": "Crispy browned meat served with tender braised potatoes"
           },
           "price": 40000,
-          "image": "/menu/chicken-vegetables.jpg",
-          "weight": 350,
-          "kcal": 390,
+          "image": "/menu/kazan-kabob.jpg",
+          "weight": 380,
+          "kcal": 560,
           "available": true
         },
         {
@@ -587,6 +623,24 @@
           "image": "/menu/kupaty.jpg",
           "weight": 320,
           "kcal": 490,
+          "available": true
+        },
+        {
+          "id": "cutlet-single",
+          "name": {
+            "ru": "Котлеты (без гарнира)",
+            "uz": "Kotletlar (garnirsiz)",
+            "en": "Cutlets (single portion)"
+          },
+          "description": {
+            "ru": "Сочная домашняя котлета из натурального говяжьего фарша",
+            "uz": "Mol go'shtidan sersuv mazali kotlet",
+            "en": "Juicy homemade meat cutlet without side"
+          },
+          "price": 12000,
+          "image": "/menu/cutlet-homemade.jpg",
+          "weight": 120,
+          "kcal": 210,
           "available": true
         }
       ]
@@ -733,24 +787,6 @@
           "image": "/menu/salad-mushroom.jpg",
           "weight": 180,
           "kcal": 110,
-          "available": true
-        },
-        {
-          "id": "salad-chicken-veg",
-          "name": {
-            "ru": "Овощи с курицей",
-            "uz": "Tovuqli sabzavotli salat",
-            "en": "Chicken & Veggies Salad"
-          },
-          "description": {
-            "ru": "Нежное отварное куриное филе со свежими томатами, огурцами и зеленью",
-            "uz": "Tovuq filesi va yangi sabzavotlar",
-            "en": "Tender chicken breast with crisp fresh vegetables"
-          },
-          "price": 15000,
-          "image": "/menu/salad-chicken-veg.jpg",
-          "weight": 200,
-          "kcal": 160,
           "available": true
         }
       ]
@@ -941,6 +977,42 @@
           "image": "/menu/water-05.jpg",
           "weight": 500,
           "kcal": 0,
+          "available": true
+        },
+        {
+          "id": "juice-bliss-05",
+          "name": {
+            "ru": "Сок Bliss 0.5 л",
+            "uz": "Bliss sharbati 0.5 l",
+            "en": "Bliss Juice 0.5L"
+          },
+          "description": {
+            "ru": "Натуральный сок Bliss в ассортименте (яблоко, вишня, персик, апельсин)",
+            "uz": "Tabiiy Bliss sharbati (turli mevali)",
+            "en": "Natural Bliss fruit juice (assorted)"
+          },
+          "price": 10000,
+          "image": "/menu/juice-bliss-05.jpg",
+          "weight": 500,
+          "kcal": 120,
+          "available": true
+        },
+        {
+          "id": "juice-bliss-1l",
+          "name": {
+            "ru": "Сок Bliss 1 л",
+            "uz": "Bliss sharbati 1 l",
+            "en": "Bliss Juice 1L"
+          },
+          "description": {
+            "ru": "Большой натуральный сок Bliss 1 литр в ассортименте",
+            "uz": "Katta 1 litrli tabiiy Bliss sharbati",
+            "en": "1 Liter natural Bliss fruit juice (assorted)"
+          },
+          "price": 20000,
+          "image": "/menu/juice-bliss-1l.jpg",
+          "weight": 1000,
+          "kcal": 240,
           "available": true
         }
       ]

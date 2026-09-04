@@ -101,8 +101,9 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               <h1 className="text-lg font-black tracking-tight">
                 КУХНЯ (KDS) · ЭКРАН ПОВАРОВ
               </h1>
-              <span className="rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-500 animate-pulse">
-                ● LIVE
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>LIVE</span>
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -149,7 +150,8 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               : 'border border-border bg-card text-muted-foreground hover:text-foreground'
           }`}
         >
-          <span>🔥 Все активные</span>
+          <Flame className="size-3.5" />
+          <span>Все активные</span>
           <span className="rounded-full bg-black/20 dark:bg-white/20 px-1.5 py-0.2 text-[11px] font-mono">
             {counts.active}
           </span>
@@ -164,7 +166,8 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               : 'border border-border bg-card text-muted-foreground hover:text-foreground'
           }`}
         >
-          <span>⏳ Ожидают</span>
+          <Clock className="size-3.5" />
+          <span>Ожидают</span>
           <span className="rounded-full bg-black/20 dark:bg-white/20 px-1.5 py-0.2 text-[11px] font-mono">
             {counts.pending}
           </span>
@@ -179,7 +182,8 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               : 'border border-border bg-card text-muted-foreground hover:text-foreground'
           }`}
         >
-          <span>🍳 Готовятся</span>
+          <Utensils className="size-3.5" />
+          <span>Готовятся</span>
           <span className="rounded-full bg-black/20 dark:bg-white/20 px-1.5 py-0.2 text-[11px] font-mono">
             {counts.cooking}
           </span>
@@ -194,7 +198,8 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               : 'border border-border bg-card text-muted-foreground hover:text-foreground'
           }`}
         >
-          <span>✅ Готовы к выдаче</span>
+          <CheckCircle2 className="size-3.5" />
+          <span>Готовы к выдаче</span>
           <span className="rounded-full bg-black/20 dark:bg-white/20 px-1.5 py-0.2 text-[11px] font-mono">
             {counts.ready}
           </span>
@@ -209,7 +214,8 @@ export function KdsScreen({ orders, onRefresh }: Props) {
               : 'border border-border bg-card text-muted-foreground hover:text-foreground'
           }`}
         >
-          <span>📦 Выдано ({counts.completed})</span>
+          <PackageCheck className="size-3.5" />
+          <span>Выдано ({counts.completed})</span>
         </button>
       </div>
 

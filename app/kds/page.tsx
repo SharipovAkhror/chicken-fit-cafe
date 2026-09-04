@@ -67,8 +67,9 @@ export default function StandaloneKdsPage() {
               <span className="font-black text-base tracking-wider uppercase">
                 CHICKEN<span className="text-amber-500">FIT</span> KDS
               </span>
-              <span className="rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-500 animate-pulse">
-                ● ЭКРАН КУХНИ
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>ЭКРАН КУХНИ</span>
               </span>
             </div>
           </div>

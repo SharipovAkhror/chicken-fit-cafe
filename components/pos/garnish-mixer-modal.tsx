@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { X, Check, Utensils, FileText } from 'lucide-react'
 import type { CartItem, GarnishIngredient } from '@/lib/cart'
 
 export type GarnishMixerModalProps = {
@@ -23,7 +24,7 @@ type IngredientDef = {
   id: string
   name: string
   shortName: string
-  icon: string
+  code: string
   color: string
 }
 
@@ -32,35 +33,35 @@ const INGREDIENTS: IngredientDef[] = [
     id: 'rice',
     name: 'Рис отварной',
     shortName: 'Рис',
-    icon: '🍚',
+    code: 'РИС',
     color: 'bg-amber-100 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200',
   },
   {
     id: 'buckwheat',
     name: 'Гречка',
     shortName: 'Гречка',
-    icon: '🥣',
+    code: 'ГРК',
     color: 'bg-orange-100 dark:bg-orange-950/60 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200',
   },
   {
     id: 'macaroni',
     name: 'Макароны',
     shortName: 'Макароны',
-    icon: '🍝',
+    code: 'МАК',
     color: 'bg-yellow-100 dark:bg-yellow-950/60 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-200',
   },
   {
     id: 'puree',
     name: 'Картофельное пюре',
     shortName: 'Пюре',
-    icon: '🥔',
+    code: 'ПЮР',
     color: 'bg-stone-100 dark:bg-stone-900 border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-200',
   },
   {
     id: 'fries',
     name: 'Картошка фри',
     shortName: 'Фри',
-    icon: '🍟',
+    code: 'ФРИ',
     color: 'bg-red-100 dark:bg-red-950/60 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200',
   },
 ]
@@ -224,8 +225,8 @@ export function GarnishMixerModal({
         {/* Шапка */}
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 px-5 py-4 bg-zinc-50/70 dark:bg-zinc-900/60">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-amber-500/20 text-lg">
-              🥗
+            <span className="flex size-9 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <Utensils className="size-5" />
             </span>
             <div>
               <h2 className="text-base sm:text-lg font-black leading-tight">
@@ -239,9 +240,9 @@ export function GarnishMixerModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-sm font-bold text-zinc-500 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
+            className="flex size-8 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-sm font-bold text-zinc-500 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition cursor-pointer"
           >
-            ✕
+            <X className="size-4" />
           </button>
         </div>
 
@@ -264,7 +265,7 @@ export function GarnishMixerModal({
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="text-xs sm:text-sm font-black">
-                    🥣 Полпорции
+                    Полпорции (180 г)
                   </span>
                   <span
                     className={`size-4 rounded-full border flex items-center justify-center text-[10px] ${
@@ -273,7 +274,7 @@ export function GarnishMixerModal({
                         : 'border-zinc-300 dark:border-zinc-700'
                     }`}
                   >
-                    {size === 'half' && '✓'}
+                    {size === 'half' && <Check className="size-2.5 text-black font-black" />}
                   </span>
                 </div>
                 <span className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1">
@@ -295,7 +296,7 @@ export function GarnishMixerModal({
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="text-xs sm:text-sm font-black">
-                    🍽️ 1 порция
+                    1 порция (350 г)
                   </span>
                   <span
                     className={`size-4 rounded-full border flex items-center justify-center text-[10px] ${
@@ -304,7 +305,7 @@ export function GarnishMixerModal({
                         : 'border-zinc-300 dark:border-zinc-700'
                     }`}
                   >
-                    {size === 'full' && '✓'}
+                    {size === 'full' && <Check className="size-2.5 text-black font-black" />}
                   </span>
                 </div>
                 <span className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1">
@@ -326,7 +327,7 @@ export function GarnishMixerModal({
               <button
                 type="button"
                 onClick={handlePresetEqualAllSelected}
-                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline"
+                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
               >
                 Поровну
               </button>
@@ -335,30 +336,30 @@ export function GarnishMixerModal({
               <button
                 type="button"
                 onClick={() => handlePreset5050('rice', 'buckwheat')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
               >
-                🍚+🥣 Рис & Гречка
+                Рис + Гречка (50/50)
               </button>
               <button
                 type="button"
                 onClick={() => handlePreset5050('puree', 'rice')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
               >
-                🥔+🍚 Пюре & Рис
+                Пюре + Рис (50/50)
               </button>
               <button
                 type="button"
                 onClick={() => handlePreset5050('puree', 'fries')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
               >
-                🥔+🍟 Пюре & Фри
+                Пюре + Фри (50/50)
               </button>
               <button
                 type="button"
                 onClick={() => handlePreset5050('macaroni', 'puree')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
               >
-                🍝+🥔 Макароны & Пюре
+                Макароны + Пюре (50/50)
               </button>
             </div>
           </div>
@@ -394,7 +395,9 @@ export function GarnishMixerModal({
                       onClick={() => handleToggleIngredient(ing.id)}
                       className="flex items-center gap-2.5 flex-1 cursor-pointer select-none"
                     >
-                      <span className="text-xl">{ing.icon}</span>
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black font-mono text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0">
+                        {ing.code}
+                      </span>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white">
@@ -479,8 +482,9 @@ export function GarnishMixerModal({
               })}
             </div>
 
-            <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
-              📋 {mixDescription}
+            <p className="flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200">
+              <FileText className="size-3.5 text-zinc-400 shrink-0" />
+              <span>{mixDescription}</span>
             </p>
           </div>
         </div>
@@ -514,8 +518,11 @@ export function GarnishMixerModal({
             onClick={handleConfirm}
             className="flex-1 rounded-2xl bg-amber-500 py-3 px-4 text-xs sm:text-sm font-black text-black shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 active:scale-98 cursor-pointer flex items-center justify-between"
           >
-            <span>✅ Добавить в чек</span>
-            <span>{formatNum(activeConfig.price * count)} сум</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="size-4" />
+              <span>Добавить в чек</span>
+            </span>
+            <span className="font-mono">{formatNum(activeConfig.price * count)} сум</span>
           </button>
         </div>
       </div>

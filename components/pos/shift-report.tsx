@@ -13,6 +13,9 @@ import {
   Percent,
   History,
   CheckCircle,
+  Utensils,
+  ShoppingBag,
+  Truck,
 } from 'lucide-react'
 import type { Order } from '@/lib/orders'
 import {
@@ -259,16 +262,25 @@ export function ShiftReport({ orders, onPrintShiftReport }: Props) {
         </h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
-            <span className="text-xs font-bold text-muted-foreground">🍽️ В зале</span>
-            <p className="text-xl font-black text-foreground mt-0.5">{stats.dineInCount}</p>
+            <span className="inline-flex items-center justify-center gap-1 text-xs font-bold text-muted-foreground">
+              <Utensils className="size-3.5 text-blue-500" />
+              <span>В зале</span>
+            </span>
+            <p className="text-xl font-black font-mono text-foreground mt-0.5">{stats.dineInCount}</p>
           </div>
           <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
-            <span className="text-xs font-bold text-muted-foreground">🛍️ С собой</span>
-            <p className="text-xl font-black text-foreground mt-0.5">{stats.takeawayCount}</p>
+            <span className="inline-flex items-center justify-center gap-1 text-xs font-bold text-muted-foreground">
+              <ShoppingBag className="size-3.5 text-amber-500" />
+              <span>С собой</span>
+            </span>
+            <p className="text-xl font-black font-mono text-foreground mt-0.5">{stats.takeawayCount}</p>
           </div>
           <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
-            <span className="text-xs font-bold text-muted-foreground">🛵 Доставка</span>
-            <p className="text-xl font-black text-foreground mt-0.5">{stats.deliveryCount}</p>
+            <span className="inline-flex items-center justify-center gap-1 text-xs font-bold text-muted-foreground">
+              <Truck className="size-3.5 text-emerald-500" />
+              <span>Доставка</span>
+            </span>
+            <p className="text-xl font-black font-mono text-foreground mt-0.5">{stats.deliveryCount}</p>
           </div>
         </div>
       </div>

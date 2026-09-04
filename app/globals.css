@@ -349,8 +349,8 @@
 
 @media print {
   html, body {
-    background: #fff !important;
-    color: #000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
@@ -379,39 +379,70 @@
     top: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
-    color: #000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
     overflow: visible !important;
     z-index: 999999 !important;
-    font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace !important;
-    -webkit-font-smoothing: none !important;
-    text-rendering: optimizeLegibility !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif !important;
+    font-variant-numeric: tabular-nums !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: geometricPrecision !important;
+    image-rendering: pixelated !important;
   }
 
-  /* 80mm Standard Width */
+  /* All text and borders in print must be 100% solid jet black (no gray halftoning) */
+  #receipt-print-wrapper,
+  #receipt-print-wrapper *:not(.badge-black) {
+    color: #000000 !important;
+    border-color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Inverted black pill for kitchen item quantity */
+  #receipt-print-wrapper .badge-black {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  /* 80mm Standard Width (Exact 72mm active printable area for 576 dots / 203 DPI) */
   #receipt-print-wrapper.paper-80mm {
-    width: 76mm !important;
-    max-width: 76mm !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
   }
 
   #receipt-print-wrapper.paper-80mm .receipt {
-    width: 76mm !important;
-    max-width: 76mm !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
     font-size: 11px !important;
-    padding: 2mm 1mm 8mm 1mm !important;
+    padding: 2mm 1mm 10mm 1mm !important;
+    line-height: 1.25 !important;
   }
 
-  /* 58mm Narrow Width */
+  #receipt-print-wrapper.paper-80mm .receipt-brand-title {
+    font-size: 22px !important;
+    line-height: 1.15 !important;
+  }
+
+  /* 58mm Narrow Width (Exact 48mm active printable area for 384 dots / 203 DPI) */
   #receipt-print-wrapper.paper-58mm {
-    width: 52mm !important;
-    max-width: 52mm !important;
+    width: 48mm !important;
+    max-width: 48mm !important;
   }
 
   #receipt-print-wrapper.paper-58mm .receipt {
-    width: 52mm !important;
-    max-width: 52mm !important;
+    width: 48mm !important;
+    max-width: 48mm !important;
     font-size: 9.5px !important;
-    padding: 1.5mm 0.5mm 6mm 0.5mm !important;
+    padding: 1.5mm 0.5mm 8mm 0.5mm !important;
+    line-height: 1.2 !important;
+  }
+
+  #receipt-print-wrapper.paper-58mm .receipt-brand-title {
+    font-size: 17px !important;
     line-height: 1.15 !important;
   }
 
@@ -474,17 +505,17 @@
   }
 
   .receipt {
-    background: #fff !important;
-    color: #000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
     margin: 0 !important;
     box-sizing: border-box !important;
   }
 
   /* Thermal Tear-off Cut Spacing */
   .receipt-tear-off {
-    margin-top: 4mm !important;
-    padding-bottom: 6mm !important;
-    border-top: 1px dashed #000 !important;
+    margin-top: 5mm !important;
+    padding-bottom: 8mm !important;
+    border-top: 1px dashed #000000 !important;
     text-align: center !important;
     font-size: 8px !important;
     letter-spacing: 1px !important;
@@ -494,3 +525,4 @@
     margin: 0;
   }
 }
+

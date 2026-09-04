@@ -15,6 +15,9 @@ import {
   Lock,
   Printer,
   ArrowRightLeft,
+  ArrowLeft,
+  ArrowRight,
+  LayoutGrid,
   X,
   FileText,
   CheckCircle2,
@@ -45,6 +48,7 @@ import {
 import {
   createOrder,
   updateOrder,
+  reopenOrder,
   transferOrderTable,
   fetchTodayOrders,
   subscribeToOrders,
@@ -80,6 +84,42 @@ type CategoryData = {
 }
 
 const MENU_OVERRIDES_KEY = 'chickenfit_pos_menu_overrides_v1'
+const MENU_CUSTOM_ITEMS_KEY = 'chickenfit_pos_custom_items_v1'
+const MENU_DELETED_ITEMS_KEY = 'chickenfit_pos_deleted_items_v1'
+const TABLE_DRAFTS_KEY = 'chickenfit_pos_table_drafts_v2'
+
+type TableDraft = {
+  items: CartItem[]
+  discountPercent: number
+  customDiscount: number
+  paymentMethod: PaymentMethod
+  customerPhone?: string
+  deliveryAddress?: string
+  activeOrderId?: string | null
+}
+
+function loadAllDrafts(): Record<string, TableDraft> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(TABLE_DRAFTS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveDraft(key: string, draft: TableDraft | null) {
+  if (typeof window === 'undefined') return
+  try {
+    const drafts = loadAllDrafts()
+    if (draft && draft.items.length > 0) {
+      drafts[key] = draft
+    } else {
+      delete drafts[key]
+    }
+    localStorage.setItem(TABLE_DRAFTS_KEY, JSON.stringify(drafts))
+  } catch {}
+}
 
 function formatNum(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -102,6 +142,7 @@ function getInitialCategories(): CategoryData[] {
 
   if (typeof window !== 'undefined') {
     try {
+      // 1. Применяем оверрайды цен, описаний и доступности
       const raw = localStorage.getItem(MENU_OVERRIDES_KEY)
       if (raw) {
         const overrides = JSON.parse(raw) as Record<string, Partial<MenuItem>>
@@ -112,6 +153,27 @@ function getInitialCategories(): CategoryData[] {
             }
             return it
           })
+        })
+      }
+
+      // 2. Добавляем созданные вручную пользователем блюда
+      const customRaw = localStorage.getItem(MENU_CUSTOM_ITEMS_KEY)
+      if (customRaw) {
+        const customItems = JSON.parse(customRaw) as Array<{ item: MenuItem; categoryId: string }>
+        customItems.forEach(({ item, categoryId }) => {
+          const cat = result.find((c) => c.id === categoryId)
+          if (cat && !cat.items.some((it) => it.id === item.id)) {
+            cat.items.push(item)
+          }
+        })
+      }
+
+      // 3. Фильтруем удаленные блюда
+      const deletedRaw = localStorage.getItem(MENU_DELETED_ITEMS_KEY)
+      if (deletedRaw) {
+        const deletedIds = new Set(JSON.parse(deletedRaw) as string[])
+        result.forEach((cat) => {
+          cat.items = cat.items.filter((it) => !deletedIds.has(it.id))
         })
       }
     } catch {}
@@ -196,6 +258,7 @@ export function PosTerminal() {
     setCategories(updated)
     if (typeof window === 'undefined') return
     const map: Record<string, Partial<MenuItem>> = {}
+    const customList: Array<{ item: MenuItem; categoryId: string }> = []
     updated.forEach((cat) => {
       cat.items.forEach((it) => {
         map[it.id] = {
@@ -203,11 +266,148 @@ export function PosTerminal() {
           available: it.available,
           name: it.name,
           description: it.description,
+          calories: it.calories,
+          protein: it.protein,
+          fat: it.fat,
+          carbs: it.carbs,
+          image: it.image,
+        }
+        if (it.id.startsWith('item-') || it.id.startsWith('custom-')) {
+          customList.push({ item: it, categoryId: cat.id })
         }
       })
     })
     localStorage.setItem(MENU_OVERRIDES_KEY, JSON.stringify(map))
+    localStorage.setItem(MENU_CUSTOM_ITEMS_KEY, JSON.stringify(customList))
   }
+
+  const handleToggleAvailable = useCallback(
+    (itemId: string, available: boolean) => {
+      const updated = categories.map((cat) => ({
+        ...cat,
+        items: cat.items.map((it) => (it.id === itemId ? { ...it, available } : it)),
+      }))
+      persistMenuOverrides(updated)
+    },
+    [categories],
+  )
+
+  const handleUpdatePrice = useCallback(
+    (itemId: string, price: number) => {
+      const updated = categories.map((cat) => ({
+        ...cat,
+        items: cat.items.map((it) => (it.id === itemId ? { ...it, price } : it)),
+      }))
+      persistMenuOverrides(updated)
+    },
+    [categories],
+  )
+
+  const handleAddNewItem = useCallback(
+    (item: {
+      id: string
+      categoryId: string
+      name: string
+      price: number
+      description: string
+      calories?: number
+      protein?: number
+      fat?: number
+      carbs?: number
+      image?: string
+    }) => {
+      const newItem: MenuItem = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        calories: item.calories,
+        protein: item.protein,
+        fat: item.fat,
+        carbs: item.carbs,
+        image: item.image,
+        available: true,
+      }
+      const updated = categories.map((cat) =>
+        cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
+      )
+      persistMenuOverrides(updated)
+      setToastMessage(`Позиция "${item.name}" добавлена в меню!`)
+      setTimeout(() => setToastMessage(null), 3000)
+    },
+    [categories],
+  )
+
+  const handleEditItem = useCallback(
+    (item: MenuItem, categoryId: string) => {
+      const updated = categories.map((cat) => {
+        let items = cat.items.filter((it) => it.id !== item.id)
+        if (cat.id === categoryId) {
+          items = [...items, item]
+        }
+        return { ...cat, items }
+      })
+      persistMenuOverrides(updated)
+      setToastMessage(
+        `Блюдо "${typeof item.name === 'string' ? item.name : item.name.ru ?? ''}" обновлено`,
+      )
+      setTimeout(() => setToastMessage(null), 3000)
+    },
+    [categories],
+  )
+
+  const handleDeleteItem = useCallback(
+    (itemId: string) => {
+      const updated = categories.map((cat) => ({
+        ...cat,
+        items: cat.items.filter((it) => it.id !== itemId),
+      }))
+      persistMenuOverrides(updated)
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem(MENU_DELETED_ITEMS_KEY)
+          const deleted = raw ? (JSON.parse(raw) as string[]) : []
+          if (!deleted.includes(itemId)) {
+            deleted.push(itemId)
+            localStorage.setItem(MENU_DELETED_ITEMS_KEY, JSON.stringify(deleted))
+          }
+        } catch {}
+      }
+      setToastMessage(`Позиция удалена из меню`)
+      setTimeout(() => setToastMessage(null), 3000)
+    },
+    [categories],
+  )
+
+  // Автосохранение набранного черновика стола / заказа (не теряется при переключении)
+  useEffect(() => {
+    const key = orderType === 'dine_in' ? `table_${tableNumber}` : orderType
+    if (!activeOrderId) {
+      if (cart.length > 0) {
+        saveDraft(key, {
+          items: cart,
+          discountPercent,
+          customDiscount,
+          paymentMethod,
+          customerPhone,
+          deliveryAddress,
+          activeOrderId: null,
+        })
+      } else {
+        saveDraft(key, null)
+      }
+    }
+  }, [
+    cart,
+    orderType,
+    tableNumber,
+    activeOrderId,
+    discountPercent,
+    customDiscount,
+    paymentMethod,
+    customerPhone,
+    deliveryAddress,
+  ])
 
   const handleAddItem = useCallback(
     (item: {
@@ -286,6 +486,8 @@ export function PosTerminal() {
   }, [])
 
   const handleClear = useCallback(() => {
+    const key = orderType === 'dine_in' ? `table_${tableNumber}` : orderType
+    saveDraft(key, null)
     setCart(clearCart())
     setActiveOrderId(null)
     setCashReceived(0)
@@ -293,7 +495,7 @@ export function PosTerminal() {
     setCustomDiscount(0)
     setDeliveryFee(0)
     setShowMobileCart(false)
-  }, [])
+  }, [orderType, tableNumber])
 
   const handlePrintWithMode = useCallback(
     (mode: PrintMode, width?: PaperWidth) => {
@@ -318,20 +520,44 @@ export function PosTerminal() {
       setCustomDiscount(activeOrder.discountAmount || 0)
       setPaymentMethod(activeOrder.paymentMethod || 'cash')
     } else {
-      setCart([])
-      setActiveOrderId(null)
-      setDiscountPercent(0)
-      setCustomDiscount(0)
+      const drafts = loadAllDrafts()
+      const draft = drafts[`table_${tableId}`]
+      if (draft && draft.items.length > 0) {
+        setCart([...draft.items])
+        setActiveOrderId(null)
+        setDiscountPercent(draft.discountPercent || 0)
+        setCustomDiscount(draft.customDiscount || 0)
+        setPaymentMethod(draft.paymentMethod || 'cash')
+      } else {
+        setCart([])
+        setActiveOrderId(null)
+        setDiscountPercent(0)
+        setCustomDiscount(0)
+      }
     }
     setActiveTab('pos')
   }, [])
 
   const handleSelectFastOrder = useCallback((type: 'takeaway' | 'delivery') => {
     setOrderType(type)
-    setCart([])
-    setActiveOrderId(null)
-    setDiscountPercent(0)
-    setCustomDiscount(0)
+    const drafts = loadAllDrafts()
+    const draft = drafts[type]
+    if (draft && draft.items.length > 0) {
+      setCart([...draft.items])
+      setActiveOrderId(null)
+      setDiscountPercent(draft.discountPercent || 0)
+      setCustomDiscount(draft.customDiscount || 0)
+      setPaymentMethod(draft.paymentMethod || 'cash')
+      setCustomerPhone(draft.customerPhone || '')
+      setDeliveryAddress(draft.deliveryAddress || '')
+    } else {
+      setCart([])
+      setActiveOrderId(null)
+      setDiscountPercent(0)
+      setCustomDiscount(0)
+      setCustomerPhone('')
+      setDeliveryAddress('')
+    }
     setActiveTab('pos')
   }, [])
 
@@ -343,28 +569,111 @@ export function PosTerminal() {
       setActiveOrderId(existing.id)
       setDiscountPercent(existing.discountPercent || 0)
       setCustomDiscount(existing.discountAmount || 0)
+      setPaymentMethod(existing.paymentMethod || 'cash')
     } else {
-      if (activeOrderId) {
+      const drafts = loadAllDrafts()
+      const draft = drafts[`table_${num}`]
+      if (draft && draft.items.length > 0) {
+        setCart([...draft.items])
+        setActiveOrderId(null)
+        setDiscountPercent(draft.discountPercent || 0)
+        setCustomDiscount(draft.customDiscount || 0)
+        setPaymentMethod(draft.paymentMethod || 'cash')
+      } else {
         setCart([])
         setActiveOrderId(null)
         setDiscountPercent(0)
         setCustomDiscount(0)
       }
     }
-  }, [activeOrdersByTables, activeOrderId])
+  }, [activeOrdersByTables])
 
   const handleSetOrderType = useCallback((type: OrderType) => {
     setOrderType(type)
     if (type !== 'dine_in') {
-      setActiveOrderId(null)
+      const drafts = loadAllDrafts()
+      const draft = drafts[type]
+      if (draft && draft.items.length > 0) {
+        setCart([...draft.items])
+        setActiveOrderId(null)
+        setDiscountPercent(draft.discountPercent || 0)
+        setCustomDiscount(draft.customDiscount || 0)
+        setPaymentMethod(draft.paymentMethod || 'cash')
+      } else {
+        setActiveOrderId(null)
+        setCart([])
+      }
     } else {
       const existing = activeOrdersByTables[tableNumber]
       if (existing) {
         setCart([...existing.items])
         setActiveOrderId(existing.id)
+      } else {
+        const drafts = loadAllDrafts()
+        const draft = drafts[`table_${tableNumber}`]
+        if (draft && draft.items.length > 0) {
+          setCart([...draft.items])
+          setActiveOrderId(null)
+        } else {
+          setCart([])
+          setActiveOrderId(null)
+        }
       }
     }
   }, [activeOrdersByTables, tableNumber])
+
+  // ─── ВОЗОБНОВЛЕНИЕ ЗАКРЫТОГО СТОЛА ─────────────────────────
+  const handleReopenTable = useCallback(
+    async (order: Order) => {
+      const reopened = await reopenOrder(order.id)
+      if (reopened) {
+        setToastMessage(
+          `Стол №${reopened.tableNumber ?? ''} снова открыт (дозаказ / корректировка)`,
+        )
+        setTimeout(() => setToastMessage(null), 3500)
+        await reloadOrders()
+        if (reopened.tableNumber) {
+          setOrderType('dine_in')
+          setTableNumber(reopened.tableNumber)
+        } else {
+          setOrderType(reopened.type)
+        }
+        setCart([...reopened.items])
+        setActiveOrderId(reopened.id)
+        setDiscountPercent(reopened.discountPercent || 0)
+        setCustomDiscount(reopened.discountAmount || 0)
+        setPaymentMethod(reopened.paymentMethod || 'cash')
+        setActiveTab('pos')
+      }
+    },
+    [reloadOrders],
+  )
+
+  const handleReopenCurrentOrder = useCallback(async () => {
+    if (activeOrderId) {
+      const ord = todayOrders.find((o) => o.id === activeOrderId)
+      if (ord) {
+        await handleReopenTable(ord)
+        return
+      }
+    }
+    const lastClosed = todayOrders.find(
+      (o) => o.tableNumber === tableNumber && o.status === 'completed',
+    )
+    if (lastClosed) {
+      await handleReopenTable(lastClosed)
+    }
+  }, [activeOrderId, todayOrders, tableNumber, handleReopenTable])
+
+  // Стадия текущего заказа
+  const currentOrderStatus = useMemo((): 'draft' | 'pending' | 'cooking' | 'ready' | 'precheck' | 'completed' | 'cancelled' => {
+    if (!activeOrderId) return 'draft'
+    const ord = todayOrders.find((o) => o.id === activeOrderId)
+    if (!ord) return 'draft'
+    if (ord.status === 'completed') return 'completed'
+    if (ord.precheckPrintedAt) return 'precheck'
+    return ord.status
+  }, [activeOrderId, todayOrders])
 
   const handleOpenTransferModal = useCallback((order: Order) => {
     setTransferModalOrder(order)
@@ -380,7 +689,7 @@ export function PosTerminal() {
       setTableNumber(newTableId)
     }
     await reloadOrders()
-    setToastMessage(`Счёт #${transferModalOrder.orderNumber} перенесён: Стол ${prevTable} ➔ Стол ${newTableId}`)
+    setToastMessage(`Счёт #${transferModalOrder.orderNumber} перенесён: Стол ${prevTable} → Стол ${newTableId}`)
     setTimeout(() => setToastMessage(null), 3500)
   }, [transferModalOrder, activeOrderId, reloadOrders])
 
@@ -502,7 +811,7 @@ export function PosTerminal() {
   ])
 
   // ─── ПРЕЧЕК / ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ ───────────────────────────
-  const handlePrintPrecheck = useCallback(() => {
+  const handlePrintPrecheck = useCallback(async () => {
     if (cart.length === 0) return
     const subtotal = cartTotal(cart)
     const pctDiscount =
@@ -512,6 +821,40 @@ export function PosTerminal() {
 
     const activeOrderObj = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
     const num = activeOrderObj ? activeOrderObj.orderNumber : orderNumber
+    const nowIso = new Date().toISOString()
+
+    if (activeOrderId) {
+      await updateOrder(activeOrderId, {
+        items: [...cart],
+        subtotal,
+        discountAmount: totalDiscount,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        total: finalTotal,
+        precheckPrintedAt: nowIso,
+      })
+      await reloadOrders()
+    } else {
+      const created = await createOrder({
+        orderNumber: num,
+        type: orderType,
+        tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+        customerPhone: orderType === 'delivery' ? customerPhone : undefined,
+        deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+        items: [...cart],
+        subtotal,
+        discountPercent: discountPercent > 0 ? discountPercent : undefined,
+        discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
+        deliveryFee: orderType === 'delivery' ? deliveryFee : undefined,
+        total: finalTotal,
+        paymentMethod,
+        cashierName: user?.name || 'Кассир',
+        status: 'cooking',
+        precheckPrintedAt: nowIso,
+      })
+      setActiveOrderId(created.id)
+      saveDraft(orderType === 'dine_in' ? `table_${tableNumber}` : orderType, null)
+      await reloadOrders()
+    }
 
     const precheckData: ReceiptProps = {
       items: [...cart],
@@ -536,7 +879,23 @@ export function PosTerminal() {
 
     setToastMessage(`Пречек для Стола №${tableNumber} отправлен на печать!`)
     setTimeout(() => setToastMessage(null), 3500)
-  }, [cart, discountPercent, customDiscount, activeOrderId, todayOrders, orderNumber, tableNumber, user, paperWidth])
+  }, [
+    cart,
+    discountPercent,
+    customDiscount,
+    activeOrderId,
+    todayOrders,
+    orderNumber,
+    orderType,
+    tableNumber,
+    customerPhone,
+    deliveryAddress,
+    deliveryFee,
+    paymentMethod,
+    user,
+    paperWidth,
+    reloadOrders,
+  ])
 
   // ─── ОПЛАТИТЬ И ЗАКРЫТЬ СТОЛ ────────────────────────────────
   const handleSubmitOrder = useCallback(async () => {
@@ -688,55 +1047,6 @@ export function PosTerminal() {
     [paperWidth],
   )
 
-  const handleToggleAvailable = useCallback(
-    (itemId: string, available: boolean) => {
-      const updated = categories.map((cat) => ({
-        ...cat,
-        items: cat.items.map((it) =>
-          it.id === itemId ? { ...it, available } : it,
-        ),
-      }))
-      persistMenuOverrides(updated)
-    },
-    [categories],
-  )
-
-  const handleUpdatePrice = useCallback(
-    (itemId: string, price: number) => {
-      const updated = categories.map((cat) => ({
-        ...cat,
-        items: cat.items.map((it) =>
-          it.id === itemId ? { ...it, price } : it,
-        ),
-      }))
-      persistMenuOverrides(updated)
-    },
-    [categories],
-  )
-
-  const handleAddNewItem = useCallback(
-    (item: {
-      id: string
-      categoryId: string
-      name: string
-      price: number
-      description: string
-    }) => {
-      const newItem: MenuItem = {
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        description: item.description,
-        available: true,
-      }
-      const updated = categories.map((cat) =>
-        cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
-      )
-      persistMenuOverrides(updated)
-    },
-    [categories],
-  )
-
   const totalCartCount = cartCount(cart)
   const currentSubtotal = cartTotal(cart)
   const currentDiscountAmount =
@@ -771,8 +1081,9 @@ export function PosTerminal() {
                 CHICKEN<span className="text-amber-500">FIT</span> POS
               </span>
             </Link>
-            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 border border-emerald-500/20">
-              ● ОНЛАЙН
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 border border-emerald-500/20">
+              <span className="size-1.5 rounded-full bg-emerald-500" />
+              <span>ОНЛАЙН</span>
             </span>
           </div>
 
@@ -791,7 +1102,8 @@ export function PosTerminal() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>🪑 Столы (8)</span>
+              <LayoutGrid className="size-3.5" />
+              <span>Столы (8)</span>
               {occupiedTablesCount > 0 && (
                 <span
                   className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-bold ${
@@ -953,7 +1265,7 @@ export function PosTerminal() {
           </div>
         </header>
 
-        {/* 📟 Индикатор внешнего табло покупателя (Customer Pole Display) */}
+        {/* Индикатор внешнего табло покупателя (Customer Pole Display) */}
         <div className="bg-zinc-950 text-red-500 border-b border-zinc-800 px-4 py-1 flex items-center justify-between text-xs font-mono select-none">
           <div className="flex items-center gap-2">
             <span className="inline-block size-2 rounded-full bg-red-500 animate-pulse" />
@@ -980,6 +1292,7 @@ export function PosTerminal() {
                 onSelectFastOrder={handleSelectFastOrder}
                 onOpenTransferModal={handleOpenTransferModal}
                 onDirectPay={handleDirectPay}
+                onReopenTable={handleReopenTable}
               />
             </div>
           )}
@@ -994,9 +1307,10 @@ export function PosTerminal() {
                     <button
                       type="button"
                       onClick={() => setActiveTab('tables')}
-                      className="flex items-center gap-1 font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="inline-flex items-center gap-1 font-bold text-muted-foreground hover:text-foreground cursor-pointer"
                     >
-                      <span>← К столам</span>
+                      <ArrowLeft className="size-3.5" />
+                      <span>Карта зала</span>
                     </button>
                     <span>·</span>
                     <span className="font-black text-foreground">
@@ -1041,7 +1355,7 @@ export function PosTerminal() {
               </div>
 
               {/* Панель оформления и корзины (справа) */}
-              <aside className="hidden lg:block w-full lg:w-[25rem] xl:w-[27rem] shrink-0 border-l border-border p-3 sm:p-4 overflow-y-auto bg-card/50">
+              <aside className="hidden lg:flex flex-col w-full lg:w-[25rem] xl:w-[27rem] shrink-0 border-l border-border p-2.5 sm:p-3 overflow-hidden bg-card/50 h-full">
                 <CartPanel
                   items={cart}
                   orderNumber={
@@ -1060,6 +1374,8 @@ export function PosTerminal() {
                   deliveryFee={deliveryFee}
                   activeOrderId={activeOrderId}
                   isTableOccupied={isCurrentTableOccupied}
+                  orderStatus={currentOrderStatus}
+                  onReopenOrder={handleReopenCurrentOrder}
                   onSaveToKitchen={handleSaveToKitchen}
                   onPrintPrecheck={handlePrintPrecheck}
                   onOpenTransferModal={() => {
@@ -1107,6 +1423,8 @@ export function PosTerminal() {
                       deliveryFee={deliveryFee}
                       activeOrderId={activeOrderId}
                       isTableOccupied={isCurrentTableOccupied}
+                      orderStatus={currentOrderStatus}
+                      onReopenOrder={handleReopenCurrentOrder}
                       onSaveToKitchen={handleSaveToKitchen}
                       onPrintPrecheck={handlePrintPrecheck}
                       onOpenTransferModal={() => {
@@ -1149,9 +1467,9 @@ export function PosTerminal() {
                       </span>
                       <span>Оформить чек</span>
                     </div>
-                    <div className="flex items-center gap-1 font-mono">
+                    <div className="flex items-center gap-1.5 font-mono">
                       <span>{formatNum(currentFinalTotal)} сум</span>
-                      <span>➔</span>
+                      <ArrowRight className="size-3.5" />
                     </div>
                   </button>
                 </div>
@@ -1167,11 +1485,12 @@ export function PosTerminal() {
           )}
 
           {activeTab === 'orders' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-4xl mx-auto w-full">
+            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
               <OrdersHistory
                 orders={todayOrders}
                 onReprint={handleReprint}
                 onRefresh={reloadOrders}
+                onReopenOrder={handleReopenTable}
               />
             </div>
           )}
@@ -1186,12 +1505,14 @@ export function PosTerminal() {
           )}
 
           {activeTab === 'menu' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-4xl mx-auto w-full">
+            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
               <MenuManager
                 categories={categories}
                 onToggleAvailable={handleToggleAvailable}
                 onUpdatePrice={handleUpdatePrice}
                 onAddItem={handleAddNewItem}
+                onEditItem={handleEditItem}
+                onDeleteItem={handleDeleteItem}
               />
             </div>
           )}
@@ -1292,7 +1613,10 @@ export function PosTerminal() {
                   >
                     <span className="text-sm font-black text-foreground">{t.name}</span>
                     <span className="text-[10px] text-muted-foreground">{t.zone}</span>
-                    <span className="text-[10px] text-emerald-500 font-semibold mt-1">🟢 Свободен</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      <span>Свободен</span>
+                    </span>
                   </button>
                 ))}
               </div>

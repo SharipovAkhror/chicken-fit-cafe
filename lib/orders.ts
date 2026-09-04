@@ -27,6 +27,7 @@ export type Order = {
   status: OrderStatus
   cookingStartedAt?: string
   readyAt?: string
+  precheckPrintedAt?: string
   completedAt?: string
 }
 
@@ -282,6 +283,7 @@ export async function createOrder(data: {
   changeAmount?: number
   cashierName?: string
   status?: OrderStatus
+  precheckPrintedAt?: string
 }): Promise<Order> {
   const currentShift = getCurrentShift()
 
@@ -305,6 +307,7 @@ export async function createOrder(data: {
     shiftId: currentShift?.id,
     cashierName: data.cashierName || currentShift?.cashierName || 'Кассир',
     status: data.status || 'pending',
+    precheckPrintedAt: data.precheckPrintedAt,
   }
 
   // 1. Всегда сохраняем в локальное хранилище для мгновенного доступа
@@ -421,6 +424,35 @@ export async function updateOrder(orderId: string, updates: Partial<Order>): Pro
 /** Перенос активного заказа на другой стол */
 export async function transferOrderTable(orderId: string, newTableNumber: string): Promise<Order | null> {
   return updateOrder(orderId, { tableNumber: newTableNumber })
+}
+
+/** Возобновить закрытый заказ (вернуть стол в работу после закрытия) */
+export async function reopenOrder(orderId: string): Promise<Order | null> {
+  const local = getLocalOrders()
+  const existing = local.find((o) => o.id === orderId)
+  if (!existing) return null
+
+  const updated: Order = {
+    ...existing,
+    status: 'cooking',
+    completedAt: undefined,
+  }
+
+  saveLocalOrder(updated)
+  broadcastOrderEvent('update', updated)
+
+  if (supabase) {
+    try {
+      await supabase
+        .from('orders')
+        .update({ status: 'cooking' })
+        .eq('id', orderId)
+    } catch (err) {
+      console.warn('Supabase reopenOrder failed:', err)
+    }
+  }
+
+  return updated
 }
 
 /** Канонический список столов ChickenFit Cafe (8 столов: 6 на 1 этаже, 2 на 1.5 этаже) */

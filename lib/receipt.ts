@@ -102,7 +102,7 @@ export function peekOrderNumber(): string {
   return '#001'
 }
 
-/** Время и дата для чека: «13.08.2026  12:45» */
+/** Время и дата для чека: «13.08.2026 12:45:30» */
 export function receiptDateTime(date?: Date): string {
   const d = date || new Date()
   const day = String(d.getDate()).padStart(2, '0')
@@ -110,10 +110,51 @@ export function receiptDateTime(date?: Date): string {
   const year = d.getFullYear()
   const h = String(d.getHours()).padStart(2, '0')
   const min = String(d.getMinutes()).padStart(2, '0')
-  return `${day}.${mon}.${year}  ${h}:${min}`
+  const sec = String(d.getSeconds()).padStart(2, '0')
+  return `${day}.${mon}.${year} ${h}:${min}:${sec}`
+}
+
+/** Дата для чека: «13.08.2026» */
+export function receiptDateOnly(date?: Date): string {
+  const d = date || new Date()
+  const day = String(d.getDate()).padStart(2, '0')
+  const mon = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}.${mon}.${year}`
+}
+
+/** Время для чека с секундами: «12:45:30» */
+export function receiptTimeOnly(date?: Date): string {
+  const d = date || new Date()
+  const h = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  const sec = String(d.getSeconds()).padStart(2, '0')
+  return `${h}:${min}:${sec}`
 }
 
 /** Форматирование суммы для чека: 158000 → «158 000» */
 export function receiptPrice(price: number): string {
   return String(Math.round(price)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
+
+/**
+ * Умный подбор и группировка позиций чека:
+ * Объединяет одинаковые товары с одинаковой ценой и модификаторами/гарниром,
+ * суммируя их количество (qty), чтобы чек был компактным и понятным.
+ */
+export function aggregateReceiptItems<T extends { id: string; name: string; price: number; qty: number; notes?: string }>(
+  items: T[],
+): T[] {
+  const map = new Map<string, T>()
+  for (const item of items) {
+    const key = `${item.id}__${item.name}__${item.price}__${(item.notes || '').trim()}`
+    const existing = map.get(key)
+    if (existing) {
+      existing.qty += item.qty
+    } else {
+      map.set(key, { ...item })
+    }
+  }
+  return Array.from(map.values())
+}
+

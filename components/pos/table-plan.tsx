@@ -11,6 +11,11 @@ import {
   Footprints,
   Maximize2,
   Sparkles,
+  RotateCcw,
+  DoorOpen,
+  Coffee,
+  Layers,
+  ArrowUp,
 } from 'lucide-react'
 import {
   type Order,
@@ -38,6 +43,7 @@ type Props = {
   onSelectFastOrder: (type: 'takeaway' | 'delivery') => void
   onOpenTransferModal: (order: Order) => void
   onDirectPay: (order: Order) => void
+  onReopenTable?: (order: Order) => void
 }
 
 /** 
@@ -46,17 +52,22 @@ type Props = {
 function TablePlanItem({
   table,
   activeOrder,
+  lastClosedOrder,
   onSelect,
   onTransfer,
+  onReopen,
   isLoft = false,
 }: {
   table: (typeof RESTAURANT_TABLES)[number]
   activeOrder?: Order
+  lastClosedOrder?: Order
   onSelect: () => void
   onTransfer: (e: React.MouseEvent) => void
+  onReopen?: (order: Order) => void
   isLoft?: boolean
 }) {
   const isOccupied = Boolean(activeOrder)
+  const isPrecheck = Boolean(activeOrder?.precheckPrintedAt)
   const elapsed = activeOrder ? getElapsedMinutes(activeOrder.createdAt) : 0
   const isLarge = table.capacity >= 6
 
@@ -64,10 +75,12 @@ function TablePlanItem({
     <div
       onClick={onSelect}
       className={`group relative flex flex-col justify-between rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-98 select-none ${
-        isLarge ? 'col-span-1 sm:col-span-2 min-h-[140px]' : 'min-h-[140px]'
+        isLarge ? 'col-span-1 sm:col-span-2 min-h-[148px]' : 'min-h-[148px]'
       } ${
         isOccupied
-          ? 'bg-amber-500/15 border-2 border-amber-500 shadow-md shadow-amber-500/10 hover:border-amber-400 ring-2 ring-amber-500/20'
+          ? isPrecheck
+            ? 'bg-amber-500/20 border-2 border-orange-500 shadow-md shadow-orange-500/20 ring-2 ring-orange-500/30'
+            : 'bg-amber-500/15 border-2 border-amber-500 shadow-md shadow-amber-500/10 hover:border-amber-400 ring-2 ring-amber-500/20'
           : 'bg-card/90 hover:bg-emerald-500/10 border-2 border-dashed border-border/80 hover:border-emerald-500 shadow-xs'
       }`}
     >
@@ -120,9 +133,13 @@ function TablePlanItem({
           <div className="flex items-center gap-1">
             {isOccupied && activeOrder ? (
               <>
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.5 text-[11px] font-mono">
+                <span className={`inline-flex items-center gap-0.5 rounded-md font-bold px-1.5 py-0.5 text-[11px] font-mono ${
+                  isPrecheck
+                    ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300'
+                    : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                }`}>
                   <Clock className="size-3" />
-                  <span>{elapsed}м</span>
+                  <span>{isPrecheck ? 'СЧЁТ' : `${elapsed}м`}</span>
                 </span>
 
                 <button
@@ -135,8 +152,9 @@ function TablePlanItem({
                 </button>
               </>
             ) : (
-              <span className="rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                🟢 Свободен
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>СВОБОДЕН</span>
               </span>
             )}
           </div>
@@ -144,20 +162,43 @@ function TablePlanItem({
       </div>
 
       {/* Нижняя часть столешницы */}
-      <div className="pt-2 border-t border-border/60 flex items-baseline justify-between mt-auto">
+      <div className="pt-2 border-t border-border/60 flex flex-col gap-1 mt-auto">
         {isOccupied && activeOrder ? (
-          <>
+          <div className="flex items-baseline justify-between">
             <span className="text-xs text-muted-foreground font-medium">
               {activeOrder.items.reduce((s, it) => s + it.qty, 0)} блюд
             </span>
             <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400">
               {formatNum(activeOrder.total)} <span className="text-xs font-normal">сум</span>
             </span>
-          </>
+          </div>
         ) : (
-          <span className="text-xs text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 font-medium transition">
-            Нажмите для заказа
-          </span>
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 font-medium transition">
+                Нажмите для заказа
+              </span>
+            </div>
+            {lastClosedOrder && (
+              <div className="flex items-center justify-between mt-1 pt-1 border-t border-dashed border-border/70">
+                <span className="text-[10px] font-mono text-muted-foreground truncate">
+                  #{lastClosedOrder.orderNumber} ({formatNum(lastClosedOrder.total)} с)
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onReopen?.(lastClosedOrder)
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-black px-1.5 py-0.5 text-[10px] font-bold transition shrink-0 ml-1 cursor-pointer"
+                  title="Открыть стол снова и продолжить обслуживание"
+                >
+                  <RotateCcw className="size-2.5" />
+                  <span>Возобновить</span>
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -190,12 +231,27 @@ export function TablePlan({
   onSelectTable,
   onSelectFastOrder,
   onOpenTransferModal,
+  onDirectPay,
+  onReopenTable,
 }: Props) {
   const [viewMode, setViewMode] = useState<'2d' | 'grid'>('2d')
 
   // Карта открытых счетов на столах
   const activeTableOrders = useMemo(() => {
     return getActiveOrdersByTables(orders)
+  }, [orders])
+
+  // Карта последних закрытых счетов по столам (для быстрого возобновления стола)
+  const lastClosedOrderByTable = useMemo(() => {
+    const map: Record<string, Order> = {}
+    for (const o of orders) {
+      if (o.type === 'dine_in' && o.tableNumber && o.status === 'completed') {
+        if (!map[o.tableNumber] || new Date(o.createdAt) > new Date(map[o.tableNumber].createdAt)) {
+          map[o.tableNumber] = o
+        }
+      }
+    }
+    return map
   }, [orders])
 
   const occupiedCount = Object.keys(activeTableOrders).length
@@ -215,11 +271,13 @@ export function TablePlan({
               <span>СТОЛЫ ({totalTables})</span>
             </h2>
             <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <span className="rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 border border-emerald-500/30">
-                🟢 {freeCount} свободно
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 border border-emerald-500/30">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>{freeCount} свободно</span>
               </span>
-              <span className="rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 border border-amber-500/30 font-bold">
-                🟡 {occupiedCount} занято
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 border border-amber-500/30 font-bold">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                <span>{occupiedCount} занято</span>
               </span>
             </div>
           </div>
@@ -307,7 +365,8 @@ export function TablePlan({
 
               {/* Маркер панорамных окон */}
               <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-bold text-cyan-600 dark:text-cyan-400">
-                <span>🪟 Панорамные окна</span>
+                <Maximize2 className="size-3.5" />
+                <span>Панорамное остекление</span>
               </div>
             </div>
 
@@ -318,11 +377,13 @@ export function TablePlan({
                   key={t.id}
                   table={t}
                   activeOrder={activeTableOrders[t.id]}
+                  lastClosedOrder={lastClosedOrderByTable[t.id]}
                   onSelect={() => onSelectTable(t.id, activeTableOrders[t.id])}
                   onTransfer={(e) => {
                     e.stopPropagation()
                     if (activeTableOrders[t.id]) onOpenTransferModal(activeTableOrders[t.id])
                   }}
+                  onReopen={onReopenTable}
                 />
               ))}
             </div>
@@ -331,8 +392,8 @@ export function TablePlan({
             <div className="mt-4 pt-3 border-t border-border/70 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Входные двери */}
               <div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-card/60 p-2.5 text-xs text-muted-foreground">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-sm">
-                  🚪
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <DoorOpen className="size-4" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground text-[11px]">Главный вход</p>
@@ -342,8 +403,8 @@ export function TablePlan({
 
               {/* Стойка кассы и раздачи */}
               <div className="flex items-center gap-2 rounded-xl border border-border bg-card/80 p-2.5 text-xs">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-black font-black text-sm">
-                  ☕
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-black">
+                  <Coffee className="size-4" />
                 </div>
                 <div>
                   <p className="font-bold text-foreground text-[11px]">Касса и выдача заказов</p>
@@ -375,7 +436,9 @@ export function TablePlan({
             {/* Лестничный переход (Стилизованная лестница) */}
             <div className="mb-4 rounded-xl border border-dashed border-purple-500/40 bg-card/70 p-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-base">🪜</span>
+                <div className="flex size-7 items-center justify-center rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-300">
+                  <Layers className="size-4" />
+                </div>
                 <div>
                   <span className="font-bold text-foreground text-[11px]">
                     Лестничный подъём
@@ -385,8 +448,9 @@ export function TablePlan({
                   </p>
                 </div>
               </div>
-              <span className="rounded-md bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2 py-0.5 text-[10px] font-bold">
-                ▲ Вверх
+              <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2 py-0.5 text-[10px] font-bold">
+                <ArrowUp className="size-2.5" />
+                <span>Вверх</span>
               </span>
             </div>
 
@@ -398,11 +462,13 @@ export function TablePlan({
                   table={t}
                   isLoft
                   activeOrder={activeTableOrders[t.id]}
+                  lastClosedOrder={lastClosedOrderByTable[t.id]}
                   onSelect={() => onSelectTable(t.id, activeTableOrders[t.id])}
                   onTransfer={(e) => {
                     e.stopPropagation()
                     if (activeTableOrders[t.id]) onOpenTransferModal(activeTableOrders[t.id])
                   }}
+                  onReopen={onReopenTable}
                 />
               ))}
             </div>
@@ -426,11 +492,13 @@ export function TablePlan({
                   key={t.id}
                   table={t}
                   activeOrder={activeTableOrders[t.id]}
+                  lastClosedOrder={lastClosedOrderByTable[t.id]}
                   onSelect={() => onSelectTable(t.id, activeTableOrders[t.id])}
                   onTransfer={(e) => {
                     e.stopPropagation()
                     if (activeTableOrders[t.id]) onOpenTransferModal(activeTableOrders[t.id])
                   }}
+                  onReopen={onReopenTable}
                 />
               ))}
             </div>
@@ -447,11 +515,13 @@ export function TablePlan({
                   table={t}
                   isLoft
                   activeOrder={activeTableOrders[t.id]}
+                  lastClosedOrder={lastClosedOrderByTable[t.id]}
                   onSelect={() => onSelectTable(t.id, activeTableOrders[t.id])}
                   onTransfer={(e) => {
                     e.stopPropagation()
                     if (activeTableOrders[t.id]) onOpenTransferModal(activeTableOrders[t.id])
                   }}
+                  onReopen={onReopenTable}
                 />
               ))}
             </div>

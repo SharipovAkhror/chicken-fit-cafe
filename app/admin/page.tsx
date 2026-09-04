@@ -143,17 +143,52 @@ function AdminContent() {
       name: string
       price: number
       description: string
+      calories?: number
+      protein?: number
+      fat?: number
+      carbs?: number
+      image?: string
     }) => {
       const newItem: MenuItem = {
         id: item.id,
         name: item.name,
         price: item.price,
         description: item.description,
+        calories: item.calories,
+        protein: item.protein,
+        fat: item.fat,
+        carbs: item.carbs,
+        image: item.image,
         available: true,
       }
       const updated = categories.map((cat) =>
         cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
       )
+      persistMenuOverrides(updated)
+    },
+    [categories],
+  )
+
+  const handleEditItem = useCallback(
+    (item: MenuItem, categoryId: string) => {
+      const updated = categories.map((cat) => {
+        let items = cat.items.filter((it) => it.id !== item.id)
+        if (cat.id === categoryId) {
+          items = [...items, item]
+        }
+        return { ...cat, items }
+      })
+      persistMenuOverrides(updated)
+    },
+    [categories],
+  )
+
+  const handleDeleteItem = useCallback(
+    (itemId: string) => {
+      const updated = categories.map((cat) => ({
+        ...cat,
+        items: cat.items.filter((it) => it.id !== itemId),
+      }))
       persistMenuOverrides(updated)
     },
     [categories],
@@ -219,8 +254,9 @@ function AdminContent() {
               <span className="font-black text-base tracking-wider uppercase">
                 CHICKEN<span className="text-amber-500">FIT</span> ADMIN
               </span>
-              <span className="rounded-md bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-500">
-                ● УПРАВЛЕНИЕ
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-500">
+                <span className="size-1.5 rounded-full bg-blue-500" />
+                <span>УПРАВЛЕНИЕ</span>
               </span>
             </div>
           </div>
@@ -370,6 +406,8 @@ function AdminContent() {
               onToggleAvailable={handleToggleAvailable}
               onUpdatePrice={handleUpdatePrice}
               onAddItem={handleAddNewItem}
+              onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
             />
           </div>
         )}
