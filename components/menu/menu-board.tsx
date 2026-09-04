@@ -13,8 +13,7 @@ import {
   User,
   Send,
   UtensilsCrossed,
-  Sliders,
-  Sparkles,
+  Utensils,
 } from 'lucide-react'
 import { createOrder } from '@/lib/orders'
 import { nextOrderNumber, receiptDateTime } from '@/lib/receipt'
@@ -57,13 +56,30 @@ function formatNum(n: number): string {
 }
 
 const SIDES_4 = [
-  { id: 'puree', name: 'Картофельное пюре' },
-  { id: 'rice', name: 'Рис отварной' },
-  { id: 'buckwheat', name: 'Гречка' },
-  { id: 'macaroni', name: 'Макароны' },
+  { id: 'puree', name: 'Картофельное пюре', icon: '🥔' },
+  { id: 'rice', name: 'Рис отварной', icon: '🍚' },
+  { id: 'buckwheat', name: 'Гречка', icon: '🌾' },
+  { id: 'macaroni', name: 'Макароны', icon: '🍝' },
 ]
 
 const SAUCES = ['Чесночный', 'Томатный', 'Сырный', 'Кисло-сладкий']
+
+const DISHES_WITH_SIDE = new Set([
+  'cutlet-chicken',
+  'goulash',
+  'tefteli',
+  'kiev-cutlet',
+  'chicken-roast',
+  'kupaty',
+])
+
+function hasSideChoice(item: ViewItem): boolean {
+  return (
+    DISHES_WITH_SIDE.has(item.id) ||
+    (item.name || '').toLowerCase().includes('с гарниром') ||
+    (item.description || '').toLowerCase().includes('с гарниром')
+  )
+}
 
 function Thumb({
   item,
@@ -95,29 +111,6 @@ function Thumb({
   )
 }
 
-function isGarnishItem(item: ViewItem): boolean {
-  const desc = (item.description || '').toLowerCase()
-  const name = (item.name || '').toLowerCase()
-  const id = item.id.toLowerCase()
-  return (
-    desc.includes('гарнир') ||
-    desc.includes('garnir') ||
-    desc.includes('side') ||
-    name.includes('гарнир') ||
-    name.includes('котлет') ||
-    name.includes('гуляш') ||
-    name.includes('тефтел') ||
-    name.includes('купат') ||
-    name.includes('окороч') ||
-    id.startsWith('cutlet') ||
-    id.startsWith('goulash') ||
-    id.startsWith('tefteli') ||
-    id.startsWith('kiev-cutlet') ||
-    id.startsWith('kupaty') ||
-    id.startsWith('chicken-roast')
-  )
-}
-
 export function MenuBoard({
   categories,
   labels,
@@ -146,12 +139,11 @@ export function MenuBoard({
   const [chickenType, setChickenType] = useState<'mix' | 'wings' | 'strips'>('mix')
   const [chickenWeightKg, setChickenWeightKg] = useState<number>(1.0)
 
-  // Состояния для конструктора Комбо 45к
+  // Состояния для Комбо 45к
   const [comboChickenPart, setComboChickenPart] = useState<'mix' | 'wings' | 'strips'>('mix')
   const [comboIncludeFries, setComboIncludeFries] = useState(true)
   const [comboIncludeDrink, setComboIncludeDrink] = useState(true)
-  const [comboSauce1, setComboSauce1] = useState('Чесночный')
-  const [comboSauce2, setComboSauce2] = useState('Томатный')
+  const [selectedSauces, setSelectedSauces] = useState<string[]>(['Чесночный', 'Томатный'])
 
   // Состояние для выбора гарнира к вторым блюдам
   const [selectedSide, setSelectedSide] = useState<string>('puree')
@@ -233,27 +225,39 @@ export function MenuBoard({
     })
   }
 
-  // Добавление комбо через конструктор
+  // Выбор соусов для комбо
+  function handleToggleSauce(sauce: string) {
+    setSelectedSauces((prev) => {
+      if (prev.includes(sauce)) {
+        if (prev.length <= 1) return prev
+        return prev.filter((s) => s !== sauce)
+      }
+      if (prev.length < 2) {
+        return [...prev, sauce]
+      }
+      return [prev[1], sauce]
+    })
+  }
+
+  // Добавление комбо через выбор опций
   function handleAddCustomCombo(item: ViewItem) {
-    let price = 0
-    // Курица 300г = 30 000
-    price += 30000
+    let price = 30000
     if (comboIncludeFries) price += 10000
     if (comboIncludeDrink) price += 5000
 
     const chickenLabel =
       comboChickenPart === 'mix'
-        ? 'Курица 300г (Микс: крылья + стрипсы)'
+        ? 'Курица 300г (Микс)'
         : comboChickenPart === 'wings'
-        ? 'Курица 300г (Только крылья)'
-        : 'Курица 300г (Только филе/стрипсы)'
+        ? 'Курица 300г (Крылья)'
+        : 'Курица 300г (Стрипсы)'
 
     const friesLabel = comboIncludeFries ? 'Фри 100г' : 'Без фри'
     const drinkLabel = comboIncludeDrink ? 'Компот 0.5л' : 'Без напитка'
-    const saucesLabel = `Соусы: ${comboSauce1}, ${comboSauce2}`
+    const saucesLabel = `Соусы: ${selectedSauces.join(', ')}`
 
     const optDesc = `${chickenLabel} · ${friesLabel} · ${drinkLabel} · ${saucesLabel}`
-    const key = `combo-${comboChickenPart}-${comboIncludeFries}-${comboIncludeDrink}-${comboSauce1}-${comboSauce2}`
+    const key = `combo-${comboChickenPart}-${comboIncludeFries}-${comboIncludeDrink}-${selectedSauces.slice().sort().join('-')}`
 
     setCartItems((prev) => {
       const existing = prev[key]
@@ -433,8 +437,8 @@ export function MenuBoard({
             {category.items.map((item) => {
               const isCombo = item.id === 'combo-chicken'
               const isWeightChicken = item.id === 'chicken-1kg'
-              const isMainDish = category.id === 'mains'
-              const isConfigurable = isCombo || isWeightChicken || isMainDish
+              const isMainWithSide = hasSideChoice(item)
+              const isConfigurable = isCombo || isWeightChicken || isMainWithSide
 
               // Количество в корзине
               const simpleItemInCart = cartItems[item.id]?.qty || 0
@@ -460,10 +464,10 @@ export function MenuBoard({
                       )}
                       {isConfigurable && (
                         <span
-                          title="Конструктор блюда"
+                          title="Выбор опций"
                           className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-xl bg-black/80 text-amber-400 backdrop-blur-md border border-amber-500/40 shadow-xs"
                         >
-                          <Sliders className="size-3.5" />
+                          <Utensils className="size-3.5" />
                         </span>
                       )}
                       {item.meta && (
@@ -489,17 +493,17 @@ export function MenuBoard({
                           {item.price}
                         </span>
 
-                        {/* Кнопка добавления / вызова конструктора */}
+                        {/* Кнопка добавления / вызова опций */}
                         {item.available && (
                           <div onClick={(e) => e.stopPropagation()}>
                             {isConfigurable ? (
                               <button
                                 type="button"
                                 onClick={() => setOpenItem(item)}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-3.5 py-1.5 text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs touch-manipulation"
                               >
-                                <Sliders className="size-3.5" />
-                                <span>Собрать состав</span>
+                                <Utensils className="size-3.5" />
+                                <span>Выбрать</span>
                               </button>
                             ) : simpleItemInCart === 0 ? (
                               <button
@@ -601,37 +605,28 @@ export function MenuBoard({
                 <p className="text-xs font-mono text-muted-foreground">{openItem.meta}</p>
               )}
 
-              {/* 1. КОНСТРУКТОР СУПЕР КОМБО */}
+              {/* 1. ВЫБОР СОСТАВА КОМБО */}
               {openItem.id === 'combo-chicken' && (
                 <div className="space-y-4 border-t border-border/60 pt-3">
-                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
-                    <p className="font-bold text-amber-700 dark:text-amber-300">
-                      ⚡ Конструктор Комбо (базовая цена 45 000 сум):
-                    </p>
-                    <p className="text-muted-foreground text-[11px] mt-0.5">
-                      Настройте части комбо под себя — цена пересчитается автоматически!
-                    </p>
-                  </div>
-
                   {/* Шаг 1: Курица 300г */}
                   <div>
-                    <label className="text-xs font-bold text-foreground block mb-1.5">
-                      1. Курица (300 г) — 30 000 сум:
+                    <label className="text-xs font-bold text-foreground block mb-2">
+                      1. Курица (300 г) — основа комбо:
                     </label>
                     <div className="grid grid-cols-3 gap-1.5">
                       {[
                         { id: 'mix', label: 'Микс 50/50' },
                         { id: 'wings', label: 'Крылышки' },
-                        { id: 'strips', label: 'Стрипсы (филе)' },
+                        { id: 'strips', label: 'Стрипсы' },
                       ].map((opt) => (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => setComboChickenPart(opt.id as any)}
-                          className={`rounded-lg py-2 px-1 text-xs font-semibold border text-center transition cursor-pointer ${
+                          className={`rounded-xl py-2.5 px-2 text-xs font-bold border transition text-center cursor-pointer active:scale-95 touch-manipulation ${
                             comboChickenPart === opt.id
-                              ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
-                              : 'border-border bg-secondary/30 text-muted-foreground'
+                              ? 'border-amber-500 bg-amber-500/15 text-foreground shadow-2xs'
+                              : 'border-border bg-secondary/30 text-muted-foreground hover:text-foreground'
                           }`}
                         >
                           {opt.label}
@@ -640,110 +635,118 @@ export function MenuBoard({
                     </div>
                   </div>
 
-                  {/* Шаг 2: Картофель фри */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/30 border border-border/50">
-                    <div>
-                      <p className="text-xs font-bold text-foreground">2. Картофель Фри (100г)</p>
-                      <p className="text-[11px] text-muted-foreground">+10 000 сум в чеке</p>
-                    </div>
+                  {/* Шаг 2: Дополнения (Фри и Компот) */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground block">
+                      2. Дополнения:
+                    </label>
                     <button
                       type="button"
                       onClick={() => setComboIncludeFries(!comboIncludeFries)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl border transition text-left cursor-pointer active:scale-98 touch-manipulation ${
                         comboIncludeFries
-                          ? 'bg-amber-500 text-black'
-                          : 'bg-secondary text-muted-foreground'
+                          ? 'border-amber-500/80 bg-amber-500/10 text-foreground'
+                          : 'border-border bg-secondary/20 text-muted-foreground'
                       }`}
                     >
-                      {comboIncludeFries ? 'Включён (+10к)' : 'Убрать (-10к)'}
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">🍟</span>
+                        <div>
+                          <p className="text-xs font-bold leading-tight">Картофель Фри (100г)</p>
+                          <p className="text-[11px] text-muted-foreground">+10 000 сум</p>
+                        </div>
+                      </div>
+                      <span className={`flex size-5 items-center justify-center rounded-lg border ${
+                        comboIncludeFries
+                          ? 'border-amber-500 bg-amber-500 text-black font-black'
+                          : 'border-muted-foreground/40'
+                      }`}>
+                        {comboIncludeFries && <Check className="size-3.5 stroke-[3]" />}
+                      </span>
                     </button>
-                  </div>
 
-                  {/* Шаг 3: Напиток */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/30 border border-border/50">
-                    <div>
-                      <p className="text-xs font-bold text-foreground">3. Домашний компот 0.5л</p>
-                      <p className="text-[11px] text-muted-foreground">+5 000 сум в чеке</p>
-                    </div>
                     <button
                       type="button"
                       onClick={() => setComboIncludeDrink(!comboIncludeDrink)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl border transition text-left cursor-pointer active:scale-98 touch-manipulation ${
                         comboIncludeDrink
-                          ? 'bg-amber-500 text-black'
-                          : 'bg-secondary text-muted-foreground'
+                          ? 'border-amber-500/80 bg-amber-500/10 text-foreground'
+                          : 'border-border bg-secondary/20 text-muted-foreground'
                       }`}
                     >
-                      {comboIncludeDrink ? 'Включён (+5к)' : 'Убрать (-5к)'}
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">🥤</span>
+                        <div>
+                          <p className="text-xs font-bold leading-tight">Домашний компот (0.5л)</p>
+                          <p className="text-[11px] text-muted-foreground">+5 000 сум</p>
+                        </div>
+                      </div>
+                      <span className={`flex size-5 items-center justify-center rounded-lg border ${
+                        comboIncludeDrink
+                          ? 'border-amber-500 bg-amber-500 text-black font-black'
+                          : 'border-muted-foreground/40'
+                      }`}>
+                        {comboIncludeDrink && <Check className="size-3.5 stroke-[3]" />}
+                      </span>
                     </button>
                   </div>
 
-                  {/* Шаг 4: 2 соуса бесплатно */}
+                  {/* Шаг 3: Соусы (выберите 2) */}
                   <div>
-                    <label className="text-xs font-bold text-foreground block mb-1.5">
-                      4. Выберите 2 соуса (бесплатно в комплекте):
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-bold text-foreground">
+                        3. Соусы (выберите 2 соуса):
+                      </label>
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 font-mono">
+                        {selectedSauces.length} из 2
+                      </span>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-[11px] text-muted-foreground block mb-1">Соус 1:</span>
-                        <select
-                          value={comboSauce1}
-                          onChange={(e) => setComboSauce1(e.target.value)}
-                          className="w-full rounded-lg border border-border bg-background p-2 text-xs font-medium outline-none"
-                        >
-                          {SAUCES.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <span className="text-[11px] text-muted-foreground block mb-1">Соус 2:</span>
-                        <select
-                          value={comboSauce2}
-                          onChange={(e) => setComboSauce2(e.target.value)}
-                          className="w-full rounded-lg border border-border bg-background p-2 text-xs font-medium outline-none"
-                        >
-                          {SAUCES.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {SAUCES.map((sauce) => {
+                        const isSelected = selectedSauces.includes(sauce)
+                        return (
+                          <button
+                            key={sauce}
+                            type="button"
+                            onClick={() => handleToggleSauce(sauce)}
+                            className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 touch-manipulation ${
+                              isSelected
+                                ? 'border-amber-500 bg-amber-500/15 text-foreground shadow-2xs'
+                                : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <span>{sauce}</span>
+                            {isSelected ? (
+                              <Check className="size-3.5 text-amber-600 dark:text-amber-400 stroke-[3]" />
+                            ) : (
+                              <span className="size-3.5 rounded-full border border-muted-foreground/30" />
+                            )}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleAddCustomCombo(openItem)}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm font-bold text-black transition active:scale-[0.98] shadow-xs cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm font-black text-black transition active:scale-[0.98] shadow-xs cursor-pointer touch-manipulation"
                   >
                     <Plus className="size-4" />
                     <span>
-                      Добавить Комбо ({formatNum(30000 + (comboIncludeFries ? 10000 : 0) + (comboIncludeDrink ? 5000 : 0))} сум)
+                      Добавить в заказ · {formatNum(30000 + (comboIncludeFries ? 10000 : 0) + (comboIncludeDrink ? 5000 : 0))} сум
                     </span>
                   </button>
                 </div>
               )}
 
-              {/* 2. КОНСТРУКТОР КУРИЦЫ НА РАЗВЕС */}
+              {/* 2. ВЫБОР ПОРЦИИ КУРИЦЫ НА РАЗВЕС */}
               {openItem.id === 'chicken-1kg' && (
                 <div className="space-y-4 border-t border-border/60 pt-3">
-                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
-                    <p className="font-bold text-amber-700 dark:text-amber-300">
-                      🍗 Курица на вес: 90 000 сум за 1 кг
-                    </p>
-                    <p className="text-muted-foreground text-[11px] mt-0.5">
-                      Крылья и стрипсы оцениваются одинаково. Можно выбрать любой вес и состав.
-                    </p>
-                  </div>
-
                   {/* Выбор состава */}
                   <div>
-                    <label className="text-xs font-bold text-foreground block mb-1.5">
-                      Выберите состав:
+                    <label className="text-xs font-bold text-foreground block mb-2">
+                      1. Состав порции:
                     </label>
                     <div className="grid grid-cols-3 gap-1.5">
                       {[
@@ -755,10 +758,10 @@ export function MenuBoard({
                           key={opt.id}
                           type="button"
                           onClick={() => setChickenType(opt.id as any)}
-                          className={`rounded-lg py-2 px-1 text-xs font-semibold border text-center transition cursor-pointer ${
+                          className={`rounded-xl py-2.5 px-2 text-xs font-bold border transition text-center cursor-pointer active:scale-95 touch-manipulation ${
                             chickenType === opt.id
-                              ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
-                              : 'border-border bg-secondary/30 text-muted-foreground'
+                              ? 'border-amber-500 bg-amber-500/15 text-foreground shadow-2xs'
+                              : 'border-border bg-secondary/30 text-muted-foreground hover:text-foreground'
                           }`}
                         >
                           {opt.label}
@@ -769,23 +772,23 @@ export function MenuBoard({
 
                   {/* Выбор веса */}
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold text-foreground">
-                        Вес порции:
+                        2. Вес (90 000 сум / кг):
                       </label>
-                      <span className="text-sm font-mono font-bold text-amber-600 dark:text-amber-400">
-                        {chickenWeightKg.toFixed(1)} кг = {formatNum(chickenWeightKg * 90000)} сум
+                      <span className="text-sm font-mono font-black text-amber-600 dark:text-amber-400">
+                        {chickenWeightKg.toFixed(1)} кг · {formatNum(chickenWeightKg * 90000)} сум
                       </span>
                     </div>
 
                     {/* Быстрые кнопки веса */}
-                    <div className="grid grid-cols-5 gap-1 mb-2">
-                      {[0.5, 1.0, 1.2, 1.5, 2.0].map((w) => (
+                    <div className="grid grid-cols-4 gap-1.5 mb-2">
+                      {[0.5, 1.0, 1.5, 2.0].map((w) => (
                         <button
                           key={w}
                           type="button"
                           onClick={() => setChickenWeightKg(w)}
-                          className={`rounded-lg py-1.5 text-xs font-mono font-bold transition cursor-pointer ${
+                          className={`rounded-xl py-2 text-xs font-mono font-bold transition cursor-pointer active:scale-95 touch-manipulation ${
                             chickenWeightKg === w
                               ? 'bg-amber-500 text-black shadow-xs'
                               : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
@@ -797,21 +800,21 @@ export function MenuBoard({
                     </div>
 
                     {/* Точный регулятор +- 100г */}
-                    <div className="flex items-center justify-center gap-3 bg-secondary/30 p-2 rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between gap-3 bg-secondary/30 p-2 rounded-xl border border-border/50">
                       <button
                         type="button"
                         onClick={() => setChickenWeightKg((prev) => Math.max(0.3, Number((prev - 0.1).toFixed(1))))}
-                        className="px-3 py-1 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer"
+                        className="px-4 py-2 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer active:scale-90 touch-manipulation"
                       >
                         − 100г
                       </button>
                       <span className="text-sm font-mono font-bold">
-                        {chickenWeightKg.toFixed(1)} кг ({Math.round(chickenWeightKg * 1000)} г)
+                        {Math.round(chickenWeightKg * 1000)} грамм
                       </span>
                       <button
                         type="button"
                         onClick={() => setChickenWeightKg((prev) => Number((prev + 0.1).toFixed(1)))}
-                        className="px-3 py-1 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer"
+                        className="px-4 py-2 bg-secondary rounded-lg text-xs font-bold hover:bg-secondary/80 cursor-pointer active:scale-90 touch-manipulation"
                       >
                         + 100г
                       </button>
@@ -821,10 +824,10 @@ export function MenuBoard({
                   <button
                     type="button"
                     onClick={() => handleAddChickenByWeight(openItem)}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-sm font-bold text-black transition active:scale-[0.98] shadow-xs cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm font-black text-black transition active:scale-[0.98] shadow-xs cursor-pointer touch-manipulation"
                   >
                     <Plus className="size-4" />
-                    <span>Добавить ({formatNum(chickenWeightKg * 90000)} сум)</span>
+                    <span>Добавить в заказ · {formatNum(chickenWeightKg * 90000)} сум</span>
                   </button>
                 </div>
               )}
@@ -841,59 +844,70 @@ export function MenuBoard({
                     </div>
                   )}
 
-                  {/* 4 вида гарнира */}
-                  {isGarnishItem(openItem) && (
-                    <div className="mb-4 rounded-xl bg-secondary/30 border border-border/60 p-3">
-                      <label className="text-xs font-bold text-foreground block mb-2">
-                        Выберите 1 из 4 гарниров:
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {SIDES_4.map((side) => (
-                          <button
-                            key={side.id}
-                            type="button"
-                            onClick={() => setSelectedSide(side.id)}
-                            className={`rounded-lg py-2 px-2 text-xs font-semibold border text-left transition cursor-pointer ${
-                              selectedSide === side.id
-                                ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold'
-                                : 'border-border bg-card text-muted-foreground'
-                            }`}
-                          >
-                            {side.name}
-                          </button>
-                        ))}
+                  {/* Выбор гарнира */}
+                  {hasSideChoice(openItem) && (
+                    <div className="mb-4 rounded-2xl bg-secondary/30 border border-border/60 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-foreground">
+                          Гарнир к блюду (включён в стоимость):
+                        </label>
+                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                          1 на выбор
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {SIDES_4.map((side) => {
+                          const isSelected = selectedSide === side.id
+                          return (
+                            <button
+                              key={side.id}
+                              type="button"
+                              onClick={() => setSelectedSide(side.id)}
+                              className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition cursor-pointer active:scale-95 touch-manipulation ${
+                                isSelected
+                                  ? 'border-amber-500 bg-amber-500/15 text-foreground font-bold shadow-2xs'
+                                  : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-base" aria-hidden="true">{side.icon}</span>
+                                <span className="text-xs">{side.name}</span>
+                              </div>
+                              {isSelected ? (
+                                <span className="flex size-4 items-center justify-center rounded-full bg-amber-500 text-black">
+                                  <Check className="size-2.5 stroke-[3]" />
+                                </span>
+                              ) : (
+                                <span className="size-4 rounded-full border border-muted-foreground/30" />
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
 
                   {openItem.available ? (
                     <div className="pt-2 flex items-center gap-3">
-                      {isGarnishItem(openItem) ? (
-                        <button
-                          type="button"
-                          onClick={() => handleAddMainWithSide(openItem)}
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
-                        >
-                          <Plus className="size-4" />
-                          <span>Добавить с гарниром ({openItem.price})</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (hasSideChoice(openItem)) {
+                            handleAddMainWithSide(openItem)
+                          } else {
                             handleAddSimple(openItem)
                             close()
-                          }}
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
-                        >
-                          <Plus className="size-4" />
-                          <span>Добавить в заказ</span>
-                        </button>
-                      )}
+                          }
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 px-4 text-sm font-black text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer touch-manipulation"
+                      >
+                        <Plus className="size-4" />
+                        <span>Добавить в заказ · {openItem.price}</span>
+                      </button>
                       <button
                         type="button"
                         onClick={close}
-                        className="rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium hover:bg-secondary/80 cursor-pointer"
+                        className="rounded-xl border border-border bg-secondary px-4 py-3.5 text-sm font-medium hover:bg-secondary/80 cursor-pointer touch-manipulation"
                       >
                         Закрыть
                       </button>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { X, Check, Utensils, FileText } from 'lucide-react'
-import type { CartItem, GarnishIngredient } from '@/lib/cart'
+import { useState } from 'react'
+import { X, Check, Utensils } from 'lucide-react'
+import type { GarnishIngredient } from '@/lib/cart'
 
 export type GarnishMixerModalProps = {
   isOpen: boolean
@@ -24,46 +24,15 @@ type IngredientDef = {
   id: string
   name: string
   shortName: string
-  code: string
-  color: string
+  icon: string
 }
 
 const INGREDIENTS: IngredientDef[] = [
-  {
-    id: 'rice',
-    name: 'Рис отварной',
-    shortName: 'Рис',
-    code: 'РИС',
-    color: 'bg-amber-100 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200',
-  },
-  {
-    id: 'buckwheat',
-    name: 'Гречка',
-    shortName: 'Гречка',
-    code: 'ГРК',
-    color: 'bg-orange-100 dark:bg-orange-950/60 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200',
-  },
-  {
-    id: 'macaroni',
-    name: 'Макароны',
-    shortName: 'Макароны',
-    code: 'МАК',
-    color: 'bg-yellow-100 dark:bg-yellow-950/60 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-200',
-  },
-  {
-    id: 'puree',
-    name: 'Картофельное пюре',
-    shortName: 'Пюре',
-    code: 'ПЮР',
-    color: 'bg-stone-100 dark:bg-stone-900 border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-200',
-  },
-  {
-    id: 'fries',
-    name: 'Картошка фри',
-    shortName: 'Фри',
-    code: 'ФРИ',
-    color: 'bg-red-100 dark:bg-red-950/60 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200',
-  },
+  { id: 'puree', name: 'Картофельное пюре', shortName: 'Пюре', icon: '🥔' },
+  { id: 'rice', name: 'Рис отварной', shortName: 'Рис', icon: '🍚' },
+  { id: 'buckwheat', name: 'Гречка', shortName: 'Гречка', icon: '🌾' },
+  { id: 'macaroni', name: 'Макароны', shortName: 'Макароны', icon: '🍝' },
+  { id: 'fries', name: 'Картошка фри', shortName: 'Фри', icon: '🍟' },
 ]
 
 const PORTION_CONFIGS = {
@@ -71,13 +40,11 @@ const PORTION_CONFIGS = {
     label: 'Полпорции',
     price: 23000,
     weight: 180,
-    badge: '23 000 сум · 180 г',
   },
   full: {
-    label: '1 порция (Полная)',
+    label: '1 порция',
     price: 35000,
     weight: 350,
-    badge: '35 000 сум · 350 г',
   },
 }
 
@@ -92,127 +59,74 @@ export function GarnishMixerModal({
   initialSize = 'half',
 }: GarnishMixerModalProps) {
   const [size, setSize] = useState<'half' | 'full'>(initialSize)
-  // parts count per ingredient: { rice: 1, puree: 1, ... }
-  const [selectedParts, setSelectedParts] = useState<Record<string, number>>({
-    rice: 1,
-  })
+  const [mode, setMode] = useState<'single' | 'mix5050'>('single')
+  const [selectedSingle, setSelectedSingle] = useState<string>('puree')
+  const [selectedMix, setSelectedMix] = useState<[string, string]>(['puree', 'rice'])
   const [count, setCount] = useState<number>(1)
-
-  const activeConfig = PORTION_CONFIGS[size]
-
-  // Выбранные ингредиенты и их доли
-  const { mixBreakdown, totalParts, mixDescription } = useMemo(() => {
-    const activeEntries = Object.entries(selectedParts).filter(
-      ([, parts]) => parts > 0,
-    )
-    const sumParts = activeEntries.reduce((acc, [, parts]) => acc + parts, 0)
-
-    if (sumParts === 0) {
-      return {
-        mixBreakdown: [],
-        totalParts: 0,
-        mixDescription: 'Не выбран ингредиент',
-      }
-    }
-
-    const breakdown: GarnishIngredient[] = activeEntries.map(
-      ([id, parts]) => {
-        const def = INGREDIENTS.find((i) => i.id === id)!
-        const pct = Math.round((parts / sumParts) * 100)
-        const grams = Math.round((activeConfig.weight * parts) / sumParts)
-        return {
-          ingredient: def.shortName,
-          percent: pct,
-          grams,
-        }
-      },
-    )
-
-    let desc = ''
-    if (breakdown.length === 1) {
-      desc = `${breakdown[0].ingredient} (100%)`
-    } else {
-      desc = breakdown
-        .map((b) => `${b.ingredient} ${b.percent}%`)
-        .join(' + ')
-    }
-
-    return {
-      mixBreakdown: breakdown,
-      totalParts: sumParts,
-      mixDescription: desc,
-    }
-  }, [selectedParts, activeConfig.weight])
 
   if (!isOpen) return null
 
-  // Переключение одного ингредиента (выбор чистого вкуса в 1 клик)
-  function handleSelectSingle(id: string) {
-    setSelectedParts({ [id]: 1 })
-  }
+  const activeConfig = PORTION_CONFIGS[size]
 
-  // Переключение чекбокса / добавление в микс
-  function handleToggleIngredient(id: string) {
-    setSelectedParts((prev) => {
-      const current = prev[id] || 0
-      if (current > 0) {
-        const next = { ...prev }
-        delete next[id]
-        // если ничего не осталось, выберем первый
-        if (Object.keys(next).length === 0) {
-          return { [id]: 1 }
-        }
-        return next
-      } else {
-        return { ...prev, [id]: 1 }
-      }
+  // Обработка клика в режиме микса 50/50
+  function handleToggleMixIngredient(id: string) {
+    setSelectedMix((prev) => {
+      // Если уже выбран — не сбрасываем в 0, а оставляем
+      if (prev[0] === id) return prev
+      if (prev[1] === id) return prev
+      // Заменяем второй элемент новым выбором
+      return [prev[1], id]
     })
   }
 
-  // Увеличение доли ингредиента
-  function handleAdjustPart(id: string, delta: number) {
-    setSelectedParts((prev) => {
-      const current = prev[id] || 0
-      const nextVal = Math.max(0, current + delta)
-      const updated = { ...prev, [id]: nextVal }
-      if (nextVal === 0) delete updated[id]
-      if (Object.keys(updated).length === 0) {
-        return { rice: 1 }
-      }
-      return updated
-    })
-  }
-
-  // Быстрые пресеты
-  function handlePreset5050(id1: string, id2: string) {
-    setSelectedParts({ [id1]: 1, [id2]: 1 })
-  }
-
-  function handlePresetEqualAllSelected() {
-    const keys = Object.keys(selectedParts)
-    if (keys.length === 0) return
-    const next: Record<string, number> = {}
-    keys.forEach((k) => (next[k] = 1))
-    setSelectedParts(next)
-  }
-
-  // Добавление в корзину
+  // Подтверждение и добавление в чек
   function handleConfirm() {
-    if (mixBreakdown.length === 0) return
+    let title = ''
+    let notes = ''
+    let breakdown: GarnishIngredient[] = []
 
-    const sizeLabel = size === 'half' ? 'Полпорции' : '1 порция'
-    const title = `Гарнир (${sizeLabel}): ${mixDescription}`
-    const unitPrice = activeConfig.price
+    if (mode === 'single') {
+      const def = INGREDIENTS.find((i) => i.id === selectedSingle) || INGREDIENTS[0]
+      title = `Гарнир (${activeConfig.label}): ${def.name}`
+      notes = `${def.shortName} (${activeConfig.weight}г)`
+      breakdown = [
+        {
+          ingredient: def.shortName,
+          percent: 100,
+          grams: activeConfig.weight,
+        },
+      ]
+    } else {
+      const def1 = INGREDIENTS.find((i) => i.id === selectedMix[0]) || INGREDIENTS[0]
+      const def2 = INGREDIENTS.find((i) => i.id === selectedMix[1]) || INGREDIENTS[1]
+      const halfWeight = Math.round(activeConfig.weight / 2)
+
+      title = `Гарнир (${activeConfig.label}): ${def1.shortName} + ${def2.shortName} (50/50)`
+      notes = `${def1.shortName} 50% + ${def2.shortName} 50% (${activeConfig.weight}г)`
+      breakdown = [
+        {
+          ingredient: def1.shortName,
+          percent: 50,
+          grams: halfWeight,
+        },
+        {
+          ingredient: def2.shortName,
+          percent: 50,
+          grams: halfWeight,
+        },
+      ]
+    }
+
     const uniqueId = `side-${size}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
     onAddGarnish({
       id: uniqueId,
       name: title,
-      price: unitPrice,
+      price: activeConfig.price,
       category: 'sides',
       isKitchen: true,
-      notes: `Гарнир ${sizeLabel}: ${mixDescription} (${activeConfig.weight}г)`,
-      garnishMix: mixBreakdown,
+      notes,
+      garnishMix: breakdown,
       qty: count,
     })
 
@@ -220,293 +134,214 @@ export function GarnishMixerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-sm print:hidden">
-      <div className="flex flex-col max-h-[92vh] w-full max-w-lg rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-xs print:hidden select-none">
+      <div className="flex flex-col max-h-[92vh] w-full max-w-lg rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-card text-card-foreground shadow-2xl overflow-hidden">
         {/* Шапка */}
-        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 px-5 py-4 bg-zinc-50/70 dark:bg-zinc-900/60">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4 bg-muted/40">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
               <Utensils className="size-5" />
             </span>
             <div>
               <h2 className="text-base sm:text-lg font-black leading-tight">
-                Конструктор гарнира
+                Выбор гарнира
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                5 ингредиентов · Свободное микширование
+              <p className="text-xs text-muted-foreground">
+                Стандартная подача или 50/50 микс
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-xl bg-zinc-200 dark:bg-zinc-800 text-sm font-bold text-zinc-500 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition cursor-pointer"
+            className="flex size-9 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition cursor-pointer touch-manipulation active:scale-90"
+            aria-label="Закрыть"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        {/* Тело модала со скроллом */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          {/* 1. Выбор размера порции */}
+        {/* Тело модала */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          {/* 1. Размер порции */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider block mb-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
               1. Размер порции
             </label>
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setSize('half')}
-                className={`flex flex-col items-start p-3 rounded-2xl border transition text-left cursor-pointer ${
+                className={`flex flex-col p-3 rounded-2xl border-2 transition text-left cursor-pointer touch-manipulation active:scale-98 ${
                   size === 'half'
-                    ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-500/15 shadow-sm'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 bg-white dark:bg-zinc-900'
+                    ? 'border-amber-500 bg-amber-500/10 text-foreground shadow-xs'
+                    : 'border-border bg-card text-muted-foreground hover:border-border/80'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-xs sm:text-sm font-black">
+                  <span className="text-sm font-black text-foreground">
                     Полпорции (180 г)
                   </span>
-                  <span
-                    className={`size-4 rounded-full border flex items-center justify-center text-[10px] ${
-                      size === 'half'
-                        ? 'border-amber-500 bg-amber-500 text-black font-black'
-                        : 'border-zinc-300 dark:border-zinc-700'
-                    }`}
-                  >
-                    {size === 'half' && <Check className="size-2.5 text-black font-black" />}
-                  </span>
+                  {size === 'half' && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-amber-500 text-black">
+                      <Check className="size-3 stroke-[3]" />
+                    </span>
+                  )}
                 </div>
-                <span className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1">
+                <span className="text-base font-black text-amber-600 dark:text-amber-400 mt-1 font-mono">
                   23 000 сум
-                </span>
-                <span className="text-[11px] text-zinc-400 font-medium">
-                  Вес: 180 грамм
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSize('full')}
-                className={`flex flex-col items-start p-3 rounded-2xl border transition text-left cursor-pointer ${
+                className={`flex flex-col p-3 rounded-2xl border-2 transition text-left cursor-pointer touch-manipulation active:scale-98 ${
                   size === 'full'
-                    ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-500/15 shadow-sm'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 bg-white dark:bg-zinc-900'
+                    ? 'border-amber-500 bg-amber-500/10 text-foreground shadow-xs'
+                    : 'border-border bg-card text-muted-foreground hover:border-border/80'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-xs sm:text-sm font-black">
+                  <span className="text-sm font-black text-foreground">
                     1 порция (350 г)
                   </span>
-                  <span
-                    className={`size-4 rounded-full border flex items-center justify-center text-[10px] ${
-                      size === 'full'
-                        ? 'border-amber-500 bg-amber-500 text-black font-black'
-                        : 'border-zinc-300 dark:border-zinc-700'
-                    }`}
-                  >
-                    {size === 'full' && <Check className="size-2.5 text-black font-black" />}
-                  </span>
+                  {size === 'full' && (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-amber-500 text-black">
+                      <Check className="size-3 stroke-[3]" />
+                    </span>
+                  )}
                 </div>
-                <span className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1">
+                <span className="text-base font-black text-amber-600 dark:text-amber-400 mt-1 font-mono">
                   35 000 сум
                 </span>
-                <span className="text-[11px] text-zinc-400 font-medium">
-                  Вес: 350 грамм
-                </span>
               </button>
             </div>
           </div>
 
-          {/* 2. Быстрые шаблоны */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                2. Быстрые миксы (50/50)
-              </label>
-              <button
-                type="button"
-                onClick={handlePresetEqualAllSelected}
-                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
-              >
-                Поровну
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => handlePreset5050('rice', 'buckwheat')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
-              >
-                Рис + Гречка (50/50)
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePreset5050('puree', 'rice')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
-              >
-                Пюре + Рис (50/50)
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePreset5050('puree', 'fries')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
-              >
-                Пюре + Фри (50/50)
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePreset5050('macaroni', 'puree')}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 cursor-pointer"
-              >
-                Макароны + Пюре (50/50)
-              </button>
-            </div>
-          </div>
-
-          {/* 3. Ингредиенты и регуляторы долей */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">
-              3. Выберите состав (5 ингредиентов)
+          {/* 2. Режим: Один или Микс 50/50 */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+              2. Формат гарнира
             </label>
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/60 border border-border">
+              <button
+                type="button"
+                onClick={() => setMode('single')}
+                className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+                  mode === 'single'
+                    ? 'bg-card text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Один гарнир (100%)
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('mix5050')}
+                className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 ${
+                  mode === 'mix5050'
+                    ? 'bg-card text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Микс 50 / 50 (Два гарнира)
+              </button>
+            </div>
+          </div>
 
-            <div className="space-y-1.5">
+          {/* 3. Выбор гарнира */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {mode === 'single'
+                  ? '3. Выберите гарнир'
+                  : '3. Выберите 2 гарнира (по 50%)'}
+              </label>
+              {mode === 'mix5050' && (
+                <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
+                  {INGREDIENTS.find((i) => i.id === selectedMix[0])?.shortName} +{' '}
+                  {INGREDIENTS.find((i) => i.id === selectedMix[1])?.shortName}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {INGREDIENTS.map((ing) => {
-                const parts = selectedParts[ing.id] || 0
-                const isSelected = parts > 0
-                const percent =
-                  totalParts > 0 ? Math.round((parts / totalParts) * 100) : 0
-                const grams =
-                  totalParts > 0
-                    ? Math.round((activeConfig.weight * parts) / totalParts)
-                    : 0
+                const isSingleSelected = mode === 'single' && selectedSingle === ing.id
+                const isMixSelected = mode === 'mix5050' && selectedMix.includes(ing.id)
+                const isSelected = mode === 'single' ? isSingleSelected : isMixSelected
 
                 return (
-                  <div
+                  <button
                     key={ing.id}
-                    className={`flex items-center justify-between p-2.5 rounded-2xl border transition ${
+                    type="button"
+                    onClick={() => {
+                      if (mode === 'single') {
+                        setSelectedSingle(ing.id)
+                      } else {
+                        handleToggleMixIngredient(ing.id)
+                      }
+                    }}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition text-left cursor-pointer touch-manipulation active:scale-98 min-h-[56px] ${
                       isSelected
-                        ? 'border-amber-500/60 bg-zinc-50 dark:bg-zinc-900/90 shadow-xs'
-                        : 'border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 opacity-70'
+                        ? 'border-amber-500 bg-amber-500/10 text-foreground font-black shadow-2xs'
+                        : 'border-border bg-card text-foreground/80 hover:border-border/80'
                     }`}
                   >
-                    {/* Кнопка выбора / название */}
-                    <div
-                      onClick={() => handleToggleIngredient(ing.id)}
-                      className="flex items-center gap-2.5 flex-1 cursor-pointer select-none"
-                    >
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black font-mono text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0">
-                        {ing.code}
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl select-none" aria-hidden="true">
+                        {ing.icon}
                       </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white">
-                            {ing.name}
+                      <span className="text-sm font-bold leading-tight">
+                        {ing.name}
+                      </span>
+                    </div>
+
+                    <div>
+                      {mode === 'single' ? (
+                        isSingleSelected ? (
+                          <span className="flex size-6 items-center justify-center rounded-full bg-amber-500 text-black">
+                            <Check className="size-3.5 stroke-[3]" />
                           </span>
-                          {isSelected && (
-                            <span className="rounded-md bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-black text-amber-600 dark:text-amber-400">
-                              {percent}% ({grams}г)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Управление долями ингредиента */}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectSingle(ing.id)}
-                        className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-amber-500 hover:text-black transition"
-                        title="Выбрать только этот гарнир 100%"
-                      >
-                        100%
-                      </button>
-
-                      <div className="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustPart(ing.id, -1)}
-                          disabled={parts === 0}
-                          className="flex size-6 items-center justify-center rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 disabled:opacity-30"
-                        >
-                          −
-                        </button>
-                        <span className="min-w-6 text-center text-xs font-black text-zinc-900 dark:text-white">
-                          {parts}
+                        ) : (
+                          <span className="size-5 rounded-full border-2 border-muted-foreground/30" />
+                        )
+                      ) : isMixSelected ? (
+                        <span className="rounded-lg bg-amber-500 px-2 py-0.5 text-xs font-black text-black font-mono">
+                          50%
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustPart(ing.id, 1)}
-                          className="flex size-6 items-center justify-center rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                        >
-                          +
-                        </button>
-                      </div>
+                      ) : (
+                        <span className="size-5 rounded-lg border-2 border-muted-foreground/30" />
+                      )}
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
-          </div>
-
-          {/* 4. Визуальная шкала пропорций */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 p-3 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-zinc-400">Итоговый состав:</span>
-              <span className="font-black text-amber-600 dark:text-amber-400">
-                {activeConfig.weight} грамм
-              </span>
-            </div>
-
-            {/* Прогресс-бар микса */}
-            <div className="h-4 w-full rounded-xl overflow-hidden flex bg-zinc-200 dark:bg-zinc-800">
-              {mixBreakdown.map((item, idx) => {
-                const colors = [
-                  'bg-amber-500',
-                  'bg-orange-500',
-                  'bg-emerald-500',
-                  'bg-sky-500',
-                  'bg-rose-500',
-                ]
-                return (
-                  <div
-                    key={item.ingredient}
-                    style={{ width: `${item.percent}%` }}
-                    className={`${colors[idx % colors.length]} h-full transition-all flex items-center justify-center text-[9px] font-black text-black overflow-hidden`}
-                    title={`${item.ingredient}: ${item.percent}%`}
-                  >
-                    {item.percent >= 15 ? `${item.ingredient} ${item.percent}%` : ''}
-                  </div>
-                )
-              })}
-            </div>
-
-            <p className="flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200">
-              <FileText className="size-3.5 text-zinc-400 shrink-0" />
-              <span>{mixDescription}</span>
-            </p>
           </div>
         </div>
 
-        {/* Подвал с добавлением в чек */}
-        <div className="border-t border-zinc-100 dark:border-zinc-800 px-5 py-3.5 bg-zinc-50 dark:bg-zinc-900/80 flex items-center justify-between gap-3">
+        {/* Подвал: количество и добавление в чек */}
+        <div className="border-t border-border px-5 py-4 bg-muted/40 flex items-center justify-between gap-3">
           {/* Количество порций */}
-          <div className="flex items-center gap-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-1">
+          <div className="flex items-center gap-1.5 rounded-2xl border border-border bg-card p-1 shadow-2xs">
             <button
               type="button"
               onClick={() => setCount((c) => Math.max(1, c - 1))}
-              className="flex size-8 items-center justify-center rounded-xl text-sm font-black text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              className="flex size-10 items-center justify-center rounded-xl text-base font-black text-foreground hover:bg-secondary active:scale-90 transition cursor-pointer touch-manipulation"
+              aria-label="Уменьшить количество"
             >
               −
             </button>
-            <span className="min-w-6 text-center text-sm font-black text-zinc-900 dark:text-white">
+            <span className="min-w-8 text-center text-sm sm:text-base font-black font-mono text-foreground">
               {count}
             </span>
             <button
               type="button"
               onClick={() => setCount((c) => c + 1)}
-              className="flex size-8 items-center justify-center rounded-xl text-sm font-black text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              className="flex size-10 items-center justify-center rounded-xl text-base font-black text-foreground hover:bg-secondary active:scale-90 transition cursor-pointer touch-manipulation"
+              aria-label="Увеличить количество"
             >
               +
             </button>
@@ -516,13 +351,15 @@ export function GarnishMixerModal({
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 rounded-2xl bg-amber-500 py-3 px-4 text-xs sm:text-sm font-black text-black shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 active:scale-98 cursor-pointer flex items-center justify-between"
+            className="flex-1 min-h-[50px] rounded-2xl bg-amber-500 py-3 px-4 text-sm sm:text-base font-black text-black shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 active:scale-95 cursor-pointer flex items-center justify-between touch-manipulation"
           >
-            <span className="inline-flex items-center gap-1.5">
-              <Check className="size-4" />
+            <span className="inline-flex items-center gap-2">
+              <Check className="size-5 stroke-[2.5]" />
               <span>Добавить в чек</span>
             </span>
-            <span className="font-mono">{formatNum(activeConfig.price * count)} сум</span>
+            <span className="font-mono font-black">
+              {formatNum(activeConfig.price * count)} сум
+            </span>
           </button>
         </div>
       </div>

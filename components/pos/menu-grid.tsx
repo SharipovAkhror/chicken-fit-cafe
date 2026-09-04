@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X, Sliders, Plus, UtensilsCrossed } from 'lucide-react'
+import { Search, X, Utensils, Plus, UtensilsCrossed } from 'lucide-react'
 import type { MenuItem } from '@/lib/menu'
 
 type Props = {
@@ -168,13 +168,13 @@ export function MenuGrid({
               >
                 <div className="space-y-1.5 w-full">
                   <div className="aspect-[4/3] w-full flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                    <Sliders className="size-7" />
+                    <Utensils className="size-7" />
                   </div>
                   <h3 className="text-xs sm:text-sm font-black leading-tight text-foreground">
-                    Конструктор гарнира
+                    Сборный гарнир
                   </h3>
                   <p className="text-[11px] text-muted-foreground line-clamp-1">
-                    Микс: Рис / Гречка / Пюре / Макароны
+                    Один или 50/50: Рис, Гречка, Пюре, Фри
                   </p>
                 </div>
                 <div className="mt-2 flex items-baseline justify-between border-t border-amber-500/30 pt-2 w-full">
