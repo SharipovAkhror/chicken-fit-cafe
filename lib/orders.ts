@@ -340,11 +340,12 @@ export async function createOrder(data: {
         status: newOrder.status,
       })
 
-      // Если в БД еще не выполнена миграция колонок (subtotal, shift_id и т.д.),
-      // гарантированно сохраняем с базовыми колонками, чтобы данные не терялись
+      // Если в БД еще не выполнена миграция колонок (subtotal, shift_id и т.д.) или ограничение статусов,
+      // гарантированно сохраняем с базовыми колонками и допустимым статусом, чтобы данные не терялись
       if (fullErr) {
         console.warn('Supabase full order insert failed, falling back to base columns:', fullErr.message)
-        await supabase.from('orders').insert({
+        const safeStatus = ['completed', 'cancelled'].includes(newOrder.status) ? newOrder.status : 'completed'
+        const { error: fallbackErr } = await supabase.from('orders').insert({
           id: newOrder.id,
           order_number: newOrder.orderNumber,
           order_type: newOrder.type,
@@ -356,8 +357,11 @@ export async function createOrder(data: {
           payment_method: newOrder.paymentMethod,
           cash_received: newOrder.cashReceived ?? null,
           change_amount: newOrder.changeAmount ?? null,
-          status: newOrder.status,
+          status: safeStatus,
         })
+        if (fallbackErr) {
+          console.warn('Supabase fallback order insert also failed:', fallbackErr.message)
+        }
       }
     } catch (err) {
       console.warn('Supabase order insert failed, order saved locally:', err)

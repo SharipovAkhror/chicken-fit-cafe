@@ -17,9 +17,14 @@ jobs:
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "apikey: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrdm9udHF1cmd6b3BkbXNkbWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NzgzNzIsImV4cCI6MjEwMjI1NDM3Mn0.URw3FfSKNXm1LdXtf6rCUQL-EITRObj-zd5oJmQFqq0' }}" \
             "https://ikvontqurgzopdmsdmla.supabase.co/rest/v1/categories?select=id&limit=1")
-          echo "Response HTTP Status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -eq 200 ]; then
+          echo "Supabase direct HTTP Status: $HTTP_STATUS"
+
+          echo "Pinging Production Keep-Alive API..."
+          VERCEL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://chicken-fit-cafe.vercel.app/api/keepalive")
+          echo "Vercel API HTTP Status: $VERCEL_STATUS"
+
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$VERCEL_STATUS" -eq 200 ]; then
             echo "✅ Supabase is alive and active! Auto-pause prevented."
           else
-            echo "⚠️ Unexpected HTTP status: $HTTP_STATUS"
+            echo "⚠️ Warning: Check response codes ($HTTP_STATUS / $VERCEL_STATUS)"
           fi

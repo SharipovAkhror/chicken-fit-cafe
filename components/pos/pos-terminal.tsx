@@ -20,9 +20,11 @@ import {
   CheckCircle2,
   QrCode,
   UtensilsCrossed,
+  Database,
+  Cloud,
 } from 'lucide-react'
 import menuJson from '@/content/menu.json'
-import type { Localized, MenuItem } from '@/lib/menu'
+import { getLiveMenu, type Localized, MenuItem } from '@/lib/menu'
 import {
   addItem,
   removeItem,
@@ -238,12 +240,37 @@ export function PosTerminal() {
 
   const isCurrentTableOccupied = Boolean(currentActiveOrder)
 
+  // Статус сетевой связности с облачной БД Supabase
+  const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'checking'>('checking')
+  const [dbLatency, setDbLatency] = useState<number | null>(null)
+
   // Данные для печати текущего чека
   const [receiptData, setReceiptData] = useState<ReceiptProps | null>(null)
 
   const reloadOrders = useCallback(async () => {
     const orders = await fetchTodayOrders()
     setTodayOrders(orders)
+  }, [])
+
+  // Проверка доступности Supabase и пинг задержки
+  const checkDatabaseHealth = useCallback(async () => {
+    if (!supabase) {
+      setDbStatus('offline')
+      return
+    }
+    try {
+      const t0 = performance.now()
+      const { error } = await supabase.from('categories').select('id').limit(1)
+      const lat = Math.round(performance.now() - t0)
+      if (!error) {
+        setDbStatus('online')
+        setDbLatency(lat)
+      } else {
+        setDbStatus('offline')
+      }
+    } catch {
+      setDbStatus('offline')
+    }
   }, [])
 
   // Realtime подписка на заказы (Supabase + BroadcastChannel)
@@ -254,6 +281,54 @@ export function PosTerminal() {
     })
     return () => unsubscribe()
   }, [reloadOrders])
+
+  // Heartbeat пинг базы данных и загрузка актуального каталога блюд из Supabase
+  useEffect(() => {
+    checkDatabaseHealth()
+    const interval = setInterval(checkDatabaseHealth, 3 * 60 * 1000)
+
+    // Подтягиваем свежие блюда из Supabase (если добавляли с других устройств)
+    if (supabase) {
+      getLiveMenu()
+        .then((liveMenu) => {
+          if (liveMenu && liveMenu.categories && liveMenu.categories.length > 0) {
+            setCategories((prev) => {
+              const catMap = new Map<string, CategoryData>()
+              prev.forEach((c) => catMap.set(c.id, { ...c, items: [...c.items] }))
+
+              liveMenu.categories.forEach((liveCat) => {
+                const existing = catMap.get(liveCat.id)
+                const titleStr =
+                  typeof liveCat.title === 'string'
+                    ? liveCat.title
+                    : liveCat.title.ru ?? Object.values(liveCat.title)[0] ?? ''
+
+                if (existing) {
+                  const existingIds = new Set(existing.items.map((it) => it.id))
+                  const merged = [...existing.items]
+                  liveCat.items.forEach((it) => {
+                    if (!existingIds.has(it.id)) {
+                      merged.push(it)
+                    }
+                  })
+                  catMap.set(liveCat.id, { ...existing, items: merged })
+                } else {
+                  catMap.set(liveCat.id, {
+                    id: liveCat.id,
+                    title: titleStr,
+                    items: [...liveCat.items],
+                  })
+                }
+              })
+              return Array.from(catMap.values())
+            })
+          }
+        })
+        .catch(console.warn)
+    }
+
+    return () => clearInterval(interval)
+  }, [checkDatabaseHealth])
 
   function persistMenuOverrides(updated: CategoryData[]) {
     setCategories(updated)
@@ -290,7 +365,14 @@ export function PosTerminal() {
       }))
       persistMenuOverrides(updated)
       if (supabase) {
-        supabase.from('menu_items').update({ available }).eq('id', itemId).then()
+        supabase
+          .from('menu_items')
+          .update({ available })
+          .eq('id', itemId)
+          .then(({ error }) => {
+            if (error) console.warn('Supabase update available error:', error.message)
+          })
+          .catch(console.warn)
       }
     },
     [categories],
@@ -304,7 +386,14 @@ export function PosTerminal() {
       }))
       persistMenuOverrides(updated)
       if (supabase) {
-        supabase.from('menu_items').update({ price }).eq('id', itemId).then()
+        supabase
+          .from('menu_items')
+          .update({ price })
+          .eq('id', itemId)
+          .then(({ error }) => {
+            if (error) console.warn('Supabase update price error:', error.message)
+          })
+          .catch(console.warn)
       }
     },
     [categories],
@@ -355,10 +444,21 @@ export function PosTerminal() {
             kcal: item.calories || null,
             weight: item.weight || null,
           })
-          .then()
+          .then(({ error }) => {
+            if (error) {
+              console.warn('Supabase menu item upsert error:', error.message)
+              setToastMessage(`Позиция сохранена в локальный кэш (БД: ${error.message})`)
+            } else {
+              setToastMessage(`Позиция "${item.name}" сохранена в облаке Supabase! ☁️`)
+            }
+          })
+          .catch((err) => {
+            console.warn('Supabase upsert network error:', err)
+          })
+      } else {
+        setToastMessage(`Позиция "${item.name}" сохранена локально`)
       }
-      setToastMessage(`Позиция "${item.name}" добавлена в меню!`)
-      setTimeout(() => setToastMessage(null), 3000)
+      setTimeout(() => setToastMessage(null), 3500)
     },
     [categories],
   )
@@ -389,12 +489,21 @@ export function PosTerminal() {
             kcal: item.calories || item.kcal || null,
             weight: item.weight || null,
           })
-          .then()
+          .then(({ error }) => {
+            if (error) {
+              console.warn('Supabase edit item error:', error.message)
+              setToastMessage(`Блюдо обновлено локально (ошибка БД: ${error.message})`)
+            } else {
+              setToastMessage(`Блюдо "${nameStr}" обновлено в Supabase! ☁️`)
+            }
+          })
+          .catch((err) => {
+            console.warn('Network error editing item:', err)
+          })
+      } else {
+        setToastMessage(`Блюдо "${nameStr}" обновлено локально`)
       }
-      setToastMessage(
-        `Блюдо "${typeof item.name === 'string' ? item.name : item.name.ru ?? ''}" обновлено`,
-      )
-      setTimeout(() => setToastMessage(null), 3000)
+      setTimeout(() => setToastMessage(null), 3500)
     },
     [categories],
   )
@@ -417,9 +526,21 @@ export function PosTerminal() {
         } catch {}
       }
       if (supabase) {
-        supabase.from('menu_items').delete().eq('id', itemId).then()
+        supabase
+          .from('menu_items')
+          .delete()
+          .eq('id', itemId)
+          .then(({ error }) => {
+            if (error) {
+              console.warn('Supabase delete item error:', error.message)
+            } else {
+              setToastMessage(`Позиция удалена из Supabase и кассы ☁️`)
+            }
+          })
+          .catch(console.warn)
+      } else {
+        setToastMessage(`Позиция удалена из меню`)
       }
-      setToastMessage(`Позиция удалена из меню`)
       setTimeout(() => setToastMessage(null), 3000)
     },
     [categories],
@@ -1281,6 +1402,51 @@ export function PosTerminal() {
 
           {/* Правая часть: кассир, термолента, админ, тема, блокировка */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* 🟢 Индикатор облачной БД Supabase */}
+            <button
+              type="button"
+              onClick={checkDatabaseHealth}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-bold transition cursor-pointer touch-manipulation ${
+                dbStatus === 'online'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 shadow-2xs'
+                  : dbStatus === 'checking'
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 animate-pulse'
+                  : 'border-zinc-400/40 bg-zinc-500/10 text-zinc-500 hover:bg-zinc-500/20'
+              }`}
+              title={
+                dbStatus === 'online'
+                  ? `Supabase подключена (${dbLatency ? `${dbLatency}мс` : 'активна'}). Нажмите для повторной проверки.`
+                  : dbStatus === 'checking'
+                  ? 'Проверка связи с Supabase...'
+                  : 'Автономный режим (Supabase недоступна). Нажмите для переподключения.'
+              }
+            >
+              <span className="relative flex size-2 shrink-0">
+                {dbStatus === 'online' && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span
+                  className={`relative inline-flex size-2 rounded-full ${
+                    dbStatus === 'online'
+                      ? 'bg-emerald-500'
+                      : dbStatus === 'checking'
+                      ? 'bg-amber-500'
+                      : 'bg-zinc-400'
+                  }`}
+                ></span>
+              </span>
+              <Database className="size-3.5" />
+              <span className="hidden xl:inline text-[11px] font-mono">
+                {dbStatus === 'online'
+                  ? dbLatency
+                    ? `${dbLatency}мс`
+                    : 'БД'
+                  : dbStatus === 'checking'
+                  ? 'Проверка'
+                  : 'Офлайн'}
+              </span>
+            </button>
+
             {/* Переключатель ленты принтера */}
             <div className="hidden lg:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
               <Printer className="size-3.5 text-muted-foreground ml-1.5" />
