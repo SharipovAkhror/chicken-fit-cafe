@@ -1,5 +1,6 @@
 import type { CartItem } from './cart'
 import { supabase } from './supabase'
+import { enqueueOrderSync, removeOrderFromOutbox } from './sync-outbox'
 
 export type OrderType = 'dine_in' | 'takeaway' | 'delivery'
 export type PaymentMethod = 'cash' | 'click_payme'
@@ -29,6 +30,7 @@ export type Order = {
   readyAt?: string
   precheckPrintedAt?: string
   completedAt?: string
+  syncStatus?: 'synced' | 'pending' | 'failed'
 }
 
 export type Shift = {
@@ -310,16 +312,21 @@ export async function createOrder(data: {
     precheckPrintedAt: data.precheckPrintedAt,
   }
 
-  // 1. Всегда сохраняем в локальное хранилище для мгновенного доступа
+  // 1. Всегда мгновенно сохраняем в локальное хранилище кассы
+  newOrder.syncStatus = 'pending'
   saveLocalOrder(newOrder)
 
   // 2. Broadcast event locally for other tabs (POS & KDS)
   broadcastOrderEvent('new', newOrder)
 
-  // 3. Если подключен Supabase — сохраняем в облако
+  // 3. Добавляем в очередь Outbox для гарантированной доставки даже при обрыве связи
+  enqueueOrderSync(newOrder.id, newOrder.orderNumber, newOrder, 'create')
+
+  // 4. Если подключен Supabase — пробуем отправить в облако прямо сейчас
   if (supabase) {
     try {
-      const { error: fullErr } = await supabase.from('orders').insert({
+      const safeStatus = ['completed', 'cancelled'].includes(newOrder.status) ? newOrder.status : 'completed'
+      const { error: fullErr } = await supabase.from('orders').upsert({
         id: newOrder.id,
         order_number: newOrder.orderNumber,
         order_type: newOrder.type,
@@ -327,44 +334,23 @@ export async function createOrder(data: {
         customer_phone: newOrder.customerPhone ?? null,
         delivery_address: newOrder.deliveryAddress ?? null,
         items: newOrder.items,
-        subtotal: newOrder.subtotal ?? null,
-        discount_percent: newOrder.discountPercent ?? null,
-        discount_amount: newOrder.discountAmount ?? null,
-        delivery_fee: newOrder.deliveryFee ?? null,
         total_amount: newOrder.total,
         payment_method: newOrder.paymentMethod,
         cash_received: newOrder.cashReceived ?? null,
         change_amount: newOrder.changeAmount ?? null,
-        shift_id: newOrder.shiftId ?? null,
-        cashier_name: newOrder.cashierName ?? null,
-        status: newOrder.status,
+        status: safeStatus,
       })
 
-      // Если в БД еще не выполнена миграция колонок (subtotal, shift_id и т.д.) или ограничение статусов,
-      // гарантированно сохраняем с базовыми колонками и допустимым статусом, чтобы данные не терялись
-      if (fullErr) {
-        console.warn('Supabase full order insert failed, falling back to base columns:', fullErr.message)
-        const safeStatus = ['completed', 'cancelled'].includes(newOrder.status) ? newOrder.status : 'completed'
-        const { error: fallbackErr } = await supabase.from('orders').insert({
-          id: newOrder.id,
-          order_number: newOrder.orderNumber,
-          order_type: newOrder.type,
-          table_number: newOrder.tableNumber ?? null,
-          customer_phone: newOrder.customerPhone ?? null,
-          delivery_address: newOrder.deliveryAddress ?? null,
-          items: newOrder.items,
-          total_amount: newOrder.total,
-          payment_method: newOrder.paymentMethod,
-          cash_received: newOrder.cashReceived ?? null,
-          change_amount: newOrder.changeAmount ?? null,
-          status: safeStatus,
-        })
-        if (fallbackErr) {
-          console.warn('Supabase fallback order insert also failed:', fallbackErr.message)
-        }
+      if (!fullErr) {
+        // Успешно доставлено в облако! Снимаем из очереди Outbox
+        removeOrderFromOutbox(newOrder.id)
+        newOrder.syncStatus = 'synced'
+        saveLocalOrder(newOrder)
+      } else {
+        console.warn('Supabase direct order sync failed, order queued in Outbox:', fullErr.message)
       }
     } catch (err) {
-      console.warn('Supabase order insert failed, order saved locally:', err)
+      console.warn('Supabase order network failure, safely stored in Outbox queue:', err)
     }
   }
 
@@ -435,10 +421,16 @@ export async function updateOrder(orderId: string, updates: Partial<Order>): Pro
       if (updates.type !== undefined) payload.order_type = updates.type
 
       if (Object.keys(payload).length > 0) {
-        await supabase.from('orders').update(payload).eq('id', orderId)
+        enqueueOrderSync(orderId, updated.orderNumber, updated, 'update')
+        const { error } = await supabase.from('orders').update(payload).eq('id', orderId)
+        if (!error) {
+          removeOrderFromOutbox(orderId)
+        } else {
+          console.warn('Supabase update error, queued in Outbox:', error.message)
+        }
       }
     } catch (err) {
-      console.warn('Supabase updateOrder failed, updated locally:', err)
+      console.warn('Supabase updateOrder network error, safely queued in Outbox:', err)
     }
   }
 
@@ -513,30 +505,49 @@ export async function fetchTodayOrders(): Promise<Order[]> {
   const startOfLocalDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString()
   const todayLocalStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-  if (supabase) {
-    try {
-      let query = supabase.from('orders').select('*')
-      if (current?.id) {
-        query = query.or(`shift_id.eq.${current.id},created_at.gte.${startOfLocalDay}`)
-      } else {
-        query = query.gte('created_at', startOfLocalDay)
-      }
+  // Локальные заказы кассы за сегодня
+  const local = getLocalOrders()
+  const localToday = local.filter((o) => {
+    if (current && (o.shiftId === current.id || o.createdAt >= current.openedAt)) {
+      return true
+    }
+    const orderDate = new Date(o.createdAt)
+    const orderLocalStr = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`
+    return orderLocalStr === todayLocalStr
+  })
 
-      let { data, error } = await query.order('created_at', { ascending: false })
+  if (!supabase) {
+    return localToday
+  }
 
-      if (error && current?.id) {
-        // Резервный запрос без shift_id, если колонка еще не создана в БД
-        const retry = await supabase
-          .from('orders')
-          .select('*')
-          .gte('created_at', startOfLocalDay)
-          .order('created_at', { ascending: false })
-        data = retry.data
-        error = retry.error
-      }
+  try {
+    let query = supabase.from('orders').select('*')
+    if (current?.id) {
+      query = query.or(`shift_id.eq.${current.id},created_at.gte.${startOfLocalDay}`)
+    } else {
+      query = query.gte('created_at', startOfLocalDay)
+    }
 
-      if (!error && data) {
-        return data.map((row) => ({
+    let { data, error } = await query.order('created_at', { ascending: false })
+
+    if (error && current?.id) {
+      // Резервный запрос без shift_id, если колонка еще не создана в БД
+      const retry = await supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', startOfLocalDay)
+        .order('created_at', { ascending: false })
+      data = retry.data
+      error = retry.error
+    }
+
+    if (!error && data) {
+      // Smart Merge: объединяем заказы из Supabase с локальным кэшем кассы
+      const ordersMap = new Map<string, Order>()
+
+      // 1. Загружаем удаленные заказы из облака
+      data.forEach((row) => {
+        ordersMap.set(row.id, {
           id: row.id,
           orderNumber: row.order_number,
           createdAt: row.created_at,
@@ -556,22 +567,33 @@ export async function fetchTodayOrders(): Promise<Order[]> {
           shiftId: row.shift_id,
           cashierName: row.cashier_name,
           status: (row.status as OrderStatus) || 'pending',
-        }))
-      }
-    } catch {
-      // fallback to local
+          syncStatus: 'synced',
+        })
+      })
+
+      // 2. Накладываем локальные заказы (гарантируем, что только что пробитые офлайн чеки не пропадут)
+      localToday.forEach((loc) => {
+        const remote = ordersMap.get(loc.id)
+        if (!remote) {
+          // Заказ создан локально, но еще в очереди Outbox — показываем его на кассе!
+          ordersMap.set(loc.id, { ...loc, syncStatus: 'pending' })
+        } else {
+          // Если локальная копия содержит дозаказ или более свежие позиции
+          if ((loc.items?.length || 0) >= (remote.items?.length || 0)) {
+            ordersMap.set(loc.id, { ...remote, ...loc })
+          }
+        }
+      })
+
+      return Array.from(ordersMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
     }
+  } catch (err) {
+    console.warn('fetchTodayOrders network fallback to local:', err)
   }
 
-  const local = getLocalOrders()
-  return local.filter((o) => {
-    if (current && (o.shiftId === current.id || o.createdAt >= current.openedAt)) {
-      return true
-    }
-    const orderDate = new Date(o.createdAt)
-    const orderLocalStr = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`
-    return orderLocalStr === todayLocalStr
-  })
+  return localToday
 }
 
 /** Подписка на Realtime заказы (Supabase + BroadcastChannel fallback) */

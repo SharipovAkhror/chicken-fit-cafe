@@ -41,6 +41,7 @@
    - [x] Трёхуровневая система Keep-Alive против авто-усыпления (Auto-Pause) Supabase: Vercel Cron (`vercel.json` + `app/api/keepalive/route.ts`), GitHub Actions workflow (`.github/workflows/supabase-keepalive.yml`) и клиентский фоновый Heartbeat раз в 3 минуты.
    - [x] Визуальный пульсирующий индикатор состояния облачной базы данных (`🟢 Supabase 85мс`) прямо в шапке кассы с мгновенным ручным тестом связности.
    - [x] Двусторонний мердж блюд: касса при старте подтягивает свежие позиции из Supabase Cloud (`getLiveMenu()`), объединяя их с локальным кэшем, а созданные кассиром блюда мгновенно пишутся в облако с обратной связью.
+   - [x] Отказоустойчивость ресторанного ERP-уровня (Offline-First Outbox Engine): фоновая очередь синхронизации заказов и меню (`lib/sync-outbox.ts`), Smart Merge локального кэша и Supabase (без потери офлайн-чеков), защита от повторных кликов (Double-Submit Mutex) и изоляция сбоев интерфейса через `PosErrorBoundary`.
 
 ---
 

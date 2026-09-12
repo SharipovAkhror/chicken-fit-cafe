@@ -79,6 +79,12 @@ import { MenuManager } from './menu-manager'
 import { QrManager } from './qr-manager'
 import { KdsScreen } from './kds-screen'
 import { TablePlan } from './table-plan'
+import { PosErrorBoundary } from './pos-error-boundary'
+import {
+  enqueueMenuMutation,
+  subscribeToSyncStatus,
+  processOutboxQueue,
+} from '@/lib/sync-outbox'
 
 type CategoryData = {
   id: string
@@ -244,6 +250,24 @@ export function PosTerminal() {
   const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'checking'>('checking')
   const [dbLatency, setDbLatency] = useState<number | null>(null)
 
+  // Очередь отложенной синхронизации (Outbox) для 100% защиты при обрыве связи
+  const [outboxStatus, setOutboxStatus] = useState<{ pendingOrders: number; pendingMenu: number; isSyncing: boolean }>({
+    pendingOrders: 0,
+    pendingMenu: 0,
+    isSyncing: false,
+  })
+
+  // Защита от повторных кликов при оформлении (Double-Submit Mutex)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+  // Подписка на статус очереди Outbox
+  useEffect(() => {
+    const unsub = subscribeToSyncStatus((status) => {
+      setOutboxStatus(status)
+    })
+    return () => unsub()
+  }, [])
+
   // Данные для печати текущего чека
   const [receiptData, setReceiptData] = useState<ReceiptProps | null>(null)
 
@@ -364,6 +388,8 @@ export function PosTerminal() {
         items: cat.items.map((it) => (it.id === itemId ? { ...it, available } : it)),
       }))
       persistMenuOverrides(updated)
+      // Очередь Outbox для гарантированной доставки
+      enqueueMenuMutation(itemId, 'upsert', { id: itemId, available })
       if (supabase) {
         supabase
           .from('menu_items')
@@ -385,6 +411,8 @@ export function PosTerminal() {
         items: cat.items.map((it) => (it.id === itemId ? { ...it, price } : it)),
       }))
       persistMenuOverrides(updated)
+      // Очередь Outbox для гарантированной доставки
+      enqueueMenuMutation(itemId, 'upsert', { id: itemId, price })
       if (supabase) {
         supabase
           .from('menu_items')
@@ -430,24 +458,30 @@ export function PosTerminal() {
         cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
       )
       persistMenuOverrides(updated)
+
+      const payload = {
+        id: item.id,
+        category_id: item.categoryId,
+        name_ru: item.name,
+        price: item.price,
+        description_ru: item.description || null,
+        image_url: item.image || null,
+        available: true,
+        kcal: item.calories || null,
+        weight: item.weight || null,
+      }
+
+      // Очередь Outbox: ни одно созданное блюдо не пропадет!
+      enqueueMenuMutation(item.id, 'upsert', payload)
+
       if (supabase) {
         supabase
           .from('menu_items')
-          .upsert({
-            id: item.id,
-            category_id: item.categoryId,
-            name_ru: item.name,
-            price: item.price,
-            description_ru: item.description || null,
-            image_url: item.image || null,
-            available: true,
-            kcal: item.calories || null,
-            weight: item.weight || null,
-          })
+          .upsert(payload)
           .then(({ error }) => {
             if (error) {
               console.warn('Supabase menu item upsert error:', error.message)
-              setToastMessage(`Позиция сохранена в локальный кэш (БД: ${error.message})`)
+              setToastMessage(`Позиция сохранена локально и в очереди Outbox (БД: ${error.message})`)
             } else {
               setToastMessage(`Позиция "${item.name}" сохранена в облаке Supabase! ☁️`)
             }
@@ -473,26 +507,32 @@ export function PosTerminal() {
         return { ...cat, items }
       })
       persistMenuOverrides(updated)
+
+      const nameStr = typeof item.name === 'string' ? item.name : item.name.ru ?? ''
+      const descStr = typeof item.description === 'string' ? item.description : item.description?.ru ?? ''
+      const payload = {
+        id: item.id,
+        category_id: categoryId,
+        name_ru: nameStr,
+        price: item.price,
+        description_ru: descStr || null,
+        image_url: item.image || null,
+        available: item.available !== false,
+        kcal: item.calories || item.kcal || null,
+        weight: item.weight || null,
+      }
+
+      // Очередь Outbox
+      enqueueMenuMutation(item.id, 'upsert', payload)
+
       if (supabase) {
-        const nameStr = typeof item.name === 'string' ? item.name : item.name.ru ?? ''
-        const descStr = typeof item.description === 'string' ? item.description : item.description?.ru ?? ''
         supabase
           .from('menu_items')
-          .upsert({
-            id: item.id,
-            category_id: categoryId,
-            name_ru: nameStr,
-            price: item.price,
-            description_ru: descStr || null,
-            image_url: item.image || null,
-            available: item.available !== false,
-            kcal: item.calories || item.kcal || null,
-            weight: item.weight || null,
-          })
+          .upsert(payload)
           .then(({ error }) => {
             if (error) {
               console.warn('Supabase edit item error:', error.message)
-              setToastMessage(`Блюдо обновлено локально (ошибка БД: ${error.message})`)
+              setToastMessage(`Блюдо обновлено локально и в очереди Outbox (ошибка БД: ${error.message})`)
             } else {
               setToastMessage(`Блюдо "${nameStr}" обновлено в Supabase! ☁️`)
             }
@@ -525,6 +565,10 @@ export function PosTerminal() {
           }
         } catch {}
       }
+
+      // Очередь Outbox для удаления
+      enqueueMenuMutation(itemId, 'delete', { id: itemId })
+
       if (supabase) {
         supabase
           .from('menu_items')
@@ -877,15 +921,17 @@ export function PosTerminal() {
 
   // ─── ОТПРАВИТЬ НА КУХНЮ / СОХРАНИТЬ ДОЗАКАЗ ──────────────────
   const handleSaveToKitchen = useCallback(async () => {
-    if (cart.length === 0) return
+    if (isSubmitting || cart.length === 0) return
+    setIsSubmitting(true)
 
-    const dt = receiptDateTime()
-    const subtotal = cartTotal(cart)
-    const pctDiscount =
-      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
-    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
-    const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
-    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
+    try {
+      const dt = receiptDateTime()
+      const subtotal = cartTotal(cart)
+      const pctDiscount =
+        discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+      const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
+      const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
+      const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
 
     if (activeOrderId) {
       // Дозаказ к существующему открытому столу
@@ -963,7 +1009,11 @@ export function PosTerminal() {
     setActiveOrderId(null)
     reloadOrders()
     setActiveTab('tables')
+  } finally {
+    setIsSubmitting(false)
+  }
   }, [
+    isSubmitting,
     cart,
     activeOrderId,
     todayOrders,
@@ -983,12 +1033,15 @@ export function PosTerminal() {
 
   // ─── ПРЕЧЕК / ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ ───────────────────────────
   const handlePrintPrecheck = useCallback(async () => {
-    if (cart.length === 0) return
-    const subtotal = cartTotal(cart)
-    const pctDiscount =
-      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
-    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
-    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount))
+    if (isSubmitting || cart.length === 0) return
+    setIsSubmitting(true)
+
+    try {
+      const subtotal = cartTotal(cart)
+      const pctDiscount =
+        discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+      const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
+      const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount))
 
     const activeOrderObj = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
     const num = activeOrderObj ? activeOrderObj.orderNumber : orderNumber
@@ -1050,7 +1103,11 @@ export function PosTerminal() {
 
     setToastMessage(`Пречек для Стола №${tableNumber} отправлен на печать!`)
     setTimeout(() => setToastMessage(null), 3500)
+  } finally {
+    setIsSubmitting(false)
+  }
   }, [
+    isSubmitting,
     cart,
     discountPercent,
     customDiscount,
@@ -1070,86 +1127,92 @@ export function PosTerminal() {
 
   // ─── ОПЛАТИТЬ И ЗАКРЫТЬ СТОЛ ────────────────────────────────
   const handleSubmitOrder = useCallback(async () => {
-    if (cart.length === 0) return
+    if (isSubmitting || cart.length === 0) return
+    setIsSubmitting(true)
 
-    const dt = receiptDateTime()
-    const subtotal = cartTotal(cart)
-    const pctDiscount =
-      discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
-    const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
-    const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
-    const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
-    const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
+    try {
+      const dt = receiptDateTime()
+      const subtotal = cartTotal(cart)
+      const pctDiscount =
+        discountPercent > 0 ? Math.round((subtotal * discountPercent) / 100) : 0
+      const totalDiscount = Math.round(pctDiscount + (customDiscount || 0))
+      const activeDelivery = orderType === 'delivery' ? deliveryFee : 0
+      const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount + activeDelivery))
+      const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
 
-    let num = orderNumber
-    if (activeOrderId) {
-      const existing = todayOrders.find((o) => o.id === activeOrderId)
-      num = existing?.orderNumber || num
-      await updateOrder(activeOrderId, {
+      let num = orderNumber
+      if (activeOrderId) {
+        const existing = todayOrders.find((o) => o.id === activeOrderId)
+        num = existing?.orderNumber || num
+        await updateOrder(activeOrderId, {
+          items: [...cart],
+          subtotal,
+          discountAmount: totalDiscount,
+          discountPercent: discountPercent > 0 ? discountPercent : undefined,
+          deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+          total: finalTotal,
+          paymentMethod,
+          cashReceived: paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
+          changeAmount: paymentMethod === 'cash' ? change : undefined,
+          status: 'completed',
+        })
+      } else {
+        num = nextOrderNumber()
+        await createOrder({
+          orderNumber: num,
+          type: orderType,
+          tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
+          customerPhone: orderType === 'delivery' ? customerPhone : undefined,
+          deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
+          items: [...cart],
+          subtotal,
+          discountPercent: discountPercent > 0 ? discountPercent : undefined,
+          discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
+          deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+          total: finalTotal,
+          paymentMethod,
+          cashReceived:
+            paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
+          changeAmount: paymentMethod === 'cash' ? change : undefined,
+          cashierName: user?.name || 'Кассир',
+          status: 'completed',
+        })
+      }
+
+      const rData: ReceiptProps = {
         items: [...cart],
-        subtotal,
-        discountAmount: totalDiscount,
-        discountPercent: discountPercent > 0 ? discountPercent : undefined,
-        deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
-        total: finalTotal,
-        paymentMethod,
-        cashReceived: paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
-        changeAmount: paymentMethod === 'cash' ? change : undefined,
-        status: 'completed',
-      })
-    } else {
-      num = nextOrderNumber()
-      await createOrder({
         orderNumber: num,
-        type: orderType,
+        dateTime: dt,
+        orderType,
         tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
         customerPhone: orderType === 'delivery' ? customerPhone : undefined,
         deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
-        items: [...cart],
         subtotal,
+        discountAmount: totalDiscount,
         discountPercent: discountPercent > 0 ? discountPercent : undefined,
-        discountAmount: totalDiscount > 0 ? totalDiscount : undefined,
-        deliveryFee: activeDelivery > 0 ? activeDelivery : undefined,
+        deliveryFee: activeDelivery,
         total: finalTotal,
         paymentMethod,
         cashReceived:
           paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
         changeAmount: paymentMethod === 'cash' ? change : undefined,
         cashierName: user?.name || 'Кассир',
-        status: 'completed',
-      })
-    }
+        printMode: 'guest',
+        paperWidth,
+        showQrCode: showReceiptQr,
+      }
 
-    const rData: ReceiptProps = {
-      items: [...cart],
-      orderNumber: num,
-      dateTime: dt,
-      orderType,
-      tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
-      customerPhone: orderType === 'delivery' ? customerPhone : undefined,
-      deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined,
-      subtotal,
-      discountAmount: totalDiscount,
-      discountPercent: discountPercent > 0 ? discountPercent : undefined,
-      deliveryFee: activeDelivery,
-      total: finalTotal,
-      paymentMethod,
-      cashReceived:
-        paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
-      changeAmount: paymentMethod === 'cash' ? change : undefined,
-      cashierName: user?.name || 'Кассир',
-      printMode: 'guest',
-      paperWidth,
-      showQrCode: showReceiptQr,
+      setReceiptData(rData)
+      setShowReceiptModal(true)
+      setOrderNumber(peekOrderNumber())
+      handleClear()
+      setActiveOrderId(null)
+      reloadOrders()
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setReceiptData(rData)
-    setShowReceiptModal(true)
-    setOrderNumber(peekOrderNumber())
-    handleClear()
-    setActiveOrderId(null)
-    reloadOrders()
   }, [
+    isSubmitting,
     cart,
     activeOrderId,
     todayOrders,
@@ -1447,6 +1510,24 @@ export function PosTerminal() {
               </span>
             </button>
 
+            {/* Индикатор отложенной очереди синхронизации (Outbox) */}
+            {(outboxStatus.pendingOrders > 0 || outboxStatus.pendingMenu > 0) && (
+              <button
+                type="button"
+                onClick={() => processOutboxQueue()}
+                disabled={outboxStatus.isSyncing}
+                className="inline-flex items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-1 text-xs font-bold transition hover:bg-amber-500/25 cursor-pointer touch-manipulation animate-pulse shadow-2xs"
+                title="Неотправленные чеки или изменения меню в очереди. Нажмите для немедленной отправки в облако."
+              >
+                <Cloud className={`size-3.5 ${outboxStatus.isSyncing ? 'animate-spin text-amber-500' : ''}`} />
+                <span className="text-[11px] font-mono">
+                  {outboxStatus.isSyncing
+                    ? 'Синк...'
+                    : `${outboxStatus.pendingOrders + outboxStatus.pendingMenu} в очереди`}
+                </span>
+              </button>
+            )}
+
             {/* Переключатель ленты принтера */}
             <div className="hidden lg:flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
               <Printer className="size-3.5 text-muted-foreground ml-1.5" />
@@ -1508,16 +1589,18 @@ export function PosTerminal() {
         <div className="flex min-h-0 flex-1 overflow-hidden relative">
           {/* 1. ПЛАН ЗАЛА И СТОЛОВ (r_keeper / iiko) */}
           {activeTab === 'tables' && (
-            <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 pb-16 lg:pb-4 w-full">
-              <TablePlan
-                orders={todayOrders}
-                onSelectTable={handleSelectTable}
-                onSelectFastOrder={handleSelectFastOrder}
-                onOpenTransferModal={handleOpenTransferModal}
-                onDirectPay={handleDirectPay}
-                onReopenTable={handleReopenTable}
-              />
-            </div>
+            <PosErrorBoundary sectionName="План столов">
+              <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 pb-16 lg:pb-4 w-full">
+                <TablePlan
+                  orders={todayOrders}
+                  onSelectTable={handleSelectTable}
+                  onSelectFastOrder={handleSelectFastOrder}
+                  onOpenTransferModal={handleOpenTransferModal}
+                  onDirectPay={handleDirectPay}
+                  onReopenTable={handleReopenTable}
+                />
+              </div>
+            </PosErrorBoundary>
           )}
 
           {/* 2. ТЕРМИНАЛ / МЕНЮ И ЧЕК */}
@@ -1707,48 +1790,58 @@ export function PosTerminal() {
 
           {/* Вкладка KDS (Экран кухни) */}
           {activeTab === 'kds' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-hidden w-full">
-              <KdsScreen orders={todayOrders} onRefresh={reloadOrders} />
-            </div>
+            <PosErrorBoundary sectionName="Кухня KDS">
+              <div className="flex-1 p-4 sm:p-6 overflow-hidden w-full">
+                <KdsScreen orders={todayOrders} onRefresh={reloadOrders} />
+              </div>
+            </PosErrorBoundary>
           )}
 
           {activeTab === 'orders' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
-              <OrdersHistory
-                orders={todayOrders}
-                onReprint={handleReprint}
-                onRefresh={reloadOrders}
-                onReopenOrder={handleReopenTable}
-              />
-            </div>
+            <PosErrorBoundary sectionName="История чеков">
+              <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
+                <OrdersHistory
+                  orders={todayOrders}
+                  onReprint={handleReprint}
+                  onRefresh={reloadOrders}
+                  onReopenOrder={handleReopenTable}
+                />
+              </div>
+            </PosErrorBoundary>
           )}
 
           {activeTab === 'shift' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-4xl mx-auto w-full">
-              <ShiftReport
-                orders={todayOrders}
-                onPrintShiftReport={handlePrintShiftThermal}
-              />
-            </div>
+            <PosErrorBoundary sectionName="Кассовая смена">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-4xl mx-auto w-full">
+                <ShiftReport
+                  orders={todayOrders}
+                  onPrintShiftReport={handlePrintShiftThermal}
+                />
+              </div>
+            </PosErrorBoundary>
           )}
 
           {activeTab === 'menu' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
-              <MenuManager
-                categories={categories}
-                onToggleAvailable={handleToggleAvailable}
-                onUpdatePrice={handleUpdatePrice}
-                onAddItem={handleAddNewItem}
-                onEditItem={handleEditItem}
-                onDeleteItem={handleDeleteItem}
-              />
-            </div>
+            <PosErrorBoundary sectionName="Управление меню">
+              <div className="flex-1 p-4 sm:p-6 overflow-hidden max-w-5xl mx-auto w-full">
+                <MenuManager
+                  categories={categories}
+                  onToggleAvailable={handleToggleAvailable}
+                  onUpdatePrice={handleUpdatePrice}
+                  onAddItem={handleAddNewItem}
+                  onEditItem={handleEditItem}
+                  onDeleteItem={handleDeleteItem}
+                />
+              </div>
+            </PosErrorBoundary>
           )}
 
           {activeTab === 'qr' && (
-            <div className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-5xl mx-auto w-full">
-              <QrManager />
-            </div>
+            <PosErrorBoundary sectionName="QR столов">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-5xl mx-auto w-full">
+                <QrManager />
+              </div>
+            </PosErrorBoundary>
           )}
         </div>
       </div>
