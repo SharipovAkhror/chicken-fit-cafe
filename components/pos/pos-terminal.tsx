@@ -18,6 +18,8 @@ import {
   X,
   FileText,
   CheckCircle2,
+  QrCode,
+  UtensilsCrossed,
 } from 'lucide-react'
 import menuJson from '@/content/menu.json'
 import type { Localized, MenuItem } from '@/lib/menu'
@@ -57,6 +59,7 @@ import {
   type PaymentMethod,
 } from '@/lib/orders'
 import { useTheme } from '@/lib/theme'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from './auth-gate'
 import { MenuGrid } from './menu-grid'
 import { CartPanel } from './cart-panel'
@@ -286,6 +289,9 @@ export function PosTerminal() {
         items: cat.items.map((it) => (it.id === itemId ? { ...it, available } : it)),
       }))
       persistMenuOverrides(updated)
+      if (supabase) {
+        supabase.from('menu_items').update({ available }).eq('id', itemId).then()
+      }
     },
     [categories],
   )
@@ -297,6 +303,9 @@ export function PosTerminal() {
         items: cat.items.map((it) => (it.id === itemId ? { ...it, price } : it)),
       }))
       persistMenuOverrides(updated)
+      if (supabase) {
+        supabase.from('menu_items').update({ price }).eq('id', itemId).then()
+      }
     },
     [categories],
   )
@@ -313,6 +322,7 @@ export function PosTerminal() {
       fat?: number
       carbs?: number
       image?: string
+      weight?: number
     }) => {
       const newItem: MenuItem = {
         id: item.id,
@@ -324,12 +334,29 @@ export function PosTerminal() {
         fat: item.fat,
         carbs: item.carbs,
         image: item.image,
+        weight: item.weight,
         available: true,
       }
       const updated = categories.map((cat) =>
         cat.id === item.categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
       )
       persistMenuOverrides(updated)
+      if (supabase) {
+        supabase
+          .from('menu_items')
+          .upsert({
+            id: item.id,
+            category_id: item.categoryId,
+            name_ru: item.name,
+            price: item.price,
+            description_ru: item.description || null,
+            image_url: item.image || null,
+            available: true,
+            kcal: item.calories || null,
+            weight: item.weight || null,
+          })
+          .then()
+      }
       setToastMessage(`Позиция "${item.name}" добавлена в меню!`)
       setTimeout(() => setToastMessage(null), 3000)
     },
@@ -346,6 +373,24 @@ export function PosTerminal() {
         return { ...cat, items }
       })
       persistMenuOverrides(updated)
+      if (supabase) {
+        const nameStr = typeof item.name === 'string' ? item.name : item.name.ru ?? ''
+        const descStr = typeof item.description === 'string' ? item.description : item.description?.ru ?? ''
+        supabase
+          .from('menu_items')
+          .upsert({
+            id: item.id,
+            category_id: categoryId,
+            name_ru: nameStr,
+            price: item.price,
+            description_ru: descStr || null,
+            image_url: item.image || null,
+            available: item.available !== false,
+            kcal: item.calories || item.kcal || null,
+            weight: item.weight || null,
+          })
+          .then()
+      }
       setToastMessage(
         `Блюдо "${typeof item.name === 'string' ? item.name : item.name.ru ?? ''}" обновлено`,
       )
@@ -370,6 +415,9 @@ export function PosTerminal() {
             localStorage.setItem(MENU_DELETED_ITEMS_KEY, JSON.stringify(deleted))
           }
         } catch {}
+      }
+      if (supabase) {
+        supabase.from('menu_items').delete().eq('id', itemId).then()
       }
       setToastMessage(`Позиция удалена из меню`)
       setTimeout(() => setToastMessage(null), 3000)
@@ -1197,6 +1245,37 @@ export function PosTerminal() {
             >
               <BarChart3 className="size-3.5 text-emerald-500" />
               <span className="hidden sm:inline">Смена</span>
+            </button>
+
+            {/* 6. Карточки товаров и меню */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('menu')
+                reloadOrders()
+              }}
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
+                activeTab === 'menu'
+                  ? 'bg-card text-foreground shadow-xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <UtensilsCrossed className="size-3.5 text-purple-500" />
+              <span className="hidden sm:inline">Товары</span>
+            </button>
+
+            {/* 7. QR столов */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('qr')}
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-bold transition cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
+                activeTab === 'qr'
+                  ? 'bg-card text-foreground shadow-xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <QrCode className="size-3.5 text-pink-500" />
+              <span className="hidden sm:inline">QR столов</span>
             </button>
           </nav>
 

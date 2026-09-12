@@ -39,10 +39,52 @@ type Props = {
     fat?: number
     carbs?: number
     image?: string
+    weight?: number
   }) => void
   onEditItem?: (item: MenuItem, categoryId: string) => void
   onDeleteItem?: (itemId: string) => void
 }
+
+export const PRESET_DISH_IMAGES = [
+  { value: '/menu/combo-chicken.jpg', label: 'Супер Комбо Chicken' },
+  { value: '/menu/chicken-kfc-1kg.jpg', label: 'Ведро курицы 1 кг' },
+  { value: '/menu/chicken-strips.jpg', label: 'Куриные стрипсы' },
+  { value: '/menu/fries-small.jpg', label: 'Картофель фри (Small 100г)' },
+  { value: '/menu/fries-medium.jpg', label: 'Картофель фри (Medium 150г)' },
+  { value: '/menu/fries-large.jpg', label: 'Картофель фри (Large 200г)' },
+  { value: '/menu/belyashi.jpg', label: 'Беляши домашние' },
+  { value: '/menu/pirozhki-potatoes.jpg', label: 'Пирожки с картошкой' },
+  { value: '/menu/sosiska-v-teste.jpg', label: 'Сосиска в тесте' },
+  { value: '/menu/breakfast-half.jpg', label: 'Завтрак 0.5 (1 яйцо + сосиска)' },
+  { value: '/menu/fried-egg.jpg', label: 'Завтрак 1 порция (2 яйца + 2 сосиски)' },
+  { value: '/menu/blinchiki-meat.jpg', label: 'Блинчики с мясом' },
+  { value: '/menu/blini-cottage-cheese.jpg', label: 'Блины с творогом' },
+  { value: '/menu/canadian-sausage.jpg', label: 'Канадская сосиска жареная' },
+  { value: '/menu/boiled-egg.jpg', label: 'Яйцо варёное' },
+  { value: '/menu/bread.jpg', label: 'Лепёшка самаркандская' },
+  { value: '/menu/borscht.jpg', label: 'Борщ домашний' },
+  { value: '/menu/shchi-green.jpg', label: 'Щи зелёные' },
+  { value: '/menu/chicken-noodles.jpg', label: 'Куриная лапша' },
+  { value: '/menu/meatball-soup.jpg', label: 'Суп с фрикадельками' },
+  { value: '/menu/cutlet-homemade.jpg', label: 'Котлеты домашние' },
+  { value: '/menu/cutlet-chicken.jpg', label: 'Котлеты куриные' },
+  { value: '/menu/goulash.jpg', label: 'Гуляш говяжий' },
+  { value: '/menu/tefteli.jpg', label: 'Тефтели говяжьи' },
+  { value: '/menu/kiev-cutlet.jpg', label: 'Котлета по-киевски' },
+  { value: '/menu/chicken-vegetables.jpg', label: 'Курица с овощами' },
+  { value: '/menu/chicken-roast.jpg', label: 'Курица окорочка' },
+  { value: '/menu/kupaty.jpg', label: 'Колбаски купаты' },
+  { value: '/menu/salad-vinegret.jpg', label: 'Салат Винегрет' },
+  { value: '/menu/salad-cabbage-vitamin.jpg', label: 'Салат Капустный витамин' },
+  { value: '/menu/salad-carrot-vitamin.jpg', label: 'Салат Морковный витамин' },
+  { value: '/menu/salad-vesenniy.jpg', label: 'Салат Весенний' },
+  { value: '/menu/salad-mushroom.jpg', label: 'Салат Грибной' },
+  { value: '/menu/salad-chicken-veg.jpg', label: 'Салат Овощи с курицей' },
+  { value: '/menu/compote-05.jpg', label: 'Освежающий компот 0.5л (бутылка)' },
+  { value: '/menu/compote-1l.jpg', label: 'Освежающий компот 1л (кувшин)' },
+  { value: '/menu/tea-pot-glass.jpg', label: 'Чай в стеклянном чайнике' },
+  { value: '/menu/americano-cup.jpg', label: 'Кофе Американо' },
+]
 
 function formatNum(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -86,6 +128,10 @@ export function MenuManager({
   const [formFat, setFormFat] = useState('')
   const [formCarbs, setFormCarbs] = useState('')
   const [formImage, setFormImage] = useState('')
+  const [formHasGarnish, setFormHasGarnish] = useState(false)
+  const [formCreateHalf, setFormCreateHalf] = useState(false)
+  const [formHalfPrice, setFormHalfPrice] = useState('')
+  const [formWeight, setFormWeight] = useState('')
 
   // Модалка полного редактирования позиции
   const [editingItem, setEditingItem] = useState<{ item: MenuItem; categoryId: string } | null>(null)
@@ -106,24 +152,55 @@ export function MenuManager({
     setEditingPriceId(null)
   }
 
-  // Создание нового товара (конструктор)
+  // Создание нового товара (конструктор карточки)
   function handleCreateItem(e: React.FormEvent) {
     e.preventDefault()
     if (!formName.trim() || !formPrice) return
 
+    let finalName = formName.trim()
+    if (formHasGarnish && !finalName.toLowerCase().includes('с гарниром')) {
+      finalName = `${finalName} с гарниром`
+    }
+
+    const mainPrice = parseInt(formPrice, 10) || 0
+    const weightVal = formWeight ? parseInt(formWeight, 10) : undefined
     const id = `item-${Date.now()}`
+
     onAddItem({
       id,
       categoryId: formCatId,
-      name: formName.trim(),
-      price: parseInt(formPrice, 10) || 0,
+      name: finalName,
+      price: mainPrice,
       description: formDesc.trim(),
       calories: formCalories ? parseInt(formCalories, 10) : undefined,
       protein: formProtein ? parseFloat(formProtein) : undefined,
       fat: formFat ? parseFloat(formFat) : undefined,
       carbs: formCarbs ? parseFloat(formCarbs) : undefined,
       image: formImage.trim() || undefined,
+      weight: weightVal,
     })
+
+    // Если кассир выбрал создание связанной 0.5 порции
+    if (formCreateHalf && formHalfPrice) {
+      const halfPrice = parseInt(formHalfPrice, 10) || Math.round(mainPrice * 0.6)
+      const rawBase = finalName.replace(' с гарниром', '')
+      const halfName = `${rawBase} (0.5 порции)${formHasGarnish ? ' с гарниром' : ''}`
+      const halfWeight = weightVal ? Math.round(weightVal * 0.5) : undefined
+
+      onAddItem({
+        id: `item-${Date.now()}-half`,
+        categoryId: formCatId,
+        name: halfName,
+        price: halfPrice,
+        description: `Половинная порция (0.5). ${formDesc.trim()}`,
+        calories: formCalories ? Math.round(parseInt(formCalories, 10) * 0.5) : undefined,
+        protein: formProtein ? parseFloat((parseFloat(formProtein) * 0.5).toFixed(1)) : undefined,
+        fat: formFat ? parseFloat((parseFloat(formFat) * 0.5).toFixed(1)) : undefined,
+        carbs: formCarbs ? parseFloat((parseFloat(formCarbs) * 0.5).toFixed(1)) : undefined,
+        image: formImage.trim() || undefined,
+        weight: halfWeight,
+      })
+    }
 
     // Reset form
     setFormName('')
@@ -134,21 +211,28 @@ export function MenuManager({
     setFormFat('')
     setFormCarbs('')
     setFormImage('')
+    setFormHasGarnish(false)
+    setFormCreateHalf(false)
+    setFormHalfPrice('')
+    setFormWeight('')
     setShowAddModal(false)
   }
 
   // Открытие модалки редактирования существующего товара
   function openEditModal(item: MenuItem, catId: string) {
     setEditingItem({ item, categoryId: catId })
-    setFormName(getItemName(item))
+    const itemName = getItemName(item)
+    setFormName(itemName)
     setFormCatId(catId)
     setFormPrice(String(item.price))
     setFormDesc(getItemDesc(item))
-    setFormCalories(item.calories ? String(item.calories) : '')
+    setFormCalories(item.calories || item.kcal ? String(item.calories || item.kcal) : '')
     setFormProtein(item.protein ? String(item.protein) : '')
     setFormFat(item.fat ? String(item.fat) : '')
     setFormCarbs(item.carbs ? String(item.carbs) : '')
     setFormImage(item.image || '')
+    setFormHasGarnish(itemName.toLowerCase().includes('с гарниром'))
+    setFormWeight(item.weight ? String(item.weight) : '')
   }
 
   // Сохранение отредактированного товара
@@ -156,22 +240,30 @@ export function MenuManager({
     e.preventDefault()
     if (!editingItem || !formName.trim() || !formPrice) return
 
+    let finalName = formName.trim()
+    if (formHasGarnish && !finalName.toLowerCase().includes('с гарниром')) {
+      finalName = `${finalName} с гарниром`
+    } else if (!formHasGarnish && finalName.toLowerCase().includes('с гарниром')) {
+      finalName = finalName.replace(/\s*с гарниром/i, '').trim()
+    }
+
     const updated: MenuItem = {
       ...editingItem.item,
-      name: formName.trim(),
+      name: finalName,
       price: parseInt(formPrice, 10) || 0,
       description: formDesc.trim() || undefined,
       calories: formCalories ? parseInt(formCalories, 10) : undefined,
+      kcal: formCalories ? parseInt(formCalories, 10) : undefined,
       protein: formProtein ? parseFloat(formProtein) : undefined,
       fat: formFat ? parseFloat(formFat) : undefined,
       carbs: formCarbs ? parseFloat(formCarbs) : undefined,
       image: formImage.trim() || editingItem.item.image,
+      weight: formWeight ? parseInt(formWeight, 10) : editingItem.item.weight,
     }
 
     if (onEditItem) {
       onEditItem(updated, formCatId)
     } else {
-      // Fallback if onEditItem not provided
       onUpdatePrice(updated.id, updated.price)
     }
 
@@ -563,7 +655,14 @@ export function MenuManager({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-zinc-500">Цена (сум) *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-500">Цена (сум) *</label>
+                    {formPrice && (
+                      <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {formatNum(parseInt(formPrice, 10) || 0)} сум (UZS)
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     required
@@ -587,6 +686,72 @@ export function MenuManager({
                   placeholder="например, Шашлык куриный фитнес"
                   className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5 text-xs font-semibold outline-none focus:border-amber-500"
                 />
+              </div>
+
+              {/* ─── КОНСТРУКТОР ПОРЦИЙ И ГАРНИРОВ (iiko / Syrve standard) ─── */}
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] p-3 space-y-2.5">
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <UtensilsCrossed className="size-3.5" />
+                  <span>Конструктор порций и гарниров:</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label className="flex items-center gap-2 p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 cursor-pointer text-xs font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={formHasGarnish}
+                      onChange={(e) => setFormHasGarnish(e.target.checked)}
+                      className="size-4 accent-amber-500 rounded"
+                    />
+                    <span>Подаётся с гарниром (пюре/рис/гречка/макароны)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 cursor-pointer text-xs font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={formCreateHalf}
+                      onChange={(e) => setFormCreateHalf(e.target.checked)}
+                      className="size-4 accent-amber-500 rounded"
+                    />
+                    <span>Создать вариант 0.5 порции</span>
+                  </label>
+                </div>
+
+                {formCreateHalf && (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-2.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                        Цена за половинную порцию (0.5) *
+                      </label>
+                      {formHalfPrice && (
+                        <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                          {formatNum(parseInt(formHalfPrice, 10) || 0)} сум
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      value={formHalfPrice}
+                      onChange={(e) => setFormHalfPrice(e.target.value)}
+                      placeholder="например, 20000"
+                      className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-2 text-xs font-mono font-bold outline-none focus:border-amber-500"
+                    />
+                    <p className="text-[10px] text-zinc-500">
+                      Будет автоматически создана отдельная позиция для кассы и меню с суффиксом «(0.5 порции)».
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[11px] font-bold text-zinc-500">Вес или Объём (г / мл / шт)</label>
+                  <input
+                    type="number"
+                    value={formWeight}
+                    onChange={(e) => setFormWeight(e.target.value)}
+                    placeholder="например, 350 (г) или 500 (мл)"
+                    className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2 text-xs font-mono outline-none focus:border-amber-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -653,14 +818,35 @@ export function MenuManager({
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-zinc-500">Путь к фото или URL (необязательно)</label>
+              {/* Выбор студийного фото */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500">Фотография блюда</label>
+                <select
+                  value={formImage}
+                  onChange={(e) => setFormImage(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2 text-xs font-semibold outline-none"
+                >
+                  <option value="">-- Выберите готовое фото из каталога ChickenFit --</option>
+                  {PRESET_DISH_IMAGES.map((img) => (
+                    <option key={img.value} value={img.value}>
+                      {img.label}
+                    </option>
+                  ))}
+                </select>
+
+                {formImage && (
+                  <div className="flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 p-1.5 bg-zinc-50 dark:bg-zinc-800/60">
+                    <img src={formImage} alt="Превью" className="size-10 rounded-lg object-cover bg-white" />
+                    <span className="text-[11px] font-mono text-zinc-500 truncate">{formImage}</span>
+                  </div>
+                )}
+
                 <input
                   type="text"
                   value={formImage}
                   onChange={(e) => setFormImage(e.target.value)}
-                  placeholder="/menu/dish-name.jpg"
-                  className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5 text-xs font-mono outline-none focus:border-amber-500"
+                  placeholder="или введите вручную URL /menu/dish-name.jpg"
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2 text-xs font-mono outline-none focus:border-amber-500"
                 />
               </div>
             </div>
@@ -728,7 +914,14 @@ export function MenuManager({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-zinc-500">Цена (сум) *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-500">Цена (сум) *</label>
+                    {formPrice && (
+                      <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {formatNum(parseInt(formPrice, 10) || 0)} сум (UZS)
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
                     required
@@ -750,6 +943,37 @@ export function MenuManager({
                   onChange={(e) => setFormName(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5 text-xs font-semibold outline-none focus:border-amber-500"
                 />
+              </div>
+
+              {/* ─── МОДИФИКАТОРЫ И ГАРНИР ─── */}
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.04] p-3 space-y-2.5">
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <UtensilsCrossed className="size-3.5" />
+                  <span>Модификаторы карточки:</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label className="flex items-center gap-2 p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 cursor-pointer text-xs font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={formHasGarnish}
+                      onChange={(e) => setFormHasGarnish(e.target.checked)}
+                      className="size-4 accent-amber-500 rounded"
+                    />
+                    <span>Подаётся с гарниром (пюре/рис/гречка/макароны)</span>
+                  </label>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-zinc-500 block mb-1">Вес / Объём (г / мл)</label>
+                    <input
+                      type="number"
+                      value={formWeight}
+                      onChange={(e) => setFormWeight(e.target.value)}
+                      placeholder="350"
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2 text-xs font-mono outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -775,6 +999,7 @@ export function MenuManager({
                       type="number"
                       value={formCalories}
                       onChange={(e) => setFormCalories(e.target.value)}
+                      placeholder="280"
                       className="mt-0.5 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-mono outline-none"
                     />
                   </div>
@@ -785,6 +1010,7 @@ export function MenuManager({
                       step="0.1"
                       value={formProtein}
                       onChange={(e) => setFormProtein(e.target.value)}
+                      placeholder="32"
                       className="mt-0.5 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-mono outline-none"
                     />
                   </div>
@@ -795,6 +1021,7 @@ export function MenuManager({
                       step="0.1"
                       value={formFat}
                       onChange={(e) => setFormFat(e.target.value)}
+                      placeholder="6.5"
                       className="mt-0.5 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-mono outline-none"
                     />
                   </div>
@@ -805,19 +1032,42 @@ export function MenuManager({
                       step="0.1"
                       value={formCarbs}
                       onChange={(e) => setFormCarbs(e.target.value)}
+                      placeholder="4.0"
                       className="mt-0.5 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-mono outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-zinc-500">Путь к фото / URL</label>
+              {/* Выбор студийного фото */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500">Фотография блюда</label>
+                <select
+                  value={formImage}
+                  onChange={(e) => setFormImage(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2 text-xs font-semibold outline-none"
+                >
+                  <option value="">-- Выберите готовое фото из каталога ChickenFit --</option>
+                  {PRESET_DISH_IMAGES.map((img) => (
+                    <option key={img.value} value={img.value}>
+                      {img.label}
+                    </option>
+                  ))}
+                </select>
+
+                {formImage && (
+                  <div className="flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 p-1.5 bg-zinc-50 dark:bg-zinc-800/60">
+                    <img src={formImage} alt="Превью" className="size-10 rounded-lg object-cover bg-white" />
+                    <span className="text-[11px] font-mono text-zinc-500 truncate">{formImage}</span>
+                  </div>
+                )}
+
                 <input
                   type="text"
                   value={formImage}
                   onChange={(e) => setFormImage(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5 text-xs font-mono outline-none focus:border-amber-500"
+                  placeholder="или введите вручную URL /menu/dish-name.jpg"
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2 text-xs font-mono outline-none focus:border-amber-500"
                 />
               </div>
             </div>

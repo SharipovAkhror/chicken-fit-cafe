@@ -319,7 +319,7 @@ export async function createOrder(data: {
   // 3. Если подключен Supabase — сохраняем в облако
   if (supabase) {
     try {
-      await supabase.from('orders').insert({
+      const { error: fullErr } = await supabase.from('orders').insert({
         id: newOrder.id,
         order_number: newOrder.orderNumber,
         order_type: newOrder.type,
@@ -339,6 +339,26 @@ export async function createOrder(data: {
         cashier_name: newOrder.cashierName ?? null,
         status: newOrder.status,
       })
+
+      // Если в БД еще не выполнена миграция колонок (subtotal, shift_id и т.д.),
+      // гарантированно сохраняем с базовыми колонками, чтобы данные не терялись
+      if (fullErr) {
+        console.warn('Supabase full order insert failed, falling back to base columns:', fullErr.message)
+        await supabase.from('orders').insert({
+          id: newOrder.id,
+          order_number: newOrder.orderNumber,
+          order_type: newOrder.type,
+          table_number: newOrder.tableNumber ?? null,
+          customer_phone: newOrder.customerPhone ?? null,
+          delivery_address: newOrder.deliveryAddress ?? null,
+          items: newOrder.items,
+          total_amount: newOrder.total,
+          payment_method: newOrder.paymentMethod,
+          cash_received: newOrder.cashReceived ?? null,
+          change_amount: newOrder.changeAmount ?? null,
+          status: newOrder.status,
+        })
+      }
     } catch (err) {
       console.warn('Supabase order insert failed, order saved locally:', err)
     }
@@ -498,7 +518,18 @@ export async function fetchTodayOrders(): Promise<Order[]> {
         query = query.gte('created_at', startOfLocalDay)
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      let { data, error } = await query.order('created_at', { ascending: false })
+
+      if (error && current?.id) {
+        // Резервный запрос без shift_id, если колонка еще не создана в БД
+        const retry = await supabase
+          .from('orders')
+          .select('*')
+          .gte('created_at', startOfLocalDay)
+          .order('created_at', { ascending: false })
+        data = retry.data
+        error = retry.error
+      }
 
       if (!error && data) {
         return data.map((row) => ({
