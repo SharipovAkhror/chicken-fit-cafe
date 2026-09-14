@@ -1,6 +1,6 @@
 {
   "$schema": "./menu.schema.json",
-  "updated": "2026-09-04",
+  "updated": "2026-09-14",
   "currency": "UZS",
   "cafe": {
     "name": "Cafe ChickenFit",
@@ -470,6 +470,24 @@
           "weight": 400,
           "kcal": 460,
           "available": true
+        },
+        {
+          "id": "shorva",
+          "name": {
+            "ru": "Шурпа по-домашнему",
+            "uz": "Uyona sho'rva",
+            "en": "Homemade Shorva Soup"
+          },
+          "description": {
+            "ru": "Наваристый бульон с нежным мясом говядины на косточке, крупным картофелем, томатами и зеленью",
+            "uz": "Katta mol go'shti, butun kartoshka va xushbo'y ziravorli to'yimli sho'rva",
+            "en": "Rich broth with tender beef rib on the bone, braised whole potatoes and herbs"
+          },
+          "price": 30000,
+          "image": "/menu/shorva.jpg",
+          "weight": 450,
+          "kcal": 380,
+          "available": true
         }
       ]
     },
@@ -500,6 +518,24 @@
           "available": true
         },
         {
+          "id": "cutlet-homemade-half",
+          "name": {
+            "ru": "Котлета домашняя (0.5 порции)",
+            "uz": "Uy kotleti (0.5 porsiya)",
+            "en": "Homemade Cutlet (0.5 portion)"
+          },
+          "description": {
+            "ru": "Одна сочная мясная котлета с гарниром на выбор (пюре, гречка, рис, макароны)",
+            "uz": "Bitta sersuv go'shtli kotlet garnir bilan (pyure, grechka, guruch, makaron)",
+            "en": "One juicy homemade meat cutlet with choice of side"
+          },
+          "price": 23000,
+          "image": "/menu/cutlet-homemade-half.jpg",
+          "weight": 220,
+          "kcal": 290,
+          "available": true
+        },
+        {
           "id": "cutlet-chicken",
           "name": {
             "ru": "Котлеты куриные с гарниром",
@@ -515,6 +551,24 @@
           "image": "/menu/cutlet-chicken.jpg",
           "weight": 350,
           "kcal": 420,
+          "available": true
+        },
+        {
+          "id": "cutlet-chicken-half",
+          "name": {
+            "ru": "Котлета куриная (0.5 порции)",
+            "uz": "Tovuqli kotlet (0.5 porsiya)",
+            "en": "Chicken Cutlet (0.5 portion)"
+          },
+          "description": {
+            "ru": "Одна нежная котлета из куриного филе с гарниром на выбор",
+            "uz": "Bitta mayin tovuq kotleti garnir bilan",
+            "en": "One tender chicken cutlet with choice of side"
+          },
+          "price": 23000,
+          "image": "/menu/cutlet-chicken-half.jpg",
+          "weight": 220,
+          "kcal": 260,
           "available": true
         },
         {
@@ -587,6 +641,24 @@
           "image": "/menu/kazan-kabob.jpg",
           "weight": 380,
           "kcal": 560,
+          "available": true
+        },
+        {
+          "id": "tuy-kabob",
+          "name": {
+            "ru": "Тўй кабоб (Той кабоб)",
+            "uz": "To'y kabob",
+            "en": "Tuy Kabob"
+          },
+          "description": {
+            "ru": "Праздничное блюдо: нежнейшее томлёное мясо на косточке с карамелизованным луком, томатами и пряным соусом",
+            "uz": "Bayramona to'y kabob: mayin dimlangan go'sht, piyoz va xushbo'y sous",
+            "en": "Celebratory slow-cooked tender beef ribs with caramelized onions, tomatoes and rich savory gravy"
+          },
+          "price": 40000,
+          "image": "/menu/tuy-kabob.jpg",
+          "weight": 400,
+          "kcal": 590,
           "available": true
         },
         {

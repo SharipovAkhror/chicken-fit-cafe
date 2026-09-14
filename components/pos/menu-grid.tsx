@@ -25,7 +25,9 @@ type Props = {
 
 const DISHES_WITH_SIDE = new Set([
   'cutlet-homemade',
+  'cutlet-homemade-half',
   'cutlet-chicken',
+  'cutlet-chicken-half',
   'goulash',
   'tefteli',
   'kiev-cutlet',
