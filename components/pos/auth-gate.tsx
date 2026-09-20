@@ -32,12 +32,12 @@ function setCookie(name: string, value: string, days: number) {
   if (typeof document === 'undefined') return
   const d = new Date()
   d.setTime(d.getTime() + days * 864e5)
-  document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/admin;SameSite=Strict`
+  document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Strict`
 }
 
 function deleteCookie(name: string) {
   if (typeof document === 'undefined') return
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/admin;`
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`
 }
 
 function getCookie(name: string): string | null {

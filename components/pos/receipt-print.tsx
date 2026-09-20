@@ -63,6 +63,7 @@ export type ReceiptProps = {
   cashReceived?: number
   changeAmount?: number
   cashierName?: string
+  shiftNumber?: number
   printMode?: PrintMode
   paperWidth?: PaperWidth
   showQrCode?: boolean
@@ -92,6 +93,7 @@ export function ReceiptPrint({
   cashReceived,
   changeAmount,
   cashierName = 'Главный кассир',
+  shiftNumber,
   printMode = 'guest',
   paperWidth = '80mm',
   showQrCode = true,
@@ -199,7 +201,7 @@ export function ReceiptPrint({
             </div>
             <div className="flex justify-between font-bold">
               <span>КАССИР: {cashierName}</span>
-              <span>СМЕНА: №1</span>
+              <span>СМЕНА: №{shiftNumber ?? 1}</span>
             </div>
 
             {orderType === 'delivery' && (

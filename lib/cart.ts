@@ -30,6 +30,12 @@ export type CartItem = {
   notes?: string
   /** Подробная раскладка ингредиентов микса */
   garnishMix?: GarnishIngredient[]
+  /** Вес в кг (для весовой курицы / товаров по кг) */
+  weightKg?: number
+  /** Цена за 1 кг (для пересчёта) */
+  pricePerKg?: number
+  /** Единица измерения (порц, шт, кг) */
+  unit?: string
 }
 
 /** Проверка, готовится ли позиция на кухне */
@@ -86,22 +92,27 @@ export function getKitchenItems(items: CartItem[]): CartItem[] {
   return items.filter(isKitchenItem)
 }
 
-/** Добавить +1 к позиции или создать новую запись */
+/** Добавить к позиции или создать новую запись */
 export function addItem(
   cart: CartItem[],
   item: {
     id: string
     name: string
     price: number
+    qty?: number
     category?: string
     isKitchen?: boolean
     notes?: string
     garnishMix?: GarnishIngredient[]
+    weightKg?: number
+    pricePerKg?: number
+    unit?: string
   },
 ): CartItem[] {
+  const addQty = item.qty && item.qty > 0 ? item.qty : 1
   const idx = cart.findIndex((c) => c.id === item.id)
   if (idx >= 0) {
-    return cart.map((c, i) => (i === idx ? { ...c, qty: c.qty + 1 } : c))
+    return cart.map((c, i) => (i === idx ? { ...c, qty: c.qty + addQty } : c))
   }
   return [
     ...cart,
@@ -110,14 +121,36 @@ export function addItem(
       name: item.name,
       price: item.price,
       originalPrice: item.price,
-      qty: 1,
+      qty: addQty,
       category: item.category,
       isKitchen:
         item.isKitchen !== undefined ? item.isKitchen : isKitchenItem(item),
       notes: item.notes,
       garnishMix: item.garnishMix,
+      weightKg: item.weightKg,
+      pricePerKg: item.pricePerKg,
+      unit: item.unit,
     },
   ]
+}
+
+/** Полное обновление свойств позиции в корзине */
+export function updateCartItem(
+  cart: CartItem[],
+  id: string,
+  updates: Partial<CartItem>,
+): CartItem[] {
+  return cart.map((c) => {
+    if (c.id !== id) return c
+    const nextPrice = updates.price !== undefined ? Math.max(0, updates.price) : c.price
+    const nextQty = updates.qty !== undefined ? Math.max(1, updates.qty) : c.qty
+    return {
+      ...c,
+      ...updates,
+      price: nextPrice,
+      qty: nextQty,
+    }
+  })
 }
 
 /** Удалить позицию из корзины полностью. */

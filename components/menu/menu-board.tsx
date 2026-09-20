@@ -427,7 +427,8 @@ export function MenuBoard({
   async function handleSendOrderToPOS() {
     if (cartList.length === 0) return
 
-    const num = nextOrderNumber()
+    const orderPrefix = orderType === 'dine_in' ? `QR${selectedTable}` : 'ONLINE'
+    const num = nextOrderNumber(orderPrefix)
     const dt = receiptDateTime()
     const orderItems = cartList.map((e) => ({
       id: e.baseId,
@@ -455,6 +456,7 @@ export function MenuBoard({
       total: totalCartSum,
       paymentMethod: 'cash',
       cashierName: customerName.trim() ? `Гость (${customerName.trim()})` : 'Онлайн-заказ',
+      status: 'pending',
     })
 
     setOrderSuccess({

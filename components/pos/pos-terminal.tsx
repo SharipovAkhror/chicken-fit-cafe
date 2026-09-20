@@ -27,6 +27,7 @@ import menuJson from '@/content/menu.json'
 import { getLiveMenu, type Localized, MenuItem } from '@/lib/menu'
 import {
   addItem,
+  updateCartItem,
   removeItem,
   setQty,
   setPrice,
@@ -34,6 +35,7 @@ import {
   clearCart,
   cartTotal,
   cartCount,
+  getKitchenItems,
   type CartItem,
   type GarnishIngredient,
 } from '@/lib/cart'
@@ -55,10 +57,12 @@ import {
   fetchTodayOrders,
   subscribeToOrders,
   getActiveOrdersByTables,
+  getCurrentShift,
   RESTAURANT_TABLES,
   type Order,
   type OrderType,
   type PaymentMethod,
+  type OrderStatus,
 } from '@/lib/orders'
 import { useTheme } from '@/lib/theme'
 import { supabase } from '@/lib/supabase'
@@ -73,6 +77,7 @@ import {
   type ShiftThermalData,
 } from './receipt-print'
 import { GarnishMixerModal } from './garnish-mixer-modal'
+import { ChickenWeightModal } from './chicken-weight-modal'
 import { OrdersHistory } from './orders-history'
 import { ShiftReport } from './shift-report'
 import { MenuManager } from './menu-manager'
@@ -226,6 +231,9 @@ export function PosTerminal() {
   // Модальное окно микшера гарниров
   const [showGarnishModal, setShowGarnishModal] = useState<boolean>(false)
   const [garnishInitialSize, setGarnishInitialSize] = useState<'half' | 'full'>('half')
+
+  // Модальное окно весового чикена (расчёт кг <-> сум)
+  const [showChickenModal, setShowChickenModal] = useState<boolean>(false)
 
   // История заказов за сегодня
   const [todayOrders, setTodayOrders] = useState<Order[]>([])
@@ -395,10 +403,14 @@ export function PosTerminal() {
           .from('menu_items')
           .update({ available })
           .eq('id', itemId)
-          .then(({ error }) => {
-            if (error) console.warn('Supabase update available error:', error.message)
-          })
-          .catch(console.warn)
+          .then(
+            ({ error }) => {
+              if (error) console.warn('Supabase update available error:', error.message)
+            },
+            (err: unknown) => {
+              console.warn('Supabase update available network error:', err)
+            },
+          )
       }
     },
     [categories],
@@ -418,10 +430,14 @@ export function PosTerminal() {
           .from('menu_items')
           .update({ price })
           .eq('id', itemId)
-          .then(({ error }) => {
-            if (error) console.warn('Supabase update price error:', error.message)
-          })
-          .catch(console.warn)
+          .then(
+            ({ error }) => {
+              if (error) console.warn('Supabase update price error:', error.message)
+            },
+            (err: unknown) => {
+              console.warn('Supabase update price network error:', err)
+            },
+          )
       }
     },
     [categories],
@@ -478,17 +494,19 @@ export function PosTerminal() {
         supabase
           .from('menu_items')
           .upsert(payload)
-          .then(({ error }) => {
-            if (error) {
-              console.warn('Supabase menu item upsert error:', error.message)
-              setToastMessage(`Позиция сохранена локально и в очереди Outbox (БД: ${error.message})`)
-            } else {
-              setToastMessage(`Позиция "${item.name}" сохранена в облаке Supabase! ☁️`)
-            }
-          })
-          .catch((err) => {
-            console.warn('Supabase upsert network error:', err)
-          })
+          .then(
+            ({ error }) => {
+              if (error) {
+                console.warn('Supabase menu item upsert error:', error.message)
+                setToastMessage(`Позиция сохранена локально и в очереди Outbox (БД: ${error.message})`)
+              } else {
+                setToastMessage(`Позиция "${item.name}" сохранена в облаке Supabase! ☁️`)
+              }
+            },
+            (err: unknown) => {
+              console.warn('Supabase upsert network error:', err)
+            },
+          )
       } else {
         setToastMessage(`Позиция "${item.name}" сохранена локально`)
       }
@@ -529,17 +547,19 @@ export function PosTerminal() {
         supabase
           .from('menu_items')
           .upsert(payload)
-          .then(({ error }) => {
-            if (error) {
-              console.warn('Supabase edit item error:', error.message)
-              setToastMessage(`Блюдо обновлено локально и в очереди Outbox (ошибка БД: ${error.message})`)
-            } else {
-              setToastMessage(`Блюдо "${nameStr}" обновлено в Supabase! ☁️`)
-            }
-          })
-          .catch((err) => {
-            console.warn('Network error editing item:', err)
-          })
+          .then(
+            ({ error }) => {
+              if (error) {
+                console.warn('Supabase edit item error:', error.message)
+                setToastMessage(`Блюдо обновлено локально и в очереди Outbox (ошибка БД: ${error.message})`)
+              } else {
+                setToastMessage(`Блюдо "${nameStr}" обновлено в Supabase! ☁️`)
+              }
+            },
+            (err: unknown) => {
+              console.warn('Network error editing item:', err)
+            },
+          )
       } else {
         setToastMessage(`Блюдо "${nameStr}" обновлено локально`)
       }
@@ -574,14 +594,18 @@ export function PosTerminal() {
           .from('menu_items')
           .delete()
           .eq('id', itemId)
-          .then(({ error }) => {
-            if (error) {
-              console.warn('Supabase delete item error:', error.message)
-            } else {
-              setToastMessage(`Позиция удалена из Supabase и кассы ☁️`)
-            }
-          })
-          .catch(console.warn)
+          .then(
+            ({ error }) => {
+              if (error) {
+                console.warn('Supabase delete item error:', error.message)
+              } else {
+                setToastMessage(`Позиция удалена из Supabase и кассы ☁️`)
+              }
+            },
+            (err: unknown) => {
+              console.warn('Supabase delete item error:', err)
+            },
+          )
       } else {
         setToastMessage(`Позиция удалена из меню`)
       }
@@ -698,6 +722,31 @@ export function PosTerminal() {
 
   const handleRemove = useCallback((id: string) => {
     setCart((prev) => removeItem(prev, id))
+  }, [])
+
+  const handleOpenChickenModal = useCallback(() => {
+    setShowChickenModal(true)
+  }, [])
+
+  const handleAddChicken = useCallback(
+    (chickenItem: {
+      id: string
+      name: string
+      price: number
+      category: string
+      isKitchen: boolean
+      notes: string
+      weightKg: number
+      pricePerKg: number
+      qty: number
+    }) => {
+      setCart((prev) => addItem(prev, chickenItem))
+    },
+    [],
+  )
+
+  const handleUpdateCartItem = useCallback((id: string, updates: Partial<CartItem>) => {
+    setCart((prev) => updateCartItem(prev, id, updates))
   }, [])
 
   const handleClear = useCallback(() => {
@@ -944,6 +993,7 @@ export function PosTerminal() {
         total: finalTotal,
       })
 
+      const curShift = getCurrentShift()
       const kitchenTicket: ReceiptProps = {
         items: [...cart],
         orderNumber: existing?.orderNumber || peekOrderNumber(),
@@ -953,6 +1003,7 @@ export function PosTerminal() {
         subtotal,
         total: finalTotal,
         cashierName: user?.name || 'Кассир',
+        shiftNumber: curShift?.shiftNumber ?? 1,
         printMode: 'kitchen',
         paperWidth,
       }
@@ -965,6 +1016,7 @@ export function PosTerminal() {
       setTimeout(() => setToastMessage(null), 3500)
     } else {
       // Открытие нового заказа на стол
+      const curShift = getCurrentShift()
       const num = nextOrderNumber()
       await createOrder({
         orderNumber: num,
@@ -992,6 +1044,7 @@ export function PosTerminal() {
         subtotal,
         total: finalTotal,
         cashierName: user?.name || 'Кассир',
+        shiftNumber: curShift?.shiftNumber ?? 1,
         printMode: 'kitchen',
         paperWidth,
       }
@@ -1046,6 +1099,7 @@ export function PosTerminal() {
     const activeOrderObj = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : null
     const num = activeOrderObj ? activeOrderObj.orderNumber : orderNumber
     const nowIso = new Date().toISOString()
+    const curShift = getCurrentShift()
 
     if (activeOrderId) {
       await updateOrder(activeOrderId, {
@@ -1091,6 +1145,7 @@ export function PosTerminal() {
       discountPercent: discountPercent > 0 ? discountPercent : undefined,
       total: finalTotal,
       cashierName: user?.name || 'Кассир',
+      shiftNumber: curShift?.shiftNumber ?? 1,
       printMode: 'precheck',
       paperWidth,
       showQrCode: false,
@@ -1141,8 +1196,17 @@ export function PosTerminal() {
       const change = Math.max(0, (cashReceived || finalTotal) - finalTotal)
 
       let num = orderNumber
+      const curShift = getCurrentShift()
+      const kitchenItems = getKitchenItems(cart)
+      const hasKitchenDishes = kitchenItems.length > 0
+      const existing = activeOrderId ? todayOrders.find((o) => o.id === activeOrderId) : undefined
+      const isPostVisitTableClosing =
+        orderType === 'dine_in' &&
+        Boolean(activeOrderId) &&
+        (Boolean(existing?.precheckPrintedAt) || existing?.status === 'ready' || existing?.status === 'completed')
+      const targetStatus: OrderStatus = (!hasKitchenDishes || isPostVisitTableClosing) ? 'completed' : 'cooking'
+
       if (activeOrderId) {
-        const existing = todayOrders.find((o) => o.id === activeOrderId)
         num = existing?.orderNumber || num
         await updateOrder(activeOrderId, {
           items: [...cart],
@@ -1154,7 +1218,9 @@ export function PosTerminal() {
           paymentMethod,
           cashReceived: paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
           changeAmount: paymentMethod === 'cash' ? change : undefined,
-          status: 'completed',
+          status: targetStatus,
+          isPaid: true,
+          paidAt: dt,
         })
       } else {
         num = nextOrderNumber()
@@ -1175,7 +1241,9 @@ export function PosTerminal() {
             paymentMethod === 'cash' ? cashReceived || finalTotal : undefined,
           changeAmount: paymentMethod === 'cash' ? change : undefined,
           cashierName: user?.name || 'Кассир',
-          status: 'completed',
+          status: targetStatus,
+          isPaid: true,
+          paidAt: dt,
         })
       }
 
@@ -1200,6 +1268,7 @@ export function PosTerminal() {
         printMode: 'guest',
         paperWidth,
         showQrCode: showReceiptQr,
+        shiftNumber: curShift?.shiftNumber ?? 1,
       }
 
       setReceiptData(rData)
@@ -1235,6 +1304,7 @@ export function PosTerminal() {
 
   const handleReprint = useCallback(
     (order: Order, mode: PrintMode = 'guest') => {
+      const curShift = getCurrentShift()
       const rData: ReceiptProps = {
         items: order.items,
         orderNumber: order.orderNumber,
@@ -1255,6 +1325,7 @@ export function PosTerminal() {
         printMode: mode,
         paperWidth,
         showQrCode: showReceiptQr,
+        shiftNumber: curShift?.shiftNumber ?? 1,
       }
 
       setReceiptData(rData)
@@ -1659,6 +1730,7 @@ export function PosTerminal() {
                     onCategoryChange={setActiveCategory}
                     onAddItem={handleAddItem}
                     onOpenGarnishMixer={handleOpenGarnishMixer}
+                    onOpenChickenModal={handleOpenChickenModal}
                   />
                 </div>
               </div>
@@ -1704,6 +1776,7 @@ export function PosTerminal() {
                   onSetQty={handleSetQty}
                   onSetPrice={handleSetPrice}
                   onSetNotes={handleSetNotes}
+                  onUpdateItem={handleUpdateCartItem}
                   onRemove={handleRemove}
                   onAddCustomItem={handleAddCustomItem}
                   onClear={handleClear}
@@ -1754,6 +1827,7 @@ export function PosTerminal() {
                       onSetQty={handleSetQty}
                       onSetPrice={handleSetPrice}
                       onSetNotes={handleSetNotes}
+                      onUpdateItem={handleUpdateCartItem}
                       onRemove={handleRemove}
                       onAddCustomItem={handleAddCustomItem}
                       onClear={handleClear}
@@ -1852,6 +1926,13 @@ export function PosTerminal() {
         initialSize={garnishInitialSize}
         onClose={() => setShowGarnishModal(false)}
         onAddGarnish={handleAddGarnish}
+      />
+
+      {/* Модальное окно весового чикена (расчёт кг <-> сум) */}
+      <ChickenWeightModal
+        isOpen={showChickenModal}
+        onClose={() => setShowChickenModal(false)}
+        onAddChicken={handleAddChicken}
       />
 
       {/* Экранный модальный предпросмотр чека */}

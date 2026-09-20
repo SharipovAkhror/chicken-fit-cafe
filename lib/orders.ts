@@ -31,6 +31,8 @@ export type Order = {
   precheckPrintedAt?: string
   completedAt?: string
   syncStatus?: 'synced' | 'pending' | 'failed'
+  isPaid?: boolean
+  paidAt?: string
 }
 
 export type Shift = {
@@ -286,6 +288,8 @@ export async function createOrder(data: {
   cashierName?: string
   status?: OrderStatus
   precheckPrintedAt?: string
+  isPaid?: boolean
+  paidAt?: string
 }): Promise<Order> {
   const currentShift = getCurrentShift()
 
@@ -310,6 +314,8 @@ export async function createOrder(data: {
     cashierName: data.cashierName || currentShift?.cashierName || 'Кассир',
     status: data.status || 'pending',
     precheckPrintedAt: data.precheckPrintedAt,
+    isPaid: data.isPaid,
+    paidAt: data.paidAt,
   }
 
   // 1. Всегда мгновенно сохраняем в локальное хранилище кассы
@@ -325,8 +331,7 @@ export async function createOrder(data: {
   // 4. Если подключен Supabase — пробуем отправить в облако прямо сейчас
   if (supabase) {
     try {
-      const safeStatus = ['completed', 'cancelled'].includes(newOrder.status) ? newOrder.status : 'completed'
-      const { error: fullErr } = await supabase.from('orders').upsert({
+      let { error: fullErr } = await supabase.from('orders').upsert({
         id: newOrder.id,
         order_number: newOrder.orderNumber,
         order_type: newOrder.type,
@@ -338,8 +343,28 @@ export async function createOrder(data: {
         payment_method: newOrder.paymentMethod,
         cash_received: newOrder.cashReceived ?? null,
         change_amount: newOrder.changeAmount ?? null,
-        status: safeStatus,
+        status: newOrder.status,
       })
+
+      // Резервная попытка, если в БД еще старое ограничение только на completed/cancelled
+      if (fullErr && fullErr.message && fullErr.message.includes('status')) {
+        const safeStatus = ['completed', 'cancelled'].includes(newOrder.status) ? newOrder.status : 'completed'
+        const retry = await supabase.from('orders').upsert({
+          id: newOrder.id,
+          order_number: newOrder.orderNumber,
+          order_type: newOrder.type,
+          table_number: newOrder.tableNumber ?? null,
+          customer_phone: newOrder.customerPhone ?? null,
+          delivery_address: newOrder.deliveryAddress ?? null,
+          items: newOrder.items,
+          total_amount: newOrder.total,
+          payment_method: newOrder.paymentMethod,
+          cash_received: newOrder.cashReceived ?? null,
+          change_amount: newOrder.changeAmount ?? null,
+          status: safeStatus,
+        })
+        fullErr = retry.error
+      }
 
       if (!fullErr) {
         // Успешно доставлено в облако! Снимаем из очереди Outbox

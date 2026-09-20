@@ -61,8 +61,8 @@ export function setStoredQrEnabled(enabled: boolean): void {
   } catch {}
 }
 
-/** Получить следующий номер заказа (#001, #002...). Сбрасывается каждый день. */
-export function nextOrderNumber(): string {
+/** Получить следующий номер заказа (#001, #W-001...). Сбрасывается каждый день. */
+export function nextOrderNumber(prefix: string = ''): string {
   const today = todayISO()
   let stored: StoredCounter = { date: today, seq: 0 }
 
@@ -82,24 +82,27 @@ export function nextOrderNumber(): string {
   stored.date = today
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
 
-  return `#${String(stored.seq).padStart(3, '0')}`
+  const cleanPrefix = prefix ? `${prefix.replace('#', '').trim()}-` : ''
+  return `#${cleanPrefix}${String(stored.seq).padStart(3, '0')}`
 }
 
 /** Текущий номер заказа без инкремента (для отображения). */
-export function peekOrderNumber(): string {
+export function peekOrderNumber(prefix: string = ''): string {
   const today = todayISO()
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as StoredCounter
       if (parsed.date === today) {
-        return `#${String(parsed.seq + 1).padStart(3, '0')}`
+        const cleanPrefix = prefix ? `${prefix.replace('#', '').trim()}-` : ''
+        return `#${cleanPrefix}${String(parsed.seq + 1).padStart(3, '0')}`
       }
     }
   } catch {
     // ignore
   }
-  return '#001'
+  const cleanPrefix = prefix ? `${prefix.replace('#', '').trim()}-` : ''
+  return `#${cleanPrefix}001`
 }
 
 /** Время и дата для чека: «13.08.2026 12:45:30» */

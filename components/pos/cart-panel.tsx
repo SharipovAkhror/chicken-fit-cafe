@@ -23,6 +23,9 @@ import {
   LayoutGrid,
   ArrowLeft,
   MessageSquare,
+  Scale,
+  Sliders,
+  DollarSign,
 } from 'lucide-react'
 import type { CartItem } from '@/lib/cart'
 import { lineTotal, cartTotal } from '@/lib/cart'
@@ -52,6 +55,7 @@ type Props = {
   onSetQty: (id: string, qty: number) => void
   onSetPrice: (id: string, price: number) => void
   onSetNotes?: (id: string, notes: string) => void
+  onUpdateItem?: (id: string, updates: Partial<CartItem>) => void
   onRemove: (id: string) => void
   onAddCustomItem: (item: { name: string; price: number }) => void
   onClear: () => void
@@ -71,6 +75,332 @@ function formatNum(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
+/** Модальное окно подробного редактирования позиции в чеке */
+function ItemEditModal({
+  item,
+  onClose,
+  onSave,
+  onRemove,
+}: {
+  item: CartItem
+  onClose: () => void
+  onSave: (updates: Partial<CartItem>) => void
+  onRemove: (id: string) => void
+}) {
+  const [qty, setQty] = useState(item.qty)
+  const [price, setPrice] = useState(item.price)
+  const [notes, setNotes] = useState(item.notes || '')
+  const isWeightItem =
+    Boolean(item.weightKg) ||
+    Boolean(item.pricePerKg) ||
+    item.id.includes('chicken-kg') ||
+    item.id.includes('chicken-1kg') ||
+    item.name.toLowerCase().includes('кг')
+
+  const pricePerKg = item.pricePerKg || 90000
+  const [weightKg, setWeightKg] = useState<number>(
+    item.weightKg || (isWeightItem ? Number((item.price / pricePerKg).toFixed(3)) : 0),
+  )
+
+  const QUICK_TAGS = [
+    '🥡 С собой',
+    '🍽️ В зале',
+    '🧅 Без лука',
+    '🔥 Подогреть',
+    '🌶️ Острее',
+    '❄️ Не острое',
+    '🧂 Без соли',
+    '🥫 Соус отдельно',
+    '📦 В ланчбокс',
+  ]
+
+  function toggleTag(tag: string) {
+    if (notes.includes(tag)) {
+      setNotes(notes.replace(tag, '').replace(/\s{2,}/g, ' ').trim())
+    } else {
+      setNotes(notes ? `${notes}, ${tag}` : tag)
+    }
+  }
+
+  function handlePriceDiscount(pct: number) {
+    const discounted = Math.round((item.originalPrice * (100 - pct)) / 100)
+    setPrice(discounted)
+    if (isWeightItem) {
+      setWeightKg(Number((discounted / pricePerKg).toFixed(3)))
+    }
+  }
+
+  function handleSumChange(valStr: string) {
+    const sum = parseInt(valStr, 10) || 0
+    setPrice(sum)
+    if (isWeightItem) {
+      setWeightKg(Number((sum / Math.max(1, pricePerKg)).toFixed(3)))
+    }
+  }
+
+  function handleWeightChange(wStr: string) {
+    const w = parseFloat(wStr.replace(',', '.')) || 0
+    setWeightKg(w)
+    setPrice(Math.round(w * pricePerKg))
+  }
+
+  function handleCommit() {
+    const updates: Partial<CartItem> = {
+      qty,
+      price,
+      notes: notes.trim(),
+    }
+    if (isWeightItem) {
+      updates.weightKg = weightKg
+      updates.pricePerKg = pricePerKg
+    }
+    onSave(updates)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-xs select-none">
+      <div className="flex flex-col max-h-[94vh] w-full max-w-lg rounded-3xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden">
+        {/* Шапка */}
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5 bg-muted/40">
+          <div>
+            <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              Редактирование позиции
+            </span>
+            <h3 className="text-base sm:text-lg font-black text-foreground line-clamp-1">
+              {item.name}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-8 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground active:scale-90 transition cursor-pointer"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Тело */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 pr-1">
+          {/* Весовой блок при весовом товаре */}
+          {isWeightItem ? (
+            <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 p-3.5 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-amber-700 dark:text-amber-300">
+                <span className="flex items-center gap-1">
+                  <Scale className="size-3.5" />
+                  <span>Весовой расчёт ({formatNum(pricePerKg)} сум/кг)</span>
+                </span>
+                <span className="font-mono">{Math.round(weightKg * 1000)} грамм</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+                    Сумма гостя (сум):
+                  </label>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => handleSumChange(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm sm:text-base font-black font-mono text-foreground outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+                    Вес (кг):
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={weightKg}
+                    onChange={(e) => handleWeightChange(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm sm:text-base font-black font-mono text-foreground outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Быстрые суммы */}
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">
+                  Быстрые суммы:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {[30000, 45000, 50000, 60000, 75000, 90000, 100000].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleSumChange(String(s))}
+                      className="px-2.5 py-1 rounded-lg border border-border bg-card hover:bg-secondary text-[11px] font-mono font-bold transition active:scale-95"
+                    >
+                      {s >= 1000 ? `${s / 1000}к` : s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Быстрый вес */}
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">
+                  Быстрый вес:
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {[0.3, 0.5, 0.75, 1.0, 1.2, 1.5, 2.0].map((w) => (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => handleWeightChange(String(w))}
+                      className="px-2.5 py-1 rounded-lg border border-border bg-card hover:bg-secondary text-[11px] font-mono font-bold transition active:scale-95"
+                    >
+                      {w} кг
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Количество для штучных блюд */
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                Количество (порций):
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    className="flex size-9 items-center justify-center rounded-xl text-foreground hover:bg-card active:scale-90 transition font-black"
+                  >
+                    −
+                  </button>
+                  <span className="min-w-8 text-center text-sm font-black font-mono">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQty((q) => q + 1)}
+                    className="flex size-9 items-center justify-center rounded-xl text-foreground hover:bg-card active:scale-90 transition font-black"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {[1, 2, 3, 4, 5, 10].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setQty(n)}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition active:scale-95 ${
+                        qty === n
+                          ? 'bg-amber-500 text-black font-black'
+                          : 'border border-border bg-card hover:bg-secondary text-foreground'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Цена за единицу */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
+              Цена позиции (сум):
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(parseInt(e.target.value, 10) || 0)}
+                className="w-40 rounded-xl border border-border bg-background px-3 py-2 text-sm sm:text-base font-black font-mono text-foreground outline-none focus:border-amber-500"
+              />
+              <div className="flex flex-wrap gap-1">
+                {[-5, -10, -15].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => handlePriceDiscount(Math.abs(pct))}
+                    className="px-2 py-1.5 rounded-xl border border-border bg-card hover:bg-secondary text-xs font-mono font-bold transition active:scale-95"
+                  >
+                    {pct}%
+                  </button>
+                ))}
+                {price !== item.originalPrice && (
+                  <button
+                    type="button"
+                    onClick={() => setPrice(item.originalPrice)}
+                    className="px-2 py-1.5 rounded-xl border border-border bg-secondary text-muted-foreground hover:text-foreground text-[11px] font-bold transition active:scale-95"
+                  >
+                    Сброс ({formatNum(item.originalPrice)})
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Быстрые пометки для кухни */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+              Быстрые пометки для кухни:
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_TAGS.map((tag) => {
+                const isSelected = notes.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-500 text-black font-bold shadow-2xs'
+                        : 'border border-border bg-card text-foreground hover:bg-secondary'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Примечание к блюду..."
+              className="w-full mt-2 rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-amber-500"
+            />
+          </div>
+        </div>
+
+        {/* Подвал */}
+        <div className="border-t border-border px-5 py-3.5 bg-muted/40 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              onRemove(item.id)
+              onClose()
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-destructive/15 text-destructive px-3.5 py-2.5 text-xs font-bold hover:bg-destructive/25 transition active:scale-95 cursor-pointer"
+          >
+            <Trash2 className="size-4" />
+            <span>Удалить позицию</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCommit}
+            className="flex-1 rounded-2xl bg-amber-500 py-3 text-sm font-black text-black shadow-md shadow-amber-500/20 hover:bg-amber-400 active:scale-98 transition cursor-pointer text-center"
+          >
+            Сохранить ({formatNum(price * qty)} сум)
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Строка позиции заказа с крупными touch-мишенями */
 function CartLine({
   item,
@@ -78,12 +408,14 @@ function CartLine({
   onSetPrice,
   onSetNotes,
   onRemove,
+  onOpenEditModal,
 }: {
   item: CartItem
   onSetQty: (id: string, qty: number) => void
   onSetPrice: (id: string, price: number) => void
   onSetNotes?: (id: string, notes: string) => void
   onRemove: (id: string) => void
+  onOpenEditModal: (item: CartItem) => void
 }) {
   const [editingPrice, setEditingPrice] = useState(false)
   const [priceInput, setPriceInput] = useState('')
@@ -114,11 +446,23 @@ function CartLine({
   return (
     <div className="group flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 transition hover:border-amber-500/40 shadow-2xs">
       {/* Название + сумма строки */}
-      <div className="flex items-start justify-between gap-2">
+      <div
+        className="flex items-start justify-between gap-2 cursor-pointer touch-manipulation"
+        onClick={() => onOpenEditModal(item)}
+      >
         <div className="leading-snug min-w-0 flex-1">
-          <span className="text-xs sm:text-sm font-bold text-foreground block truncate">
-            {item.name}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs sm:text-sm font-bold text-foreground block truncate">
+              {item.name}
+            </span>
+            <Edit2 className="size-3 text-muted-foreground opacity-30 group-hover:opacity-100 transition shrink-0" />
+          </div>
+          {item.weightKg ? (
+            <span className="inline-flex items-center gap-1 mt-0.5 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black text-amber-700 dark:text-amber-400 font-mono">
+              <Scale className="size-2.5" />
+              <span>{item.weightKg.toFixed(2)} кг · {formatNum(item.pricePerKg || 90000)} сум/кг</span>
+            </span>
+          ) : null}
           {item.notes && !editingNotes && (
             <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1">
               <span className="size-1 rounded-full bg-amber-500 shrink-0" />
@@ -174,7 +518,11 @@ function CartLine({
           >
             <Minus className="size-3.5 sm:size-4 stroke-[2.5]" />
           </button>
-          <span className="min-w-7 text-center text-xs sm:text-sm font-black font-mono text-foreground">
+          <span
+            onClick={() => onOpenEditModal(item)}
+            className="min-w-7 text-center text-xs sm:text-sm font-black font-mono text-foreground cursor-pointer hover:underline"
+            title="Изменить количество"
+          >
             {item.qty}
           </span>
           <button
@@ -227,6 +575,16 @@ function CartLine({
         )}
 
         <div className="flex items-center gap-1">
+          {/* Кнопка полного редактирования позиции */}
+          <button
+            type="button"
+            onClick={() => onOpenEditModal(item)}
+            title="Подробно настроить позицию (вес, скидка, теги)"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-90 transition cursor-pointer touch-manipulation"
+          >
+            <Sliders className="size-3.5" />
+          </button>
+
           {/* Кнопка комментария к позиции */}
           {onSetNotes && !editingNotes && (
             <button
@@ -281,6 +639,7 @@ export function CartPanel({
   onSetQty,
   onSetPrice,
   onSetNotes,
+  onUpdateItem,
   onRemove,
   onAddCustomItem,
   onClear,
@@ -299,6 +658,7 @@ export function CartPanel({
   // 'order' — свободный набор заказа без мусора и громоздких калькуляторов
   // 'pay' — сфокусированный экран оплаты со сдачей, купюрами и закрытием чека
   const [mode, setMode] = useState<'order' | 'pay'>('order')
+  const [editingModalItem, setEditingModalItem] = useState<CartItem | null>(null)
   const [showAddCustom, setShowAddCustom] = useState(false)
   const [customName, setCustomName] = useState('')
   const [customPrice, setCustomPrice] = useState('')
@@ -467,13 +827,13 @@ export function CartPanel({
               </div>
 
               {/* Быстрые банкноты */}
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-5 gap-1.5">
                 <button
                   type="button"
                   onClick={() => onSetCashReceived(finalTotal)}
-                  className="rounded-xl bg-amber-500/15 border border-amber-500/30 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 active:scale-95 transition cursor-pointer text-center touch-manipulation"
+                  className="rounded-xl bg-amber-500/15 border border-amber-500/30 py-2.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
-                  Без сдачи
+                  Точно
                 </button>
                 <button
                   type="button"
@@ -495,6 +855,14 @@ export function CartPanel({
                   className="rounded-xl border border-border bg-card py-2.5 text-xs font-mono font-bold hover:bg-secondary active:scale-95 transition cursor-pointer text-center touch-manipulation"
                 >
                   +200к
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSetCashReceived(0)}
+                  title="Сбросить полученную сумму"
+                  className="rounded-xl border border-border bg-card py-2.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/30 active:scale-95 transition cursor-pointer text-center touch-manipulation"
+                >
+                  Сброс
                 </button>
               </div>
 
@@ -765,6 +1133,7 @@ export function CartPanel({
             onSetPrice={onSetPrice}
             onSetNotes={onSetNotes}
             onRemove={onRemove}
+            onOpenEditModal={setEditingModalItem}
           />
         ))}
 
@@ -887,16 +1256,33 @@ export function CartPanel({
           </div>
         ) : (
           <div className="space-y-2">
-            {/* Главная кнопка расчёта для навынос / доставки */}
-            <button
-              type="button"
-              onClick={() => setMode('pay')}
-              disabled={!hasItems}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3.5 text-sm sm:text-base font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20 touch-manipulation"
-            >
-              <CreditCard className="size-4" />
-              <span>Оплатить ({formatNum(finalTotal)} сум) →</span>
-            </button>
+            {/* Кнопки расчёта для навынос / доставки */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onSetPaymentMethod('cash')
+                  onSetCashReceived(finalTotal)
+                  onSubmitOrder()
+                }}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-foreground py-3 text-xs font-bold transition active:scale-98 disabled:opacity-30 cursor-pointer touch-manipulation shadow-2xs"
+                title="Быстрая оплата наличными без сдачи"
+              >
+                <Banknote className="size-4 text-amber-500" />
+                <span>Без сдачи (нал)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMode('pay')}
+                disabled={!hasItems}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-xs sm:text-sm font-black text-black transition active:scale-[0.98] disabled:opacity-30 cursor-pointer shadow-md shadow-amber-500/20 touch-manipulation"
+              >
+                <CreditCard className="size-4" />
+                <span>Расчёт →</span>
+              </button>
+            </div>
 
             <button
               type="button"
@@ -910,6 +1296,27 @@ export function CartPanel({
           </div>
         )}
       </div>
+
+      {editingModalItem && (
+        <ItemEditModal
+          item={editingModalItem}
+          onClose={() => setEditingModalItem(null)}
+          onSave={(updates) => {
+            if (onUpdateItem) {
+              onUpdateItem(editingModalItem.id, updates)
+            } else {
+              if (updates.qty !== undefined) onSetQty(editingModalItem.id, updates.qty)
+              if (updates.price !== undefined) onSetPrice(editingModalItem.id, updates.price)
+              if (updates.notes !== undefined && onSetNotes) onSetNotes(editingModalItem.id, updates.notes)
+            }
+            setEditingModalItem(null)
+          }}
+          onRemove={(id) => {
+            onRemove(id)
+            setEditingModalItem(null)
+          }}
+        />
+      )}
     </div>
   )
 }

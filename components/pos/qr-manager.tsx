@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Printer, Wifi, Download, Copy } from 'lucide-react'
+import { Printer, Wifi, Download, Copy, Check } from 'lucide-react'
 import { SimpleQR } from '@/lib/qr-generator'
 
 type Props = {
@@ -18,6 +18,7 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
   const [wifiPass, setWifiPass] = useState('chicken2026')
   const [batchMode, setBatchMode] = useState(false)
   const [batchCount, setBatchCount] = useState(10)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
@@ -63,8 +64,8 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
       {/* Верхняя шапка настроек (скрывается при печати) */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-          <h2 className="text-lg font-bold text-white">Генератор QR-кодов и Тейбл-тентов</h2>
-          <p className="text-xs text-white/50">
+          <h2 className="text-lg font-bold text-foreground">Генератор QR-кодов и Тейбл-тентов</h2>
+          <p className="text-xs text-muted-foreground">
             Готовые макеты для столов, наклеек и стоек кафе
           </p>
         </div>
@@ -75,7 +76,7 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
             className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition cursor-pointer ${
               batchMode
                 ? 'bg-amber-500 text-black'
-                : 'bg-white/10 text-white hover:bg-white/15'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border'
             }`}
           >
             <Printer className="size-3.5" />
@@ -92,28 +93,28 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
       </div>
 
       {/* Панель настроек (скрывается при печати) */}
-      <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs sm:grid-cols-2 lg:grid-cols-4 print:hidden">
+      <div className="grid gap-4 rounded-2xl border border-border bg-card p-4 text-xs sm:grid-cols-2 lg:grid-cols-4 print:hidden shadow-xs">
         <div>
-          <label className="font-semibold text-white/70">Домен / Ссылка</label>
+          <label className="font-semibold text-foreground">Домен / Ссылка</label>
           <input
             type="text"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="https://chickenfit.vercel.app"
-            className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs text-white outline-none focus:border-amber-400/60"
+            className="mt-1 w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground outline-none focus:border-amber-400"
           />
         </div>
 
         {!batchMode ? (
           <div>
-            <label className="font-semibold text-white/70">Номер стола / Локация</label>
+            <label className="font-semibold text-foreground">Номер стола / Локация</label>
             <div className="mt-1 flex gap-1">
               <input
                 type="text"
                 value={table}
                 onChange={(e) => setTable(e.target.value)}
                 placeholder="1"
-                className="w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs text-white outline-none focus:border-amber-400/60"
+                className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground outline-none focus:border-amber-400"
               />
               <div className="flex gap-1">
                 {['1', '2', '3', '4', 'Бар'].map((t) => (
@@ -121,7 +122,7 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
                     key={t}
                     type="button"
                     onClick={() => setTable(t)}
-                    className="rounded-lg bg-white/5 px-2 py-1 text-[11px] text-white/70 hover:bg-white/10"
+                    className="rounded-lg bg-secondary px-2 py-1 text-[11px] font-medium text-foreground hover:bg-secondary/80 border border-border cursor-pointer"
                   >
                     {t}
                   </button>
@@ -131,38 +132,38 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
           </div>
         ) : (
           <div>
-            <label className="font-semibold text-white/70">Количество столов в серии</label>
+            <label className="font-semibold text-foreground">Количество столов в серии</label>
             <input
               type="number"
               min="1"
               max="50"
               value={batchCount}
               onChange={(e) => setBatchCount(parseInt(e.target.value, 10) || 1)}
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs text-white outline-none focus:border-amber-400/60"
+              className="mt-1 w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground outline-none focus:border-amber-400"
             />
           </div>
         )}
 
         <div>
-          <label className="font-semibold text-white/70">Язык по умолчанию</label>
+          <label className="font-semibold text-foreground">Язык по умолчанию</label>
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value as 'ru' | 'uz' | 'en')}
-            className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-xs text-white outline-none"
+            className="mt-1 w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground outline-none focus:border-amber-400"
           >
-            <option value="ru" className="bg-zinc-900">Русский ( / )</option>
-            <option value="uz" className="bg-zinc-900">O&apos;zbekcha ( /uz )</option>
-            <option value="en" className="bg-zinc-900">English ( /en )</option>
+            <option value="ru">Русский ( / )</option>
+            <option value="uz">O&apos;zbekcha ( /uz )</option>
+            <option value="en">English ( /en )</option>
           </select>
         </div>
 
         <div className="flex flex-col justify-end gap-2">
-          <label className="flex items-center gap-2 cursor-pointer text-white/80">
+          <label className="flex items-center gap-2 cursor-pointer text-foreground font-medium">
             <input
               type="checkbox"
               checked={showWifi}
               onChange={(e) => setShowWifi(e.target.checked)}
-              className="accent-amber-500"
+              className="accent-amber-500 rounded"
             />
             <span>Добавить блок Wi-Fi</span>
           </label>
@@ -173,14 +174,14 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
                 value={wifiName}
                 onChange={(e) => setWifiName(e.target.value)}
                 placeholder="Сеть"
-                className="w-1/2 rounded-lg border border-white/10 bg-white/5 p-1.5 text-[11px] text-white"
+                className="w-1/2 rounded-lg border border-border bg-background p-1.5 text-[11px] text-foreground"
               />
               <input
                 type="text"
                 value={wifiPass}
                 onChange={(e) => setWifiPass(e.target.value)}
                 placeholder="Пароль"
-                className="w-1/2 rounded-lg border border-white/10 bg-white/5 p-1.5 text-[11px] text-white"
+                className="w-1/2 rounded-lg border border-border bg-background p-1.5 text-[11px] text-foreground"
               />
             </div>
           )}
@@ -189,8 +190,8 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
 
       {/* Превью макета тейбл-тента для печати */}
       {!batchMode ? (
-        <div className="flex flex-col items-center justify-center p-4 sm:p-8">
-          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border-4 border-amber-500/30 bg-white p-7 text-center text-zinc-950 shadow-2xl transition-all">
+        <div className="flex flex-col items-center justify-center p-4 sm:p-8 print:p-0 print-qr-target">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border-4 border-amber-500/30 bg-white p-7 text-center text-zinc-950 shadow-2xl transition-all print:shadow-none print:border-2 print:max-w-md print:mx-auto">
             {/* Декоративная рамка */}
             <div className="absolute inset-2 pointer-events-none rounded-2xl border border-amber-500/20" />
 
@@ -252,27 +253,41 @@ export function QrManager({ defaultDomain = 'https://chickenfit.vercel.app' }: P
             <button
               type="button"
               onClick={() => handleDownloadSvg(table, currentUrl)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-800 dark:text-white transition hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-secondary cursor-pointer shadow-xs"
             >
               <Download className="size-3.5" />
               <span>Скачать SVG QR</span>
             </button>
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(currentUrl)
-                alert('Ссылка скопирована: ' + currentUrl)
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(currentUrl)
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                } catch {
+                  // clipboard fallback
+                }
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-secondary border border-border px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-secondary/80 cursor-pointer shadow-xs"
             >
-              <Copy className="size-3.5" />
-              <span>Скопировать ссылку</span>
+              {copied ? (
+                <>
+                  <Check className="size-3.5 text-emerald-500" />
+                  <span className="text-emerald-600 dark:text-emerald-400">Скопировано!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="size-3.5" />
+                  <span>Скопировать ссылку</span>
+                </>
+              )}
             </button>
           </div>
         </div>
       ) : (
         /* Режим печати всей серии столов */
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-2 print:gap-4 print-qr-target">
           {Array.from({ length: batchCount }, (_, i) => String(i + 1)).map((num) => {
             let clean = domain.trim().replace(/\/+$/, '')
             if (!clean.startsWith('http://') && !clean.startsWith('https://')) {

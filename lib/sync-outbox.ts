@@ -182,11 +182,10 @@ export async function processOutboxQueue(): Promise<{
         record.attempts += 1
         record.lastAttemptAt = new Date().toISOString()
 
-        const p = record.payload
-        // Формируем безопасный статус, гарантированно принимаемый схемой
-        const safeStatus = ['completed', 'cancelled'].includes(p.status) ? p.status : 'completed'
+        const p: any = record.payload || {}
+        const targetStatus = p.status || 'pending'
 
-        // Попытка полной вставки/апдейта
+        // Попытка полной вставки/апдейта с реальным статусом заказа
         let resultErr: any = null
         if (record.type === 'create') {
           const { error } = await supabase.from('orders').upsert({
@@ -201,9 +200,29 @@ export async function processOutboxQueue(): Promise<{
             payment_method: p.payment_method || p.paymentMethod,
             cash_received: p.cash_received || p.cashReceived || null,
             change_amount: p.change_amount || p.changeAmount || null,
-            status: safeStatus,
+            status: targetStatus,
           })
           resultErr = error
+
+          // Резервная попытка для старой схемы базы данных
+          if (resultErr && resultErr.message && resultErr.message.includes('status')) {
+            const safeStatus = ['completed', 'cancelled'].includes(targetStatus) ? targetStatus : 'completed'
+            const retry = await supabase.from('orders').upsert({
+              id: p.id,
+              order_number: p.order_number || p.orderNumber,
+              order_type: p.order_type || p.type,
+              table_number: p.table_number || p.tableNumber || null,
+              customer_phone: p.customer_phone || p.customerPhone || null,
+              delivery_address: p.delivery_address || p.deliveryAddress || null,
+              items: p.items,
+              total_amount: p.total_amount || p.total,
+              payment_method: p.payment_method || p.paymentMethod,
+              cash_received: p.cash_received || p.cashReceived || null,
+              change_amount: p.change_amount || p.changeAmount || null,
+              status: safeStatus,
+            })
+            resultErr = retry.error
+          }
         } else {
           const { error } = await supabase
             .from('orders')
@@ -211,10 +230,24 @@ export async function processOutboxQueue(): Promise<{
               items: p.items,
               total_amount: p.total_amount || p.total,
               table_number: p.table_number || p.tableNumber || null,
-              status: safeStatus,
+              status: targetStatus,
             })
             .eq('id', record.id)
           resultErr = error
+
+          if (resultErr && resultErr.message && resultErr.message.includes('status')) {
+            const safeStatus = ['completed', 'cancelled'].includes(targetStatus) ? targetStatus : 'completed'
+            const retry = await supabase
+              .from('orders')
+              .update({
+                items: p.items,
+                total_amount: p.total_amount || p.total,
+                table_number: p.table_number || p.tableNumber || null,
+                status: safeStatus,
+              })
+              .eq('id', record.id)
+            resultErr = retry.error
+          }
         }
 
         if (!resultErr) {
