@@ -37,3 +37,9 @@ v1 продолжит работать: legacy-ключи localStorage v2 не �
 Временный сотрудник `staff.is_test=true` (его заказы и смены пишутся с `source='dev_test'`, не попадают в отчёты и pull реальных сотрудников):
 `TEST_PIN=… BASE=http://localhost:3100 node tests/e2e/real-supabase-e2e.mjs`. После прогона удалить его заказы
 (`orders.created_by`), смены (`shifts.opened_by`), `applied_mutations.staff_id`, `login_attempts` его устройств и самого сотрудника.
+
+## v2.1 / v2.2 (ветка `ux/v2.1`) — перед мержем в main
+- `v2_0009_product_kinds` — **уже применена** в Supabase (колонки `menu_items.kind/options`; старые клиенты совместимы).
+- `20261003001000_price_override_audit.sql` (`v2_0010`) — **ещё НЕ применена**. Применить при мерже (до деплоя прода):
+  аудит ручной цены → `order_events.type = 'price_override'`. Вызов аудита в `_upsert_order` обёрнут в
+  `exception when others` — сбой аудита не может сорвать запись заказа. Без неё v2.1 работает, но аудита нет.

@@ -37,3 +37,4 @@ jobs:
           run supabase/tests/02_tests.sql
           run supabase/tests/03_tests_v8.sql
           run supabase/tests/04_tests_v9.sql
+          run supabase/tests/05_tests_v10.sql

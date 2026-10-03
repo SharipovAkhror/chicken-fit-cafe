@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRightLeft, Ban, ChefHat, Minus, MoreHorizontal, Plus, PlusCircle, Printer, Search, X } from 'lucide-react'
-import { addItem, cartCount, lineTotal, setQty, updateLine } from '@/domain/cart'
+import { ArrowLeft, ArrowRightLeft, Ban, ChefHat, MoreHorizontal, Plus, PlusCircle, Printer, Search, X } from 'lucide-react'
+import { addItem, baseName, cartCount, gramsOf, isPriceOverridden, lineTotal, setQty, updateLine } from '@/domain/cart'
 import { STATUS_LABEL, TYPE_LABEL, isActive, type Order, type PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { kindOf, optionsOf, hasOptions, pricePerKgOf, type ProductOptions } from '@/domain/product'
@@ -10,14 +10,22 @@ import type { MenuItemRow } from '@/data/local-db'
 import { useRuntime } from '@/features/app/runtime'
 import { Modal, Money } from './common'
 import { PaymentDialog } from './PaymentDialog'
-import { cancelOrder, markPrecheck, pay, saveDraftLocal, saveOrder, sendToKitchen, withTotals } from './actions'
+import { cancelOrder, markPrecheck, pay, saveDraftLocal, saveMenuItem, saveOrder, sendToKitchen, withTotals } from './actions'
 import { printJob } from './print'
 import { useActiveOrders, useMenu, useTables } from './useData'
 import { GarnishDialog } from './GarnishDialog'
 import { ProductCard } from './ProductCard'
-import { CustomItemDialog, LineEditor, OptionsDialog, TransferDialog, WeightDialog } from './ItemDialogs'
+import { LinePanel, OptionsDialog, QuickProductDialog, TransferDialog, WeightAdd, type QuickProduct } from './ItemDialogs'
+import { uuidv4 } from '@/domain/ids'
 
 type Pending = { kind: 'garnish' | 'portion' | 'weight' | 'options'; item: MenuItemRow } | null
+
+/** В чеке на экране — без процентов и граммов микса (они нужны кухне и печатаются в тикете). */
+const shortNote = (name: string, notes?: string, mix?: boolean) => {
+  if (!notes || !mix) return notes
+  const t = notes.split(', ').map((p) => p.replace(/\s\d+%/g, '').replace(/\s*\(\d+\s?г\)/g, '').trim()).filter((p) => p && !name.includes(p)).join(', ')
+  return t || undefined
+}
 
 const minutesSince = (iso: string) => Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 60000))
 
@@ -32,7 +40,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const [paying, setPaying] = useState(false)
   const [lineIdx, setLineIdx] = useState<number | null>(null)
   const [pending, setPending] = useState<Pending>(null)
-  const [dialog, setDialog] = useState<'cancel' | 'custom' | 'transfer' | null>(null)
+  const [dialog, setDialog] = useState<'cancel' | 'new' | 'transfer' | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sheet, setSheet] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -78,6 +86,21 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
     add({ id: m.id, name: m.nameRu, price: m.price, category: m.categoryId ?? undefined, isKitchen: m.isKitchen ?? undefined })
   }
 
+  /** Новое блюдо из заказа: (по желанию) сохраняем в меню и сразу добавляем как обычное нажатие на карточку. */
+  const onQuick = async (p: QuickProduct) => {
+    setDialog(null)
+    const weighted = p.kind === 'weighted'
+    const row = {
+      id: `custom-${uuidv4().slice(0, 8)}`, nameRu: p.name, categoryId: p.categoryId, price: p.price, kind: p.kind, unit: weighted ? 'kg' : 'portion',
+      pricePerKg: weighted ? p.price : null, isKitchen: p.isKitchen, available: true, imageUrl: null, weight: null, options: null,
+    }
+    const item: MenuItemRow = p.saveToMenu ? await saveMenuItem(db, row, p.categoryTitle, null) : { ...row, isDeleted: false, needsReview: false, sortOrder: 0 }
+    if (p.saveToMenu) { setQ(''); setCat(p.categoryId) }
+    onProduct(item)
+    if (p.saveToMenu) flash(`«${p.name}» сохранено в меню`)
+  }
+  const catList = (menu?.categories ?? []).map((c) => ({ id: c.id, title: c.titleRu }))
+
   const toKitchen = async () => {
     const saved = await sendToKitchen(db, order)
     setOrder(saved)
@@ -112,6 +135,13 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const busyTables = new Set(active.filter((o) => o.type === 'dine_in' && o.tableId && o.id !== order.id && isActive(o)).map((o) => o.tableId as string))
   const title = order.type === 'dine_in' ? tableLabel ?? `Стол ${order.tableId}` : TYPE_LABEL[order.type]
 
+  const editLine = lineIdx !== null && !locked ? order.items[lineIdx] : undefined
+  const editor = editLine && lineIdx !== null && (
+    <LinePanel key={lineIdx} line={editLine} onClose={() => setLineIdx(null)}
+      onChange={(l) => update(withTotals(order, updateLine(order.items, lineIdx, l)))}
+      onRemove={() => { update(withTotals(order, setQty(order.items, lineIdx, 0))); setLineIdx(null) }} />
+  )
+
   const ticket = (
     <aside className="panel flex flex-col relative" style={{ width: compact ? '100%' : 400, height: '100%', borderRadius: compact ? 0 : 12 }}>
       <div className="p-3 flex items-center justify-between gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -128,7 +158,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
         {moreOpen && (
           <div className="panel menu-pop" role="menu" onClick={() => setMoreOpen(false)}>
             {order.type === 'dine_in' && <button role="menuitem" onClick={() => setDialog('transfer')}><ArrowRightLeft size={18} />Перенести на другой стол</button>}
-            <button role="menuitem" onClick={() => setDialog('custom')}><PlusCircle size={18} />Своя позиция</button>
+            <button role="menuitem" onClick={() => setDialog('new')}><PlusCircle size={18} />Новое блюдо / своя позиция</button>
             {order.number && order.paymentStatus === 'unpaid' && <button role="menuitem" className="danger" onClick={() => setDialog('cancel')}><Ban size={18} />Отменить заказ</button>}
           </div>
         )}
@@ -143,25 +173,25 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
       )}
       <ul className="flex-1 overflow-auto px-2" aria-label="Позиции заказа">
         {order.items.length === 0 && <li className="muted p-6 text-center">Нажмите на блюдо, чтобы добавить</li>}
-        {order.items.map((it, idx) => (
-          <li key={idx} className="line">
-            <button className="line-main" disabled={locked} onClick={() => setLineIdx(idx)} aria-label={`Изменить: ${it.name}`}>
-              <span className="min-w-0">
-                <span className="font-semibold block">{it.name}{it.isKitchen === false && <span className="muted text-xs font-normal"> · бар</span>}</span>
-                {it.notes && <span className="text-sm block" style={{ color: 'var(--primary-ink)' }}>{it.notes}</span>}
-                <span className="muted text-sm">{it.weightKg ? (it.pricePerKg ? `${formatUZS(it.pricePerKg)} / кг` : '') : `${it.qty} × ${formatUZS(it.price)}`}</span>
-              </span>
-              <span className="font-bold whitespace-nowrap">{formatUZS(lineTotal(it))}</span>
-            </button>
-            {!locked && !it.weightKg && (
-              <div className="flex items-center gap-2 mt-1">
-                <button className="btn qty-btn" aria-label={`Меньше: ${it.name}`} onClick={() => update(withTotals(order, setQty(order.items, idx, it.qty - 1)))}><Minus size={18} /></button>
-                <span className="w-8 text-center font-bold">{it.qty}</span>
-                <button className="btn qty-btn" aria-label={`Больше: ${it.name}`} onClick={() => update(withTotals(order, setQty(order.items, idx, it.qty + 1)))}><Plus size={18} /></button>
-              </div>
-            )}
-          </li>
-        ))}
+        {order.items.map((it, idx) => {
+          const sub = it.weightKg ? `${gramsOf(it)} г` : null
+          const changed = isPriceOverridden(it)
+          const note = shortNote(it.name, it.notes, !!it.garnishMix?.length)
+          return (
+            <li key={idx} className="line">
+              <button className="line-main" disabled={locked} aria-current={lineIdx === idx} onClick={() => setLineIdx(lineIdx === idx ? null : idx)} aria-label={`Изменить: ${it.name}`}>
+                <span className="min-w-0">
+                  <span className="font-semibold block">
+                    {it.qty > 1 && !it.weightKg && <span className="line-qty">{it.qty}×</span>}{baseName(it)}
+                  </span>
+                  {(sub || changed) && <span className="line-sub">{[sub, changed ? 'своя цена' : null].filter(Boolean).join(' · ')}</span>}
+                  {note && <span className="line-note">{note}</span>}
+                </span>
+                <span className="font-bold whitespace-nowrap">{formatUZS(lineTotal(it))}</span>
+              </button>
+            </li>
+          )
+        })}
         <li ref={listEnd} aria-hidden />
       </ul>
       <div className="p-3 grid gap-2" style={{ borderTop: '1px solid var(--border)' }}>
@@ -183,7 +213,12 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
 
   return (
     <div className="flex h-full gap-3 p-3" style={{ minHeight: 0 }}>
-      {(!compact || !sheet) && (
+      {!compact && editLine && (
+        <section className="flex-1 flex justify-center items-start overflow-auto" style={{ minWidth: 0 }}>
+          <div className="edit-pane">{editor}</div>
+        </section>
+      )}
+      {(compact ? !sheet : !editLine) && (
         <section className="flex-1 flex flex-col gap-3" style={{ minWidth: 0 }}>
           <div className="flex items-center gap-2">
             <button className="btn shrink-0" onClick={onBack} aria-label="Столы"><ArrowLeft size={18} />{!compact && 'Столы'}</button>
@@ -192,6 +227,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
               <input className="input" style={{ paddingLeft: 38, paddingRight: q ? 40 : 12 }} placeholder="Поиск блюда" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Поиск блюда" />
               {q && <button className="btn btn-ghost" style={{ position: 'absolute', right: 0, top: 0, minHeight: 48, padding: '0 10px' }} onClick={() => setQ('')} aria-label="Очистить поиск"><X size={18} /></button>}
             </label>
+            {!locked && <button className="btn shrink-0" onClick={() => setDialog('new')} aria-label="Новое блюдо"><Plus size={18} />{!compact && 'Новое'}</button>}
             {compact && <span className="font-bold whitespace-nowrap">{title}</span>}
           </div>
           {!needle && (
@@ -218,16 +254,12 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
         <PaymentDialog order={order} onClose={() => setPaying(false)} onPaid={onPaid}
           onDiscount={(p) => update(withTotals(order, order.items, p))} />
       )}
-      {lineIdx !== null && order.items[lineIdx] && (
-        <LineEditor line={order.items[lineIdx]} onClose={() => setLineIdx(null)}
-          onRemove={() => { update(withTotals(order, setQty(order.items, lineIdx, 0))); setLineIdx(null) }}
-          onSave={(u) => { update(withTotals(order, updateLine(order.items, lineIdx, u))); setLineIdx(null) }} />
-      )}
+      {compact && editLine && <Modal title="Позиция" onClose={() => setLineIdx(null)}>{editor}</Modal>}
       {wItem && (
-        <WeightDialog name={wBase} pricePerKg={wPpk} opts={wOpts} onClose={() => setPending(null)} onAdd={(r) => {
+        <WeightAdd name={wBase} pricePerKg={wPpk} opts={wOpts} onClose={() => setPending(null)} onAdd={(r) => {
           const v = r.variant ? ` ${r.variant}` : ''
           const extrasNote = r.note.split(' · ').filter((x) => x && x !== r.variant).join(' · ')
-          add({ id: wItem.id, name: `${wBase}${v} ${r.grams} г`, price: r.price, weightKg: r.grams / 1000, pricePerKg: wPpk, category: wItem.categoryId ?? undefined, isKitchen: wItem.isKitchen ?? true, notes: extrasNote || undefined })
+          add({ id: wItem.id, name: `${wBase}${v} ${r.grams} г`, price: r.price, originalPrice: r.price, weightKg: r.grams / 1000, pricePerKg: wPpk, listPricePerKg: wPpk, category: wItem.categoryId ?? undefined, isKitchen: wItem.isKitchen ?? true, notes: extrasNote || undefined })
           setPending(null)
         }} />
       )}
@@ -258,8 +290,8 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
             }} />
         )
       })()}
-      {dialog === 'custom' && (
-        <CustomItemDialog onClose={() => setDialog(null)} onAdd={(r) => { add({ id: `custom-${Date.now()}`, name: r.name, price: r.price, isKitchen: r.isKitchen }); setDialog(null) }} />
+      {dialog === 'new' && (
+        <QuickProductDialog cats={catList} defaultCat={cat} canSave onClose={() => setDialog(null)} onDone={(p) => void onQuick(p)} />
       )}
       {dialog === 'transfer' && order.tableId && (
         <TransferDialog from={order.tableId} tables={tables} busy={busyTables} onClose={() => setDialog(null)} onPick={transfer} />

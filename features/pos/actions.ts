@@ -2,7 +2,7 @@
 import { uuidv4 } from '@/domain/ids'
 import { computeTotals, type CartItem } from '@/domain/cart'
 import type { Order, OrderStatus, OrderType, PaymentMethod, Shift } from '@/domain/order'
-import type { LocalDb } from '@/data/local-db'
+import type { LocalDb, MenuItemRow } from '@/data/local-db'
 import { enqueue } from '@/data/outbox'
 import { orderToPayload, shiftToPayload } from '@/data/mappers'
 import { getEngine } from '@/features/app/runtime'
@@ -93,4 +93,22 @@ export async function saveDraftLocal(db: LocalDb, o: Order): Promise<void> {
 /** Счёт (пречек) выдан гостю — локальная отметка для плана зала (как «СЧЁТ» в v1). */
 export async function markPrecheck(db: LocalDb, orderId: string): Promise<void> {
   await db.kv.put({ key: `precheck:${orderId}`, value: new Date().toISOString() })
+}
+
+export type MenuItemInput = Omit<MenuItemRow, 'isDeleted' | 'needsReview' | 'sortOrder'>
+
+/** Создать/изменить блюдо: локально + menu.upsert в outbox (из редактора меню и из заказа). */
+export async function saveMenuItem(db: LocalDb, row: MenuItemInput, categoryTitle: string, existing: MenuItemRow | null): Promise<MenuItemRow> {
+  const same = await db.menu.where('categoryId').equals(row.categoryId ?? '').toArray().catch(() => [] as MenuItemRow[])
+  const maxSort = Math.max(0, ...same.map((i) => i.sortOrder))
+  const full: MenuItemRow = existing ? { ...existing, ...row } : { ...row, isDeleted: false, needsReview: false, sortOrder: maxSort + 1 }
+  await db.menu.put(full)
+  if (full.categoryId && !(await db.categories.get(full.categoryId))) await db.categories.put({ id: full.categoryId, titleRu: categoryTitle, sortOrder: 99, isActive: true })
+  await enqueue(db, 'menu.upsert', full.id, {
+    id: full.id, nameRu: full.nameRu, categoryId: full.categoryId, categoryTitle, price: full.price, imageUrl: full.imageUrl ?? '',
+    isKitchen: full.isKitchen, available: full.available, kind: full.kind, unit: full.unit, pricePerKg: full.pricePerKg ?? null,
+    weight: full.weight ?? null, options: full.options ?? null, ...(existing ? {} : { sortOrder: full.sortOrder }),
+  })
+  getEngine().kick()
+  return full
 }

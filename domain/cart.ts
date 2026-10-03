@@ -18,7 +18,10 @@ export type CartItem = {
   notes?: string
   garnishMix?: GarnishIngredient[]
   weightKg?: number
+  /** цена за кг в этой позиции (может быть изменена кассиром) */
   pricePerKg?: number
+  /** цена за кг по меню — для расчёта originalPrice весовой позиции */
+  listPricePerKg?: number
   unit?: string
 }
 
@@ -78,3 +81,26 @@ export function computeTotals(cart: CartItem[], discountPercent = 0, customDisco
 
 /** Сдача (не меньше нуля). */
 export const changeDue = (total: number, received: number): number => Math.max(0, roundUZS(received) - roundUZS(total))
+
+/** Название без хвоста веса: «Chicken Крылья 556 г» → «Chicken Крылья». */
+export const baseName = (item: Pick<CartItem, 'name' | 'weightKg'>): string => (item.weightKg ? item.name.replace(/\s+\d+\s?г$/u, '') : item.name)
+export const gramsOf = (item: Pick<CartItem, 'weightKg'>): number => Math.round((item.weightKg ?? 0) * 1000)
+/** Цена изменена вручную (price ≠ цена по меню). Эти строки сервер пишет в аудит (order_events 'price_override'). */
+export const isPriceOverridden = (item: CartItem): boolean => roundUZS(item.price) !== roundUZS(item.originalPrice)
+
+/**
+ * Весовая позиция: новый вес, сумма или цена за кг. Цена пересчитывается; originalPrice = вес × цена за кг по меню,
+ * поэтому смена веса — не «ручная цена», а смена цены за кг — ручная.
+ */
+export function weighLine(item: CartItem, change: { grams?: number; sum?: number; pricePerKg?: number }): CartItem {
+  const listPpk = item.listPricePerKg ?? item.pricePerKg ?? item.price
+  const ppk = Math.max(0, change.pricePerKg ?? item.pricePerKg ?? listPpk)
+  let grams = change.grams ?? gramsOf(item)
+  let price: number
+  if (change.sum !== undefined) {
+    price = roundUZS(change.sum)
+    grams = ppk > 0 ? Math.round((price * 1000) / ppk) : 0
+  } else price = roundUZS((grams * ppk) / 1000)
+  const originalPrice = ppk === listPpk ? price : roundUZS((grams * listPpk) / 1000)
+  return { ...item, qty: 1, weightKg: grams / 1000, pricePerKg: ppk, listPricePerKg: listPpk, price, originalPrice, name: `${baseName(item)} ${grams} г` }
+}

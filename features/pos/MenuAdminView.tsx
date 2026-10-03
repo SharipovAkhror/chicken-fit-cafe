@@ -9,6 +9,7 @@ import { formatUZS } from '@/domain/money'
 import { uuidv4 } from '@/domain/ids'
 import { KIND_HINT, KIND_LABEL, kindOf, optionsOf, parseList, pricePerKgOf, stationOf, type ProductKind } from '@/domain/product'
 import { Modal } from './common'
+import { saveMenuItem } from './actions'
 import { TablesAdmin } from './TablesAdmin'
 import { thumbOf, TypeIndicator } from './ProductCard'
 import menuJson from '@/content/menu.json'
@@ -48,7 +49,11 @@ function MenuItems({ isAdmin }: { isAdmin: boolean }) {
   const active = items.filter((i) => !i.needsReview && !i.isDeleted && (!q || i.nameRu.toLowerCase().includes(q.toLowerCase()))).sort((a, b) => a.sortOrder - b.sortOrder)
   const groups = [...new Set(active.map((i) => i.categoryId))]
   const catTitle = (g: string | null) => cats.find((c) => c.id === g)?.titleRu ?? (g ? JSON_TITLES[g] ?? g : 'Без категории')
-  const catList = cats.length ? [...cats].sort((a, b) => a.sortOrder - b.sortOrder).map((c) => ({ id: c.id, title: c.titleRu })) : Object.entries(JSON_TITLES).map(([id, title]) => ({ id, title }))
+  // категории с сервера + базовые из menu.json (если сервер ещё не прислал справочник)
+  const catList = [
+    ...[...cats].sort((a, b) => a.sortOrder - b.sortOrder).map((c) => ({ id: c.id, title: c.titleRu })),
+    ...Object.entries(JSON_TITLES).filter(([id]) => !cats.some((c) => c.id === id)).map(([id, title]) => ({ id, title })),
+  ]
   if (!items.length) return <div className="p-6 muted">Меню ещё не загружено с сервера.</div>
   return (
     <div className="p-4 grid gap-4" style={{ maxWidth: 960, gridTemplateColumns: 'minmax(0, 1fr)' }}>
@@ -102,17 +107,7 @@ function MenuItems({ isAdmin }: { isAdmin: boolean }) {
           onClose={() => setForm(null)}
           onDelete={form !== 'new' ? async () => { await save(form, { isDeleted: true }); setForm(null) } : undefined}
           onSave={async (row, categoryTitle) => {
-            const existing = form !== 'new' ? form : null
-            const maxSort = Math.max(0, ...items.filter((i) => i.categoryId === row.categoryId).map((i) => i.sortOrder))
-            const full: MenuItemRow = existing ? { ...existing, ...row } : { ...row, isDeleted: false, needsReview: false, sortOrder: maxSort + 1 }
-            await db.menu.put(full)
-            if (full.categoryId && !cats.some((c) => c.id === full.categoryId)) await db.categories.put({ id: full.categoryId, titleRu: categoryTitle, sortOrder: 99, isActive: true })
-            await enqueue(db, 'menu.upsert', full.id, {
-              id: full.id, nameRu: full.nameRu, categoryId: full.categoryId, categoryTitle, price: full.price, imageUrl: full.imageUrl ?? '',
-              isKitchen: full.isKitchen, available: full.available, kind: full.kind, unit: full.unit, pricePerKg: full.pricePerKg ?? null,
-              weight: full.weight ?? null, options: full.options ?? null, ...(existing ? {} : { sortOrder: full.sortOrder }),
-            })
-            getEngine().kick()
+            await saveMenuItem(db, row, categoryTitle, form !== 'new' ? form : null)
             setForm(null)
           }} />
       )}
@@ -138,6 +133,7 @@ export function ItemForm({ item, cats, onClose, onSave, onDelete }: {
   const [extras, setExtras] = useState((item ? optionsOf(item).extras ?? [] : []).join(', '))
   const [img, setImg] = useState(item?.imageUrl ?? '')
   const [available, setAvailable] = useState(item?.available ?? true)
+  const advOpen = !!item && (!!item.imageUrl || !!item.weight || item.available === false || stationOf(item) === 'bar' || !!item.options)
   const [confirmDel, setConfirmDel] = useState(false)
   const priceN = Number(price.replace(/\D/g, '') || 0)
   const imgOk = !img.trim() || /^(https?:\/\/|\/)/.test(img.trim())
@@ -178,34 +174,39 @@ export function ItemForm({ item, cats, onClose, onSave, onDelete }: {
             <input className="input" inputMode="numeric" value={price ? formatUZS(priceN) : ''} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} required /></label>
         </div>
         {cat === '__new' && <input className="input" placeholder="Название новой категории" aria-label="Название новой категории" value={newCat} onChange={(e) => setNewCat(e.target.value)} />}
-        <div className="grid grid-cols-2 gap-3 items-end">
-          <div className="grid gap-1">
-            <span className="text-sm muted">Куда уходит заказ</span>
-            <div className="seg" role="radiogroup" aria-label="Куда">
-              <button type="button" role="radio" aria-checked={kitchen} onClick={() => setKitchen(true)}>Кухня</button>
-              <button type="button" role="radio" aria-checked={!kitchen} onClick={() => setKitchen(false)}>Бар</button>
+        <details className="adv" open={advOpen}>
+          <summary className="cursor-pointer font-semibold py-2">Дополнительно <span className="muted text-sm font-normal">— кухня/бар, выход, варианты, фото</span></summary>
+          <div className="grid gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div className="grid gap-1">
+              <span className="text-sm muted">Куда уходит заказ</span>
+              <div className="seg" role="radiogroup" aria-label="Куда">
+                <button type="button" role="radio" aria-checked={kitchen} onClick={() => setKitchen(true)}>Кухня</button>
+                <button type="button" role="radio" aria-checked={!kitchen} onClick={() => setKitchen(false)}>Бар</button>
+              </div>
             </div>
+            {kind !== 'weighted' && (
+              <label className="grid gap-1"><span className="text-sm muted">Выход, г (необязательно)</span>
+                <input className="input" inputMode="numeric" value={grams} onChange={(e) => setGrams(e.target.value.replace(/\D/g, ''))} /></label>
+            )}
           </div>
-          {kind !== 'weighted' && (
-            <label className="grid gap-1"><span className="text-sm muted">Выход, г (необязательно)</span>
-              <input className="input" inputMode="numeric" value={grams} onChange={(e) => setGrams(e.target.value.replace(/\D/g, ''))} /></label>
+          {kind !== 'side_mix' && kind !== 'with_side' && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="grid gap-1"><span className="text-sm muted">Варианты, через запятую</span>
+                <input className="input" placeholder="Микс, Крылья, Стрипсы" value={variants} onChange={(e) => setVariants(e.target.value)} /></label>
+              <label className="grid gap-1"><span className="text-sm muted">Добавки без доплаты</span>
+                <input className="input" placeholder="Острый" value={extras} onChange={(e) => setExtras(e.target.value)} /></label>
+            </div>
           )}
-        </div>
-        {kind !== 'side_mix' && kind !== 'with_side' && (
-          <div className="grid grid-cols-2 gap-3">
-            <label className="grid gap-1"><span className="text-sm muted">Варианты, через запятую</span>
-              <input className="input" placeholder="Микс, Крылья, Стрипсы" value={variants} onChange={(e) => setVariants(e.target.value)} /></label>
-            <label className="grid gap-1"><span className="text-sm muted">Добавки без доплаты</span>
-              <input className="input" placeholder="Острый" value={extras} onChange={(e) => setExtras(e.target.value)} /></label>
+          <div className="flex gap-3 items-start">
+            <label className="grid gap-1 flex-1"><span className="text-sm muted">Фото (ссылка, необязательно)</span>
+              <input className="input" inputMode="url" placeholder="https://… или /menu/…" value={img} onChange={(e) => setImg(e.target.value)} />
+              {!imgOk && <span className="text-sm" style={{ color: 'var(--danger)' }}>Ссылка должна начинаться с https:// или /</span>}</label>
+            {preview && imgOk && <img src={preview} alt="Предпросмотр" style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', marginTop: 22 }} />}
           </div>
-        )}
-        <div className="flex gap-3 items-start">
-          <label className="grid gap-1 flex-1"><span className="text-sm muted">Фото (ссылка, необязательно)</span>
-            <input className="input" inputMode="url" placeholder="https://… или /menu/…" value={img} onChange={(e) => setImg(e.target.value)} />
-            {!imgOk && <span className="text-sm" style={{ color: 'var(--danger)' }}>Ссылка должна начинаться с https:// или /</span>}</label>
-          {preview && imgOk && <img src={preview} alt="Предпросмотр" style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', marginTop: 22 }} />}
-        </div>
-        <label className="flex items-center gap-2"><input type="checkbox" checked={available} onChange={(e) => setAvailable(e.target.checked)} style={{ width: 22, height: 22 }} />В продаже</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={available} onChange={(e) => setAvailable(e.target.checked)} style={{ width: 22, height: 22 }} />В продаже</label>
+          </div>
+        </details>
         <div className="grid gap-2" style={{ gridTemplateColumns: onDelete ? '1fr 2fr' : '1fr' }}>
           {onDelete && (confirmDel
             ? <button type="button" className="btn btn-lg btn-danger" onClick={onDelete}>Точно убрать</button>

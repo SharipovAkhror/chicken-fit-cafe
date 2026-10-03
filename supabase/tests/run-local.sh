@@ -13,4 +13,5 @@ echo "re-apply (idempotency)"; for f in migrations/*.sql; do run "$f"; done
 run tests/02_tests.sql
 run tests/03_tests_v8.sql
 run tests/04_tests_v9.sql
+run tests/05_tests_v10.sql
 echo "ALL MIGRATION TESTS PASSED"

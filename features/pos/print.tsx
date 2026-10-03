@@ -70,11 +70,11 @@ function OrderSlip({ job }: { job: Extract<PrintJob, { order: Order }> }) {
       {items.map((i, idx) => (
         <div key={idx} style={{ marginBottom: 2 }}>
           {kitchen ? (
-            <div className="r-big">{i.qty} × {i.name}</div>
+            <div className="r-big">{i.weightKg ? i.name : `${i.qty} × ${i.name}`}</div>
           ) : (
             <>
               <div>{i.name}</div>
-              <Row l={`  ${i.weightKg ? `${i.weightKg} кг` : i.qty} × ${formatUZS(i.price)}`} r={formatUZS(lineTotal(i))} />
+              <Row l={i.weightKg ? `  ${Math.round(i.weightKg * 1000)} г × ${formatUZS(i.pricePerKg ?? Math.round(i.price / i.weightKg))}/кг` : `  ${i.qty} × ${formatUZS(i.price)}`} r={formatUZS(lineTotal(i))} />
             </>
           )}
           {i.garnishMix?.length && !i.notes ? <div>  {i.garnishMix.map((g) => `${g.ingredient} ${g.percent}%`).join(' + ')}</div> : null}
