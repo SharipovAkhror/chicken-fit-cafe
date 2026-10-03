@@ -36,7 +36,7 @@ export function KitchenView() {
               {o.items.filter((i) => i.isKitchen).map((i, idx) => (
                 <li key={idx} className="py-1" style={{ borderBottom: '1px solid var(--border)' }}>
                   <span className="text-lg font-bold">{i.qty} × {i.name}</span>
-                  {i.garnishMix?.length ? <div className="text-sm">микс: {i.garnishMix.map((g) => `${g.ingredient} ${g.percent}%`).join(', ')}</div> : null}
+                  {i.garnishMix?.length && !i.notes ? <div className="text-sm">{i.garnishMix.map((g) => `${g.ingredient} ${g.percent}%`).join(' + ')}</div> : null}
                   {i.notes && <div className="font-bold" style={{ color: 'var(--primary-ink)' }}>! {i.notes}</div>}
                 </li>
               ))}
