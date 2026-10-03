@@ -71,6 +71,8 @@ export function menuFromRow(r: Row): MenuItemRow {
     kcal: r.kcal,
     sortOrder: n(r.sort_order),
     needsReview: r.needs_review === true,
+    kind: r.kind ?? null,
+    options: r.options && typeof r.options === 'object' ? r.options : null,
   }
 }
 

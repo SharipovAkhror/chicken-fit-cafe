@@ -18,7 +18,7 @@ export type PortionSize = keyof typeof PORTION
 
 /** Блюда, к которым кассир выбирает гарнир (список v1 + «с гарниром» в названии). */
 const DISHES_WITH_SIDE = new Set(['cutlet-homemade', 'cutlet-homemade-half', 'cutlet-chicken', 'cutlet-chicken-half', 'goulash', 'tefteli', 'kiev-cutlet', 'chicken-roast', 'kupaty'])
-export const needsSideChoice = (m: { id: string; nameRu: string }) => DISHES_WITH_SIDE.has(m.id) || /с гарниром/i.test(m.nameRu)
+export const needsSideChoice = (m: { id: string; nameRu: string; kind?: string | null }) => (m.kind ? m.kind === 'with_side' : DISHES_WITH_SIDE.has(m.id) || /с гарниром/i.test(m.nameRu))
 /** Сборный гарнир (порция/полпорции) — открывает конструктор смеси. Картофель фри добавляется как обычная позиция. */
 export const isGarnishPortion = (m: { id: string }) => m.id.startsWith('side-portion')
 export const portionOf = (m: { id: string; price: number }): PortionSize => (m.id.includes('full') || m.price >= 35000 ? 'full' : 'half')

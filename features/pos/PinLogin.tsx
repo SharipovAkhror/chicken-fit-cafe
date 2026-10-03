@@ -25,8 +25,8 @@ export function PinLogin() {
   return (
     <main className="min-h-dvh flex items-center justify-center p-4">
       <div className="panel w-full" style={{ maxWidth: 380, padding: 24 }}>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold flex items-center gap-2"><img src="/logo-mark.svg" alt="" width={36} height={36} style={{ borderRadius: 9 }} />Chicken<span className="brand-mark" style={{ marginLeft: -6 }}>Fit</span></h1>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2 whitespace-nowrap"><img src="/logo-mark.svg" alt="" width={36} height={36} style={{ borderRadius: 9 }} />Chicken<span className="brand-mark" style={{ marginLeft: -6 }}>Fit</span></h1>
           <SyncBadge />
         </div>
         <p className="muted mb-4">Введите PIN сотрудника</p>

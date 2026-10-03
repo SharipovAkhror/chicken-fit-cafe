@@ -39,9 +39,9 @@ export function GarnishDialog({ kind, title, prices, initialSize = 'half', onClo
   return (
     <Modal title={title} onClose={onClose} width={560}>
       {kind === 'portion' && prices && (
-        <div className="grid grid-cols-2 gap-2 mb-3" role="radiogroup" aria-label="Размер порции">
+        <div className="seg mb-3 w-full" role="radiogroup" aria-label="Размер порции" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           {(Object.keys(PORTION) as PortionSize[]).map((s) => (
-            <button key={s} role="radio" aria-checked={size === s} className={`btn btn-lg${size === s ? ' btn-primary' : ''}`} onClick={() => setSize(s)}>
+            <button key={s} role="radio" aria-checked={size === s} style={{ minHeight: 56 }} onClick={() => setSize(s)}>
               {PORTION[s].label} · {PORTION[s].grams} г · {formatUZS(prices[s])}
             </button>
           ))}
@@ -64,7 +64,7 @@ export function GarnishDialog({ kind, title, prices, initialSize = 'half', onClo
       )}
       <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Ингредиенты гарнира">
         {GARNISHES.map((g) => (
-          <button key={g.id} className={`btn${ids.includes(g.id) ? ' btn-primary' : ''}`} aria-pressed={ids.includes(g.id)} onClick={() => toggle(g.id)}>{g.name}</button>
+          <button key={g.id} className="cat-chip" aria-pressed={ids.includes(g.id)} aria-selected={ids.includes(g.id)} onClick={() => toggle(g.id)}>{g.name}</button>
         ))}
       </div>
       {ids.length > 1 && (

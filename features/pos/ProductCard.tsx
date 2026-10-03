@@ -1,0 +1,49 @@
+'use client'
+import { CupSoda, Layers, Scale, SlidersHorizontal, UtensilsCrossed } from 'lucide-react'
+import type { MenuItemRow } from '@/data/local-db'
+import { formatUZS } from '@/domain/money'
+import { hasOptions, kindOf, pricePerKgOf, stationOf } from '@/domain/product'
+
+/** Маленькая копия фото из public/menu/thumb (240×240 webp, ~12 КБ) — касса не тянет 20 МБ оригиналов. */
+export function thumbOf(url?: string | null): string | null {
+  if (!url) return null
+  const m = /^\/menu\/([^/]+)\.(jpe?g|png|webp)$/i.exec(url)
+  return m ? `/menu/thumb/${m[1]}.webp` : url
+}
+
+/** Один спокойный индикатор типа: иконка + слово, приглушённым цветом. */
+export function TypeIndicator({ item, reserve = true }: { item: MenuItemRow; reserve?: boolean }) {
+  const k = kindOf(item)
+  const bar = stationOf(item) === 'bar'
+  const opts = hasOptions(item)
+  const parts: Array<[React.ReactNode, string]> = []
+  if (k === 'weighted') parts.push([<Scale key="w" size={14} aria-hidden />, 'на вес'])
+  if (k === 'with_side') parts.push([<UtensilsCrossed key="s" size={14} aria-hidden />, 'гарнир на выбор'])
+  if (k === 'side_mix') parts.push([<Layers key="m" size={14} aria-hidden />, 'микс'])
+  if (opts && k !== 'with_side') parts.push([<SlidersHorizontal key="o" size={14} aria-hidden />, 'варианты'])
+  if (bar) parts.push([<CupSoda key="b" size={14} aria-hidden />, 'бар'])
+  if (!parts.length) return reserve ? <span className="pcard-type" /> : null
+  return <span className="pcard-type">{parts[0][0]}{parts.map((p) => p[1]).join(' · ')}</span>
+}
+
+export function ProductCard({ item, qty, onAdd, showPhoto = true }: { item: MenuItemRow; qty: number; onAdd: () => void; showPhoto?: boolean }) {
+  const k = kindOf(item)
+  const img = thumbOf(item.imageUrl)
+  const price = k === 'weighted' ? `${formatUZS(pricePerKgOf(item))} / кг` : formatUZS(item.price)
+  return (
+    <button type="button" className="pcard" aria-disabled={!item.available} onClick={() => item.available && onAdd()}
+      aria-label={`${item.nameRu}, ${price} сум${item.available ? '' : ', нет в наличии'}${qty ? `, в заказе ${qty}` : ''}`}>
+      {showPhoto && (img
+        ? <img className="pcard-img" src={img} alt="" loading="lazy" decoding="async" />
+        : <span className="pcard-ph" aria-hidden>{stationOf(item) === 'bar' ? <CupSoda size={22} /> : <UtensilsCrossed size={22} />}</span>)}
+      {qty > 0 && <span className="pcard-qty" aria-hidden>{qty}</span>}
+      <span className="pcard-body">
+        <span className="pcard-name">{item.nameRu}</span>
+        <TypeIndicator item={item} />
+        <span className="pcard-foot">
+          {item.available ? <strong>{price}</strong> : <span className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Нет в наличии</span>}
+        </span>
+      </span>
+    </button>
+  )
+}

@@ -1,3 +1,4 @@
+import type { ProductKind, ProductOptions } from '@/domain/product'
 /**
  * Локальная база устройства (IndexedDB через Dexie). Источник правды для UI на кассе:
  * всё пишется сюда сразу, на сервер уходит через outbox.
@@ -24,6 +25,10 @@ export type MenuItemRow = {
   kcal?: number | null
   sortOrder: number
   needsReview: boolean
+  /** тип товара (0009); null — определить по старым признакам, см. domain/product.ts */
+  kind?: ProductKind | null
+  /** модификаторы без доплаты (0009) */
+  options?: ProductOptions | null
   dirty?: boolean
 }
 export type CategoryRow = { id: string; titleRu: string; titleUz?: string | null; titleEn?: string | null; sortOrder: number; isActive: boolean }

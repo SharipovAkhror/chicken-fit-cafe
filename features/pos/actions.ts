@@ -89,3 +89,8 @@ export async function closeShift(db: LocalDb, s: Shift, countedCash: number, not
 export async function saveDraftLocal(db: LocalDb, o: Order): Promise<void> {
   await db.orders.put({ ...o, updatedAt: new Date().toISOString(), dirty: true })
 }
+
+/** Счёт (пречек) выдан гостю — локальная отметка для плана зала (как «СЧЁТ» в v1). */
+export async function markPrecheck(db: LocalDb, orderId: string): Promise<void> {
+  await db.kv.put({ key: `precheck:${orderId}`, value: new Date().toISOString() })
+}

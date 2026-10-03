@@ -4,7 +4,9 @@ import type { Order, PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { Modal, Money, Numpad } from './common'
 
-export function PaymentDialog({ order, onClose, onPaid }: { order: Order; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: boolean) => void }) {
+export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
+  order: Order; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: boolean) => void; onDiscount?: (percent: number) => void
+}) {
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [cash, setCash] = useState('')
   const received = Number(cash || 0)
@@ -14,10 +16,20 @@ export function PaymentDialog({ order, onClose, onPaid }: { order: Order; onClos
   const ok = method === 'click_payme' || cash === '' || received >= order.total
   return (
     <Modal title={`Оплата · заказ №${order.number || 'новый'}`} onClose={onClose} width={560}>
-      <div className="flex items-baseline justify-between mb-4">
-        <span className="muted">К оплате</span>
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="muted">К оплате{order.discountAmount > 0 ? ` (скидка −${formatUZS(order.discountAmount)})` : ''}</span>
         <Money v={order.total} className="text-3xl font-bold" />
       </div>
+      {onDiscount && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="muted text-sm">Скидка</span>
+          <div className="seg seg-fill" role="radiogroup" aria-label="Скидка">
+            {[0, 5, 10, 15, 20].map((p) => (
+              <button key={p} role="radio" aria-checked={order.discountPercent === p} onClick={() => { onDiscount(p); setCash('') }}>{p ? `${p}%` : 'нет'}</button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2 mb-4" role="radiogroup" aria-label="Способ оплаты">
         {(['cash', 'click_payme'] as const).map((m) => (
           <button key={m} role="radio" aria-checked={method === m} className={`btn btn-lg${method === m ? ' btn-primary' : ''}`} onClick={() => setMethod(m)}>

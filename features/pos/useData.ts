@@ -6,7 +6,7 @@ import { isKitchenItem } from '@/domain/cart'
 import type { CategoryRow, MenuItemRow, TableRow } from '@/data/local-db'
 import type { Order, Shift } from '@/domain/order'
 
-type MJ = { categories: Array<{ id: string; title: { ru: string }; items: Array<{ id: string; name: { ru: string }; price: number; available?: boolean }> }> }
+type MJ = { categories: Array<{ id: string; title: { ru: string }; items: Array<{ id: string; name: { ru: string }; price: number; available?: boolean; image?: string; weight?: number }> }> }
 
 const FALLBACK_TABLES: TableRow[] = Array.from({ length: 8 }, (_, i) => ({
   id: String(i + 1), label: `Стол ${i + 1}`, zone: i < 6 ? '1 этаж' : 'Антресоль', seats: 4, sortOrder: i + 1,
@@ -19,7 +19,7 @@ function fallbackMenu(): { items: MenuItemRow[]; categories: CategoryRow[] } {
     categories: m.categories.map((c, i) => ({ id: c.id, titleRu: c.title.ru, sortOrder: i, isActive: true })),
     items: m.categories.flatMap((c) => c.items.map((it) => ({
       id: it.id, categoryId: c.id, nameRu: it.name.ru, price: it.price, available: it.available !== false, isDeleted: false,
-      isKitchen: isKitchenItem({ id: it.id, name: it.name.ru, category: c.id }), unit: 'portion', sortOrder: ++sort, needsReview: false,
+      isKitchen: isKitchenItem({ id: it.id, name: it.name.ru, category: c.id }), unit: 'portion', sortOrder: ++sort, needsReview: false, imageUrl: it.image ?? null, weight: it.weight ?? null,
     }))),
   }
 }
