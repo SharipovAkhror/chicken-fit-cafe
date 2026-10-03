@@ -1,12 +1,6 @@
 'use client'
+import { PosRoot } from '@/features/pos/PosApp'
 
-import { AuthGate } from '@/components/pos/auth-gate'
-import { PosTerminal } from '@/components/pos/pos-terminal'
-
-export default function StandalonePosPage() {
-  return (
-    <AuthGate>
-      <PosTerminal />
-    </AuthGate>
-  )
+export default function PosPage() {
+  return <PosRoot />
 }

@@ -104,3 +104,30 @@ export function businessDate(iso: string): string {
   const d = new Date(new Date(iso).getTime() + 5 * 3600 * 1000)
   return d.toISOString().slice(0, 10)
 }
+
+/** Локальный расчёт итогов смены (резерв, когда сервер недоступен). Та же логика, что _shift_summary. */
+export function localShiftSummary(shift: Shift, orders: Order[]): ShiftSummary {
+  const end = shift.closedAt ? Date.parse(shift.closedAt) : Date.now()
+  const inShift = orders.filter((o) => o.source !== ('dev_test' as never) &&
+    (o.shiftId === shift.id || (!o.shiftId && Date.parse(o.createdAt) >= Date.parse(shift.openedAt) && Date.parse(o.createdAt) < end)))
+  const paid = inShift.filter((o) => o.paymentStatus === 'paid' && o.status !== 'cancelled')
+  const sum = (l: Order[]) => l.reduce((s, o) => s + o.total, 0)
+  const cash = sum(paid.filter((o) => o.paymentMethod === 'cash'))
+  const items = new Map<string, { name: string; qty: number; revenue: number }>()
+  for (const o of paid) for (const i of o.items) {
+    const t = items.get(i.name) ?? { name: i.name, qty: 0, revenue: 0 }
+    t.qty += i.qty
+    t.revenue += Math.round(i.price * i.qty)
+    items.set(i.name, t)
+  }
+  return {
+    number: shift.number, cashier_name: shift.cashierName, opened_at: shift.openedAt, closed_at: shift.closedAt ?? null,
+    initial_cash: shift.initialCash, counted_cash: shift.countedCash ?? null, orders_count: paid.length,
+    total_revenue: sum(paid), cash_revenue: cash, click_revenue: sum(paid.filter((o) => o.paymentMethod === 'click_payme')),
+    discount_total: paid.reduce((s, o) => s + (o.discountAmount || 0), 0), expected_cash: shift.initialCash + cash,
+    dine_in: paid.filter((o) => o.type === 'dine_in').length, takeaway: paid.filter((o) => o.type === 'takeaway').length,
+    delivery: paid.filter((o) => o.type === 'delivery').length, cancelled_count: inShift.filter((o) => o.status === 'cancelled').length,
+    unpaid_open_count: inShift.filter((o) => o.paymentStatus === 'unpaid' && o.status !== 'cancelled').length,
+    top_items: [...items.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 10),
+  }
+}

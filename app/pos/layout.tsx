@@ -1,19 +1,9 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import '@/features/ui/v2.css'
 
-export const metadata: Metadata = {
-  title: 'Касса (POS) · ChickenFit',
-  description: 'Сенсорный кассовый терминал ChickenFit Cafe',
-  robots: 'noindex, nofollow',
-}
+export const metadata: Metadata = { title: 'Касса · Chicken Fit', robots: 'noindex, nofollow' }
+export const viewport: Viewport = { themeColor: '#F5F4F0', width: 'device-width', initialScale: 1 }
 
-export default function PosLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="min-h-screen bg-background text-foreground select-none">
-      {children}
-    </div>
-  )
+export default function PosLayout({ children }: { children: React.ReactNode }) {
+  return <div className="select-none">{children}</div>
 }

@@ -26,6 +26,8 @@ export async function applyPull(db: LocalDb, data: Awaited<ReturnType<Api['pull'
   await db.transaction('rw', [db.orders, db.shifts, db.menu, db.categories, db.diningTables], async () => {
     for (const r of data.orders) {
       if (pending.has(String(r.id))) continue
+      const local = await db.orders.get(String(r.id))
+      if (local?.dirty) continue // несохранённые правки корзины на этом устройстве
       await db.orders.put(orderFromRow(r))
     }
     for (const r of data.shifts) {

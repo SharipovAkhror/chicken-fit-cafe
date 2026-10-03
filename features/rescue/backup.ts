@@ -56,7 +56,7 @@ export async function restoreBackup(db: LocalDb, file: unknown): Promise<{ snaps
   let orders = 0
   for (const o of f.v2?.orders ?? []) {
     if (!o?.id || o.source === 'legacy_rescue' || (await db.orders.get(o.id))) continue
-    await db.orders.put({ ...o, dirty: true })
+    await db.orders.put({ ...o, dirty: false })
     await enqueue(db, 'order.upsert', o.id, orderToPayload(o), await uuidv5(`cf:restore:${o.id}:${o.updatedAt}`))
     orders++
   }
