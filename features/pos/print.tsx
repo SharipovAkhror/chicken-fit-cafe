@@ -77,7 +77,7 @@ function OrderSlip({ job }: { job: Extract<PrintJob, { order: Order }> }) {
               <Row l={`  ${i.weightKg ? `${i.weightKg} кг` : i.qty} × ${formatUZS(i.price)}`} r={formatUZS(lineTotal(i))} />
             </>
           )}
-          {i.garnishMix?.length ? <div>  микс: {i.garnishMix.map((g) => `${g.ingredient} ${g.percent}%`).join(', ')}</div> : null}
+          {i.garnishMix?.length && !i.notes ? <div>  {i.garnishMix.map((g) => `${g.ingredient} ${g.percent}%`).join(' + ')}</div> : null}
           {i.notes && <div className="r-b">  ! {i.notes}</div>}
         </div>
       ))}

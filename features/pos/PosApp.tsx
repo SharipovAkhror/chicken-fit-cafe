@@ -126,7 +126,7 @@ function PosApp() {
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />
-          ) : tab === 'history' ? <HistoryView onOpen={setCurrent} /> : tab === 'menu' ? <MenuAdminView /> : tab === 'kitchen' ? <KitchenView /> : tab === 'shift' ? <ShiftView /> : tab === 'reports' ? <ReportsView /> : <BackupView r={rescue} />}
+          ) : tab === 'history' ? <HistoryView onOpen={setCurrent} /> : tab === 'menu' ? <MenuAdminView isAdmin={isAdmin} /> : tab === 'kitchen' ? <KitchenView /> : tab === 'shift' ? <ShiftView /> : tab === 'reports' ? <ReportsView /> : <BackupView r={rescue} />}
         </main>
       </div>
       {compact && !current && <nav className="bottom-nav flex justify-around" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }} aria-label="Разделы">{nav}</nav>}

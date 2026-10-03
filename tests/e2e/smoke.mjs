@@ -17,7 +17,7 @@ function fakeServer() {
     switch (fn) {
       case 'pos_login': return a.p_pin === '12345678' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 's', name: 'Администратор', role: 'admin' } }
         : a.p_pin === '1234' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 'c', name: 'Кассир 1', role: 'cashier' } } : { error: 'invalid_pin' }
-      case 'pos_apply_mutation': st.applied.push(a.p_kind); if (a.p_kind === 'legacy.order') st.legacyOrders++; return { duplicate: false, result: {} }
+      case 'pos_apply_mutation': st.applied.push(a.p_kind); (st.payloads ||= []).push({ kind: a.p_kind, payload: a.p_payload }); if (a.p_kind === 'table.upsert') { const t = a.p_payload, i = tables.findIndex((x) => x.id === t.id); if (t.isActive === false) { if (i >= 0) tables.splice(i, 1) } else { const row = { id: t.id, name: t.name, zone: t.zone, capacity: t.capacity, sort_order: t.sortOrder }; if (i >= 0) tables[i] = row; else tables.push(row) } } if (a.p_kind === 'legacy.order') st.legacyOrders++; return { duplicate: false, result: {} }
       case 'pos_pull': return { server_time: new Date().toISOString(), staff: { id: 's', name: 'A', role: 'admin' }, orders: [], shifts: [], menu: [], categories: [], tables }
       case 'rescue_store_snapshot': st.snapshots.push(a.p_snapshot.sha256); return { id: 'x', duplicate: false }
       case 'rescue_verify': return { orders_by_day: {}, orders: st.legacyOrders, shifts: 0 }
@@ -90,8 +90,29 @@ async function run() {
     // заказ
     await page.getByRole('button', { name: 'Столы' }).click()
     await page.getByRole('button', { name: /^Стол 1,/ }).click()
-    await page.locator('.tile').first().click()
-    await page.locator('.tile').first().click()
+    const pickGarnishIfAsked = async () => {
+      const dlg = page.getByRole('dialog')
+      if (await dlg.count()) await dlg.getByRole('button', { name: 'Пюре + Рис' }).first().click()
+    }
+    await page.locator('.tile').first().click(); await page.waitForTimeout(150); await pickGarnishIfAsked()
+    await page.locator('.tile').first().click(); await page.waitForTimeout(150); await pickGarnishIfAsked()
+    if (vp.tag === 'pos-1366') {
+      // смесь гарниров: полпорции, Пюре + Рис + Гречка, Пюре +10%
+      await page.getByRole('tab', { name: /Гарниры/ }).click()
+      await page.locator('.tile', { hasText: 'Гарнир (Полпорции)' }).click()
+      const dlg = page.getByRole('dialog')
+      await dlg.getByRole('button', { name: 'Рис', exact: true }).click()
+      await dlg.getByRole('button', { name: 'Гречка', exact: true }).click()
+      await dlg.getByRole('button', { name: 'Больше: Пюре' }).click()
+      await page.screenshot({ path: `${OUT}/pos-1366-13-garnish-mix.png` })
+      await dlg.getByRole('button', { name: /^Добавить/ }).click()
+      const line = page.getByLabel('Позиции заказа')
+      check('смесь гарниров в заказе', (await line.getByText('Гарнир (Полпорции): Пюре + Рис + Гречка').count()) === 1 && (await line.getByText('Пюре 44% + Рис 28% + Гречка 28% (180г)').count()) === 1)
+      await page.getByRole('tab', { name: /Вторые/ }).click()
+      await page.locator('.tile', { hasText: 'Гуляш' }).first().click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Гречка', exact: true }).first().click()
+      check('блюдо с гарниром: выбор записан', (await line.getByText('Гарнир: Гречка').count()) >= 1)
+    }
     const drinks = page.getByRole('tab', { name: /Напитки|Компот|Drinks/i }).first()
     if (await drinks.count()) { await drinks.click(); await page.locator('.tile').first().click() }
     if (vp.tag === 'phone-390') { await page.screenshot({ path: `${OUT}/${vp.tag}-04-menu.png` }); await page.getByRole('button', { name: /^Заказ ·/ }).click() }
@@ -101,7 +122,7 @@ async function run() {
     await page.getByText('Отправлено на кухню').waitFor()
     await page.getByRole('button', { name: 'Оплатить' }).click()
     await page.getByRole('button', { name: '1', exact: true }).click()
-    for (let i = 0; i < 5; i++) await page.getByRole('button', { name: '0', exact: true }).click()
+    for (let i = 0; i < 6; i++) await page.getByRole('button', { name: '0', exact: true }).click()
     await page.screenshot({ path: `${OUT}/${vp.tag}-05-payment.png` })
     await page.getByRole('button', { name: 'Оплачено + чек' }).click()
     await page.waitForTimeout(1500)
@@ -151,6 +172,38 @@ async function run() {
       await page.getByRole('button', { name: 'В продаже' }).first().click()
       await page.waitForTimeout(1200)
       check('стоп-лист: menu.upsert отправлен', st.applied.includes('menu.upsert'))
+      // новое блюдо
+      await page.getByRole('button', { name: 'Добавить блюдо' }).click()
+      const f = page.getByRole('dialog')
+      await f.getByLabel('Название').fill('Тестовый салат')
+      await f.getByLabel('Категория').selectOption({ label: 'Салаты' })
+      await f.getByLabel('Цена, сум').fill('27000')
+      await f.getByLabel(/Фото/).fill('/logo-mark.svg')
+      await page.screenshot({ path: `${OUT}/pos-1366-14-menu-add.png` })
+      await f.getByRole('button', { name: 'Сохранить' }).click()
+      await page.waitForTimeout(1200)
+      const added = (st.payloads || []).find((x) => x.kind === 'menu.upsert' && x.payload.nameRu === 'Тестовый салат')
+      check('новое блюдо: menu.upsert с категорией, ценой и фото', !!added && added.payload.price === 27000 && added.payload.categoryId === 'salads' && added.payload.imageUrl === '/logo-mark.svg' && /^custom-/.test(added.payload.id))
+      await page.getByRole('button', { name: 'Изменить Тестовый салат' }).click()
+      await page.getByRole('dialog').getByLabel('Название').fill('Салат дня')
+      await page.getByRole('dialog').getByRole('button', { name: 'Сохранить' }).click()
+      await page.waitForTimeout(1200)
+      check('редактирование блюда отправлено', (st.payloads || []).some((x) => x.kind === 'menu.upsert' && x.payload.nameRu === 'Салат дня' && x.payload.id === added?.payload.id))
+      // столы
+      await page.getByRole('tab', { name: 'Столы' }).click()
+      await page.getByRole('button', { name: 'Добавить стол' }).click()
+      await page.getByRole('dialog').getByLabel('Название').fill('Терраса 1')
+      await page.getByRole('dialog').getByLabel('Зал').fill('Терраса')
+      await page.getByRole('dialog').getByRole('button', { name: 'Сохранить' }).click()
+      await page.getByRole('button', { name: 'Переименовать Стол 8' }).click()
+      await page.getByRole('dialog').getByLabel('Название').fill('VIP')
+      await page.getByRole('dialog').getByRole('button', { name: 'Сохранить' }).click()
+      await page.getByRole('button', { name: 'Удалить Стол 7' }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Удалить стол' }).click()
+      await page.waitForTimeout(1500)
+      await page.screenshot({ path: `${OUT}/pos-1366-15-tables-admin.png` })
+      const tp = (st.payloads || []).filter((x) => x.kind === 'table.upsert').map((x) => x.payload)
+      check('столы: добавить/переименовать/удалить через table.upsert', tp.some((t) => t.id === '9' && t.name === 'Терраса 1' && t.zone === 'Терраса') && tp.some((t) => t.id === '8' && t.name === 'VIP') && tp.some((t) => t.id === '7' && t.isActive === false))
     }
     await page.getByRole('button', { name: 'Бэкап' }).click()
     await page.waitForTimeout(500)

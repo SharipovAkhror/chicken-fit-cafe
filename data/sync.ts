@@ -23,7 +23,7 @@ export type SyncState = {
 
 export async function applyPull(db: LocalDb, data: Awaited<ReturnType<Api['pull']>>): Promise<void> {
   const pending = await pendingEntityIds(db)
-  await db.transaction('rw', [db.orders, db.shifts, db.menu, db.categories, db.diningTables], async () => {
+  await db.transaction('rw', [db.orders, db.shifts, db.menu, db.categories, db.diningTables, db.outbox], async () => {
     for (const r of data.orders) {
       if (pending.has(String(r.id))) continue
       const local = await db.orders.get(String(r.id))
@@ -39,7 +39,9 @@ export async function applyPull(db: LocalDb, data: Awaited<ReturnType<Api['pull'
       await db.menu.put(menuFromRow(r))
     }
     for (const r of data.categories) await db.categories.put(categoryFromRow(r))
-    if (data.tables.length) {
+    // пока изменение столов не дошло до сервера, локальный список не перетираем
+    const tablesPending = (await db.outbox.toArray()).some((o) => o.kind === 'table.upsert' && !o.blocked)
+    if (data.tables.length && !tablesPending) {
       await db.diningTables.clear()
       await db.diningTables.bulkPut(data.tables.map(tableFromRow))
     }

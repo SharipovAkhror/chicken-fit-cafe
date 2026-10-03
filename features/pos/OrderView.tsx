@@ -10,6 +10,8 @@ import { PaymentDialog } from './PaymentDialog'
 import { cancelOrder, pay, saveDraftLocal, saveOrder, sendToKitchen, withTotals } from './actions'
 import { printJob } from './print'
 import { useMenu, useTables } from './useData'
+import { GarnishDialog } from './GarnishDialog'
+import { isGarnishPortion, needsSideChoice, portionOf, PORTION, type PortionSize } from '@/domain/garnish'
 
 export function OrderView({ initial, onBack, compact }: { initial: Order; onBack: () => void; compact: boolean }) {
   const { db } = useRuntime()
@@ -23,6 +25,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const [sheet, setSheet] = useState(false)
   const [weighItem, setWeighItem] = useState<{ id: string; name: string; pricePerKg: number; category?: string } | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [garnish, setGarnish] = useState<{ kind: 'dish' | 'portion'; item: { id: string; nameRu: string; price: number; categoryId?: string | null; isKitchen?: boolean | null } } | null>(null)
   const locked = order.paymentStatus === 'paid' || order.status === 'cancelled'
   const tableLabel = tables.find((t) => t.id === order.tableId)?.label
 
@@ -152,6 +155,8 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
                 onClick={() => {
                   if (locked || !m.available) return
                   if (m.unit === 'kg' || /(^|\s)кг$/i.test(m.nameRu)) return setWeighItem({ id: m.id, name: m.nameRu, pricePerKg: m.pricePerKg ?? m.price, category: m.categoryId ?? undefined })
+                  if (isGarnishPortion(m)) return setGarnish({ kind: 'portion', item: m })
+                  if (needsSideChoice(m)) return setGarnish({ kind: 'dish', item: m })
                   update(withTotals(order, addItem(order.items, { id: m.id, name: m.nameRu, price: m.price, category: m.categoryId ?? undefined, isKitchen: m.isKitchen ?? undefined })))
                 }}>
                 <span className="font-semibold leading-tight">{m.nameRu}</span>
@@ -182,6 +187,25 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
           setWeighItem(null)
         }} />
       )}
+      {garnish && (() => {
+        const g = garnish.item
+        const priceOf = (s: PortionSize) => menu?.items.find((x) => x.id === `side-portion-${s}`)?.price ?? (s === 'full' ? 35000 : 23000)
+        return (
+          <GarnishDialog kind={garnish.kind} title={garnish.kind === 'portion' ? 'Гарнир — смесь' : `${g.nameRu} — гарнир`}
+            prices={garnish.kind === 'portion' ? { half: priceOf('half'), full: priceOf('full') } : undefined}
+            initialSize={garnish.kind === 'portion' ? portionOf(g) : undefined}
+            onClose={() => setGarnish(null)}
+            onPick={(res) => {
+              if (garnish.kind === 'portion') {
+                const size = res.size ?? 'half'
+                update(withTotals(order, addItem(order.items, { id: `side-portion-${size}`, name: `Гарнир (${PORTION[size].label}): ${res.label}`, price: priceOf(size), category: 'sides', isKitchen: true, notes: res.note, garnishMix: res.mix ?? undefined })))
+              } else {
+                update(withTotals(order, addItem(order.items, { id: g.id, name: g.nameRu, price: g.price, category: g.categoryId ?? undefined, isKitchen: g.isKitchen ?? undefined, notes: res.note, garnishMix: res.mix ?? undefined })))
+              }
+              setGarnish(null)
+            }} />
+        )
+      })()}
       {cancelAsk && (
         <CancelDialog onClose={() => setCancelAsk(false)} onConfirm={async (r) => { await cancelOrder(db, order, r); setCancelAsk(false); onBack() }} />
       )}
