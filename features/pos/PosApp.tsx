@@ -16,6 +16,7 @@ import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
 import { newOrder } from './actions'
+import { inter } from '@/features/ui/font'
 import { useActiveOrders, useOpenShift } from './useData'
 
 type Tab = 'tables' | 'history' | 'kitchen' | 'menu' | 'shift' | 'reports' | 'backup'
@@ -30,7 +31,7 @@ export function PosRoot({ kitchenOnly = false }: { kitchenOnly?: boolean }) {
 
 function Themed({ children }: { children: React.ReactNode }) {
   const [theme] = useTheme()
-  return <div className="v2" data-theme={theme}>{children}</div>
+  return <div className={`v2 ${inter.variable}`} data-theme={theme}>{children}</div>
 }
 
 function Gate() {
@@ -101,7 +102,7 @@ function PosApp() {
     <div className="flex flex-col" style={{ height: '100dvh' }}>
       <header className="flex items-center justify-between px-3 gap-2" style={{ height: 52, borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
         <div className="flex items-center gap-3 min-w-0">
-          <strong className="text-lg whitespace-nowrap">Chicken Fit</strong>
+          <img src="/logo-mark.svg" alt="" width={28} height={28} style={{ borderRadius: 7 }} /><strong className="text-lg whitespace-nowrap">Chicken<span className="brand-mark">Fit</span></strong>
           {!compact && <span className="muted text-sm truncate">{session?.staff.name}{shift ? ` · смена${shift.number ? ` №${shift.number}` : ''} открыта` : ' · смена не открыта'}</span>}
         </div>
         <div className="flex items-center gap-2">

@@ -27,12 +27,12 @@ export function TablesView({ orders, onOpenTable, onNew, onOpenOrder }: {
               const busy = os.length > 0
               const unpaid = os.some((o) => o.paymentStatus === 'unpaid')
               return (
-                <button key={t.id} className="tile" style={{ minHeight: 120, borderWidth: busy ? 2 : 1, borderColor: busy ? (unpaid ? 'var(--accent)' : 'var(--success)') : 'var(--border)' }}
+                <button key={t.id} className="tile" style={{ minHeight: 120, borderWidth: busy ? 2 : 1, borderColor: busy ? (unpaid ? 'var(--brand)' : 'var(--success)') : 'var(--border)' }}
                   onClick={() => onOpenTable(t.id)} aria-label={`${t.label}${busy ? ', занят' : ', свободен'}`}>
                   <span className="text-2xl font-bold">{t.label.replace('Стол ', '')}</span>
                   {busy ? (
                     <span>
-                      <span className="block text-sm" style={{ color: unpaid ? 'var(--accent)' : 'var(--success)' }}>
+                      <span className="block text-sm" style={{ color: unpaid ? 'var(--primary-ink)' : 'var(--success)' }}>
                         {unpaid ? 'Не оплачен' : 'Оплачен'} · {STATUS_LABEL[os[0].status]}
                       </span>
                       <Money v={total} className="font-bold" />

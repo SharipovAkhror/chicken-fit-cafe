@@ -1,15 +1,29 @@
 /* ChickenFit v2 — дизайн-система кассы (светлая по умолчанию, тёмная через [data-theme=dark]). */
+/*
+ * Палитра бренда ChickenFit из v1 (design/tokens.css, коммит cde9b97):
+ *   pastry #FDFCF9 · terracotta #C95530 · graphite #28211D · olive #667447;
+ *   тёмная v1: bg #1A1614 · surface #241F1C · text #FAF7F0 · brand #E06A42 · olive #8A9A5B.
+ * Корректировки ради WCAG AA (только оттенок, отмечено):
+ *   --primary #B34A28 — terracotta чуть темнее: светлый текст на #C95530 даёт 4.24:1, на #B34A28 — 5.21:1;
+ *   --primary-ink #A8452A — terracotta как цвет текста на светлых поверхностях (≥4.9:1);
+ *   --accent #5C6940 — olive чуть темнее (#667447 на surface-2 даёт 4.11:1, #5C6940 — 4.81:1);
+ *   тёмная: --primary-ink #EA845F (текст на surface-2 5.44:1); #E06A42 и #8A9A5B — без изменений.
+ *   --brand #C95530 / #E06A42 — исходный цвет для нетекстовых элементов (рамки, индикаторы, знак).
+ */
 .v2 {
-  --bg: #F5F4F0; --surface: #FFFFFF; --surface-2: #ECEAE4; --text: #1E2226; --muted: #565C63;
-  --primary: #1D6B57; --on-primary: #FFFFFF; --accent: #8F5A12; --success: #1B7A4B; --warning: #8A5800;
-  --danger: #B3261E; --info: #1F5FA8; --border: #C9C5BC; --border-strong: #858178;
+  --bg: #F4F1EC; --surface: #FDFCF9; --surface-2: #ECE7E0; --text: #28211D; --muted: #665F5A;
+  --brand: #C95530; --primary: #B34A28; --on-primary: #FDFCF9; --primary-ink: #A8452A;
+  --accent: #5C6940; --success: #1B7A4B; --warning: #8A5800; --danger: #9F1D35; --info: #1F5FA8;
+  --border: #D9D3CB; --border-strong: #8C847D;
   background: var(--bg); color: var(--text); min-height: 100dvh;
+  font-family: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent;
 }
 .v2[data-theme='dark'] {
-  --bg: #121212; --surface: #1C1C1E; --surface-2: #2A2A2D; --text: #E7E5E2; --muted: #A6A6AB;
-  --primary: #7CC4AE; --on-primary: #0F1F1A; --accent: #E2AE68; --success: #6CC596; --warning: #E6BE6A;
-  --danger: #F2938A; --info: #8DB8F0; --border: #3A3A3E; --border-strong: #7C7C83;
+  --bg: #1A1614; --surface: #241F1C; --surface-2: #2F2925; --text: #FAF7F0; --muted: #B5ACA5;
+  --brand: #E06A42; --primary: #E06A42; --on-primary: #1A1614; --primary-ink: #EA845F;
+  --accent: #8A9A5B; --success: #6CC596; --warning: #E6BE6A; --danger: #F08A9A; --info: #8DB8F0;
+  --border: #3A332E; --border-strong: #7D736C;
 }
 .v2 *:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
 .v2 .btn { min-height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--border-strong);
@@ -18,8 +32,8 @@
 .v2 .btn:active { transform: translateY(1px); }
 .v2 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .v2 .btn-primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
-.v2 .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
-.v2[data-theme='dark'] .btn-accent { color: #1E1406; }
+.v2 .brand-mark { color: var(--brand); }
+.v2 .btn-accent { background: var(--accent); color: var(--surface); border-color: var(--accent); }
 .v2 .btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
 .v2 .btn-lg { min-height: 60px; font-size: 18px; }
 .v2 .btn-ghost { border-color: transparent; background: transparent; }
@@ -36,7 +50,7 @@
 .v2 .numkey { min-height: 64px; font-size: 24px; font-weight: 600; }
 .v2 .rail-btn { width: 72px; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); border-radius: 10px; }
-.v2 .rail-btn[aria-current='page'] { color: var(--primary); background: var(--surface-2); }
+.v2 .rail-btn[aria-current='page'] { color: var(--primary-ink); background: var(--surface-2); box-shadow: inset 3px 0 0 var(--brand); }
 .v2 .banner { border-radius: 10px; padding: 10px 14px; border: 1px solid; font-size: 14px; }
 .v2 .banner-warn { color: var(--warning); border-color: var(--warning); background: color-mix(in srgb, var(--warning) 8%, var(--surface)); }
 .v2 .banner-danger { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
@@ -63,3 +77,4 @@
   #v2-print .r-big { font-size: 1.35em; font-weight: 700; }
 }
 .v2 nav.bottom-nav .rail-btn { width: auto; flex: 1 1 0; min-width: 0; font-size: 10px; padding: 0 2px; }
+.v2 nav.bottom-nav .rail-btn[aria-current='page'] { box-shadow: inset 0 3px 0 var(--brand); }
