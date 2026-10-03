@@ -52,6 +52,10 @@ npm run build && npx next start -p 3100 &  npm run test:e2e   # smoke, мок RP
 `tests/e2e/real-supabase-readonly.mjs` — только чтение на реальной БД (вход/pull/отчёты/выход).
 `tests/e2e/real-supabase-e2e.mjs` — пишет в реальную БД под тестовым сотрудником (`staff.is_test`, `source='dev_test'`); запускать только осознанно.
 
+## Открытые задачи
+Открытые задачи — GitHub Issues (метки `design`, `owner`, `feature`, `security`); TODO-списки в репозитории не держать.
+Задача закрывается сама: в коммите или PR в `main` пишется `Closes #N`. Задачи `owner` без кода закрывает владелец вручную.
+
 ## Релиз и откат
 Ветка → PR/CI зелёный (lint, types, unit, build, migrations, e2e) → миграции применить в Supabase (до деплоя) →
 `main` (ff) → Vercel собирает прод → проверить `/api/keepalive` 200, `/pos`, `/kds`, `/backup`.
