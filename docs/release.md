@@ -26,7 +26,7 @@
 | Дата (UTC+5) | Коммит | Деплой | Что |
 |---|---|---|---|
 | 03.10.2026 | `74ab3bb` | `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` | v2.0 (переход с v1; v1 — `dpl_DtNZzsEdt2aSZUtMJ9pT7aH8Vayj`, тег `pre-v2`) |
-| 04.10.2026 | ux/v2.1 → main | см. Vercel (откат → `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ`) | v2.1–v2.3: типы товаров, правка позиций, аудит цены (0010), редизайн |
+| 04.10.2026 01:16 | `b225f30` (ux/v2.1 → main, ff) | `dpl_s8M5f2VMgYi1PgQLdXyWhkj1raYb` | v2.1–v2.3: типы товаров, правка позиций, аудит цены (0010 применена до деплоя), редизайн, чистка репо. Откат → `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` |
 
 ## Тестовые записи в реальной БД
 `tests/e2e/real-supabase-e2e.mjs` — только под сотрудником `staff.is_test=true` (записи `source='dev_test'`, не в отчётах).

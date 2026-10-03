@@ -25,7 +25,7 @@ for (const vp of [{ w: 1366, h: 768, tag: 'real-1366' }, { w: 390, h: 844, tag: 
   await page.screenshot({ path: `${OUT}/${vp.tag}-tables.png` })
   await page.getByRole('button', { name: /^Стол 1,/ }).click()
   await page.waitForTimeout(800)
-  const tiles = await page.locator('.tile').count()
+  const tiles = await page.locator('.pcard:not(.pcard-new)').count()
   check(`${vp.tag} меню из БД`, tiles > 0, `tiles=${tiles}`)
   await page.screenshot({ path: `${OUT}/${vp.tag}-order-empty.png` })
   await page.getByRole('button', { name: 'Столы' }).first().click()
