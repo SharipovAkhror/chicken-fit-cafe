@@ -46,7 +46,7 @@ function KitchenGate() {
   return (
     <div className="min-h-dvh flex flex-col">
       <header className="flex items-center justify-between px-4" style={{ height: 56, borderBottom: '1px solid var(--border)' }}>
-        <strong className="text-lg">Кухня · Chicken Fit</strong>
+        <strong className="text-lg flex items-center gap-2"><img src="/logo-mark.svg" alt="" width={28} height={28} style={{ borderRadius: 7 }} />Кухня · Chicken<span className="brand-mark" style={{ marginLeft: -6 }}>Fit</span></strong>
         <div className="flex gap-2 items-center"><SyncBadge /><button className="btn" onClick={logout}><LogOut size={18} /></button></div>
       </header>
       <KitchenView />
@@ -102,7 +102,7 @@ function PosApp() {
     <div className="flex flex-col" style={{ height: '100dvh' }}>
       <header className="flex items-center justify-between px-3 gap-2" style={{ height: 52, borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
         <div className="flex items-center gap-3 min-w-0">
-          <img src="/logo-mark.svg" alt="" width={28} height={28} style={{ borderRadius: 7 }} /><strong className="text-lg whitespace-nowrap">Chicken<span className="brand-mark">Fit</span></strong>
+          <img src="/logo-mark.svg" alt="Chicken Fit" width={28} height={28} className="shrink-0" style={{ borderRadius: 7 }} />{!compact && <strong className="text-lg whitespace-nowrap">Chicken<span className="brand-mark">Fit</span></strong>}
           {!compact && <span className="muted text-sm truncate">{session?.staff.name}{shift ? ` · смена${shift.number ? ` №${shift.number}` : ''} открыта` : ' · смена не открыта'}</span>}
         </div>
         <div className="flex items-center gap-2">

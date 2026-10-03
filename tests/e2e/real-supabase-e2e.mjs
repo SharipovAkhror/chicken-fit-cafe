@@ -31,7 +31,7 @@ const pos = await open('/pos', { width: 1366, height: 768 }, 'pos')
 await pos.page.getByText('С собой').waitFor({ timeout: 20000 })
 check('POS: вход тестового сотрудника (pos_login 200)', pos.st.rpc.some((r) => r.startsWith('pos_login 200')))
 const kds = await open('/kds', { width: 1280, height: 800 }, 'kds')
-await kds.page.getByText('Кухня · Chicken Fit').waitFor({ timeout: 20000 })
+await kds.page.getByText(/Кухня · Chicken/).waitFor({ timeout: 20000 })
 await kds.page.waitForTimeout(3000)
 check('KDS: вход и realtime-подключение', kds.st.ws > 0, `ws=${kds.st.ws}`)
 
