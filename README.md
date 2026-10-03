@@ -1,71 +1,29 @@
-# Chicken Fit Cafe — ОС проекта
+# Chicken Fit — касса
 
-Единый источник истины для запуска кафе **Chicken Fit Cafe** и совместной работы
-AI-ролей и человека.
+Касса кафе Chicken Fit (Самарканд): столы, заказы, оплата наличными/Click, печать чеков 58/80 мм,
+экран кухни, смены с X/Z-отчётами, отчёты продаж, гостевое меню по QR.
 
-**Репозиторий:** https://github.com/SharipovAkhror/chicken-fit-cafe
-
-Репозиторий работает как операционная система проекта: правила, база знаний,
-контракты ролей и процесс принятия решений живут в файлах и в GitHub-процессе.
-
-> Основной язык — русский. Технические термины допустимы на английском.
-
-## Главный принцип
-
-**Предположение не является фактом, пока оно не подтверждено явно.**
-Ранее сгенерированные материалы (папка [`archive/gemini/`](archive/gemini/))
-сохранены как история и не наследуются как решения. Любое утверждение из них
-проходит через реестр [`knowledge/claims.yaml`](knowledge/claims.yaml).
-
-## С чего начать
-
-| Кто | Куда |
-| :--- | :--- |
-| Человек / новый агент | [`STATUS.md`](STATUS.md) → [`AGENTS.md`](AGENTS.md) |
-| Карта потоков | [`strategy/project-map.md`](strategy/project-map.md) |
-| Факты | [`knowledge/`](knowledge/) |
-| Роль | [`agents/`](agents/) |
-| Задача | [`backlog/`](backlog/) + [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-
-## Agent harness
-
-| Файл | Назначение |
-| :--- | :--- |
-| `AGENTS.md` | Канон правил для всех AI |
-| `STATUS.md` | Текущий handoff / OPEN |
-| `CLAUDE.md` / `GEMINI.md` / `GROK.md` | Vendor-стабы → `AGENTS.md` |
-| `.github/copilot-instructions.md` | Copilot-стаб → `AGENTS.md` |
-| `node tools/validate.mjs` | Локальная + CI-проверка структуры |
-
-## Структура репозитория
-
-| Область | Назначение |
-| :--- | :--- |
-| [`knowledge/`](knowledge/) | База знаний: реестр утверждений, подтверждённые факты, глоссарий |
-| [`strategy/`](strategy/) | Карта проекта, дорожная карта, бизнес-стратегия |
-| [`brand/`](brand/) | Бренд-платформа и вербальная идентичность |
-| [`design/`](design/) | Визуальная система и дизайн-артефакты |
-| [`operations/`](operations/) | Операционная модель, SOP, сервис |
-| [`finance/`](finance/) | Финансовая модель и допущения |
-| [`product/`](product/) | QR-продукт и цифровые сервисы |
-| [`agents/`](agents/) | Контракты шести AI-ролей |
-| [`decisions/`](decisions/) | Журнал решений (ADR) |
-| [`templates/`](templates/) | Шаблоны артефактов |
-| [`backlog/`](backlog/) | Стартовые задачи следующих этапов |
-| [`tools/`](tools/) | Локальные валидаторы (те же, что в CI) |
-| [`archive/`](archive/) | Неизменяемые исходные материалы |
-
-## Локальные проверки
-
+## Запуск
 ```bash
-node tools/validate.mjs
+npm ci
+cp .env.example .env.local   # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+npm run dev                   # http://localhost:3000/pos
 ```
+Без переменных Supabase касса работает «только локально» (вход по PIN недоступен).
 
-Тот же скрипт запускается в CI (`.github/workflows/validate.yml`).
+## Маршруты
+| Путь | Что |
+|---|---|
+| `/pos` | касса (PIN) |
+| `/kds` | экран кухни (PIN) |
+| `/backup` | скачать JSON-бэкап устройства без PIN |
+| `/`, `/uz`, `/en` | гостевое меню |
 
-## Границы текущего этапа
+## Данные
+- Supabase: таблицы закрыты RLS, доступ только через RPC с PIN-сессией (`supabase/migrations`).
+- Устройство: IndexedDB `cf2` (меню, заказы, смены, очередь изменений, снимки старой версии).
+- Перенос со старой версии (v1, localStorage): при первом открытии снимок уходит в IndexedDB и на сервер,
+  после входа по PIN заказы/смены/меню импортируются идемпотентно и сверяются по дням (раздел «Бэкап»).
 
-- Remote GitHub — **активен** (`SharipovAkhror/chicken-fit-cafe`).
-- Клиентское QR-приложение пока не разрабатывается.
-- Финальное название/логотип бренда — только через ADR + human approval.
-- Без БД, SaaS-интеграций и веб-панели агентов: интерфейс v1 — файлы и GitHub.
+## Проверки
+`npm run lint`, `npm run typecheck`, `npm test`, `npm run build`; миграции — `supabase/tests/run-local.sh`.

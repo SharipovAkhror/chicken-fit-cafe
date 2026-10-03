@@ -15,8 +15,7 @@ import {
   UtensilsCrossed,
   Utensils,
 } from 'lucide-react'
-import { createOrder } from '@/lib/orders'
-import { nextOrderNumber, receiptDateTime } from '@/lib/receipt'
+import { receiptDateTime } from '@/lib/receipt'
 
 export type ViewItem = {
   id: string
@@ -423,12 +422,12 @@ export function MenuBoard({
     close()
   }
 
-  // Отправка заказа прямо на кассу
+  // Экран заказа для показа кассиру (без отправки)
   async function handleSendOrderToPOS() {
     if (cartList.length === 0) return
 
-    const orderPrefix = orderType === 'dine_in' ? `QR${selectedTable}` : 'ONLINE'
-    const num = nextOrderNumber(orderPrefix)
+    // v2: гостевое меню только для просмотра — заказ не отправляется в систему, гость показывает его кассиру
+    const num = orderType === 'dine_in' ? `Стол ${selectedTable}` : 'Гость'
     const dt = receiptDateTime()
     const orderItems = cartList.map((e) => ({
       id: e.baseId,
@@ -445,19 +444,6 @@ export function MenuBoard({
         ? `Самовывоз (${customerName || 'Гость'}, тел: ${customerPhone || 'не указан'})`
         : `Доставка (${deliveryAddress || 'Адрес не указан'}, ${customerPhone || ''})`
 
-    await createOrder({
-      orderNumber: num,
-      type: orderType,
-      tableNumber: orderType === 'dine_in' ? selectedTable : undefined,
-      customerPhone: customerPhone.trim() || undefined,
-      deliveryAddress: orderType === 'delivery' ? deliveryAddress.trim() || undefined : undefined,
-      items: orderItems,
-      subtotal: totalCartSum,
-      total: totalCartSum,
-      paymentMethod: 'cash',
-      cashierName: customerName.trim() ? `Гость (${customerName.trim()})` : 'Онлайн-заказ',
-      status: 'pending',
-    })
 
     setOrderSuccess({
       orderNumber: num,
@@ -1320,7 +1306,7 @@ export function MenuBoard({
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-black transition hover:bg-amber-400 active:scale-[0.98] shadow-xs cursor-pointer"
                 >
                   <Send className="size-3.5" />
-                  <span>Отправить заказ</span>
+                  <span>Показать кассиру</span>
                 </button>
               </div>
             </div>
@@ -1342,9 +1328,9 @@ export function MenuBoard({
               <div className="flex size-12 mx-auto items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
                 <Check className="size-6" />
               </div>
-              <h3 className="text-xl font-bold">Заказ принят!</h3>
+              <h3 className="text-xl font-bold">Ваш заказ</h3>
               <p className="text-xs text-muted-foreground">
-                Заказ передан в систему. Номер: <span className="font-mono font-bold text-foreground">{orderSuccess.orderNumber}</span> ({orderSuccess.orderType})
+                Покажите этот экран кассиру. <span className="font-mono font-bold text-foreground">{orderSuccess.orderNumber}</span> ({orderSuccess.orderType})
               </p>
             </div>
 

@@ -2,7 +2,7 @@
 import type { Order, Shift, ShiftSummary } from '@/domain/order'
 import type { CategoryRow, MenuItemRow, TableRow } from './local-db'
 
-type Row = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+type Row = Record<string, any>  
 const n = (v: unknown): number => (typeof v === 'number' ? v : Number(v ?? 0) || 0)
 
 export function orderFromRow(r: Row): Order {
@@ -89,7 +89,7 @@ export const menuToPayload = (m: MenuItemRow) => ({
 
 /** Локальный заказ -> payload order.upsert (только серверные поля). */
 export function orderToPayload(o: Order, extra: Record<string, unknown> = {}) {
-  const { dirty: _d, updatedAt: _u, source: _s, ...rest } = o // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { dirty: _d, updatedAt: _u, source: _s, ...rest } = o  
   return { ...rest, ...extra }
 }
 export function shiftToPayload(s: Shift) {

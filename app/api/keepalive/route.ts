@@ -1,65 +1,16 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+/** Пинг Supabase (бесплатный план засыпает без активности). Только чтение публичной таблицы. */
 export async function GET() {
-  const startedAt = Date.now()
-
-  if (!supabase) {
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: 'Supabase client not configured (missing env variables)',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 503 },
-    )
-  }
-
-  try {
-    // 1. Keep-alive ping to categories & menu_items
-    const [catRes, itemRes, orderRes] = await Promise.all([
-      supabase.from('categories').select('id').limit(1),
-      supabase.from('menu_items').select('id').limit(1),
-      supabase.from('orders').select('id').limit(1),
-    ])
-
-    const latencyMs = Date.now() - startedAt
-
-    const results = {
-      categories: catRes.error ? `error: ${catRes.error.message}` : 'ok',
-      menu_items: itemRes.error ? `error: ${itemRes.error.message}` : 'ok',
-      orders: orderRes.error ? `error: ${orderRes.error.message}` : 'ok',
-    }
-
-    const hasErrors = Boolean(catRes.error || itemRes.error)
-
-    return NextResponse.json(
-      {
-        status: hasErrors ? 'degraded' : 'alive',
-        timestamp: new Date().toISOString(),
-        latencyMs,
-        database: 'Supabase PostgreSQL (ikvontqurgzopdmsdmla.supabase.co)',
-        tables: results,
-      },
-      { status: hasErrors ? 500 : 200 },
-    )
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json(
-      {
-        status: 'unreachable',
-        error: errorMsg,
-        timestamp: new Date().toISOString(),
-        latencyMs: Date.now() - startedAt,
-      },
-      { status: 500 },
-    )
-  }
-}
-
-export async function POST() {
-  return GET()
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  if (!url || !key) return NextResponse.json({ status: 'error', message: 'Supabase env missing' }, { status: 503 })
+  const started = Date.now()
+  const { error } = await createClient(url, key, { auth: { persistSession: false } }).from('categories').select('id').limit(1)
+  if (error) return NextResponse.json({ status: 'error', message: error.message }, { status: 502 })
+  return NextResponse.json({ status: 'ok', latencyMs: Date.now() - started, timestamp: new Date().toISOString() })
 }

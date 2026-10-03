@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+    branches: [main, 'rebuild/**']
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations twice + tests
+        env: { PGHOST: localhost, PGUSER: postgres, PGPASSWORD: postgres }
+        run: |
+          createdb cf_test
+          run() { psql -q -v ON_ERROR_STOP=1 -d cf_test -f "$1"; }
+          run supabase/tests/00_local_supabase_stub.sql
+          run supabase/tests/01_prod_state_fixture.sql
+          for f in supabase/migrations/*.sql; do run "$f"; done
+          for f in supabase/migrations/*.sql; do run "$f"; done
+          run supabase/tests/02_tests.sql

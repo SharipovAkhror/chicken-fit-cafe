@@ -9,7 +9,7 @@ import { isKitchenItem, type CartItem } from '@/domain/cart'
 import { roundUZS } from '@/domain/money'
 import { LEGACY_KEYS } from './legacy-keys'
 
-type Json = any // eslint-disable-line @typescript-eslint/no-explicit-any
+type Json = any  
 
 export type LegacyOrderPayload = Record<string, Json> & { id: string; legacyId: string; total: number; createdAt: string }
 export type LegacyShiftPayload = Record<string, Json> & { id: string; legacyId: string }
