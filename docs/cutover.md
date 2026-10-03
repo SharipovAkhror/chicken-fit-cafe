@@ -4,7 +4,7 @@
 
 ## Перед деплоем
 1. CI на `rebuild/v2` зелёный (lint, typecheck, test, build, миграции на Postgres 17), preview READY.
-2. Миграции `v2_0001…v2_0007` уже применены в Supabase (аддитивно; v1 Supabase не использует).
+2. Миграции `v2_0001…v2_0008` уже применены в Supabase (аддитивно; v1 Supabase не использует).
 
 ## Деплой
 1. Vercel → Environment Variables → **только Production**:
@@ -32,3 +32,8 @@ select import_report->'verify' from legacy_snapshots order by received_at desc l
 Instant Rollback в Vercel на `dpl_DtNZzsEdt2aSZUtMJ9pT7aH8Vayj` (v1, коммит `cde9b97`).
 v1 продолжит работать: legacy-ключи localStorage v2 не изменяет. Заказы, созданные в v2 до отката,
 останутся в Supabase и IndexedDB, но в v1 видны не будут.
+
+## E2E на реальной базе (без следа в отчётах)
+Временный сотрудник `staff.is_test=true` (его заказы и смены пишутся с `source='dev_test'`, не попадают в отчёты и pull реальных сотрудников):
+`TEST_PIN=… BASE=http://localhost:3100 node tests/e2e/real-supabase-e2e.mjs`. После прогона удалить его заказы
+(`orders.created_by`), смены (`shifts.opened_by`), `applied_mutations.staff_id`, `login_attempts` его устройств и самого сотрудника.
