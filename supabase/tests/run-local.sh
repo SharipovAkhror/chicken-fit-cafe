@@ -11,4 +11,5 @@ run tests/01_prod_state_fixture.sql
 for f in migrations/*.sql; do echo "apply $f"; run "$f"; done
 echo "re-apply (idempotency)"; for f in migrations/*.sql; do run "$f"; done
 run tests/02_tests.sql
+run tests/03_tests_v8.sql
 echo "ALL MIGRATION TESTS PASSED"
