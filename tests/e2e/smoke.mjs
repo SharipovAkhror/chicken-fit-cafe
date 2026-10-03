@@ -1,14 +1,15 @@
 /**
  * E2E-смоук UI с поддельным сервером (перехват RPC Supabase в браузере) — реальную БД не трогает.
  * Запуск: BASE=http://localhost:3100 node tests/e2e/smoke.mjs  (нужен собранный и запущенный next start)
- * Скриншоты: /workspace/shots/*.png
+ * Скриншоты: $SHOTS (по умолчанию test-results/shots). Браузер: $CHROME, /usr/bin/google-chrome или chromium Playwright.
  */
 import { chromium } from 'playwright'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync } from 'node:fs'
 
 const BASE = process.env.BASE || 'http://localhost:3100'
-const OUT = process.env.SHOTS || '/workspace/shots'
-const exe = process.env.CHROME || '/usr/bin/google-chrome'
+const OUT = process.env.SHOTS || 'test-results/shots'
+mkdirSync(OUT, { recursive: true })
+const exe = process.env.CHROME || (existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined) // иначе chromium Playwright (npx playwright install chromium)
 
 function fakeServer() {
   const st = { applied: [], snapshots: [], orders: new Map(), shifts: new Map(), legacyOrders: 0 }

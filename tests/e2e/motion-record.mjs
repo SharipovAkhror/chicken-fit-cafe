@@ -1,5 +1,6 @@
-/** Запись ключевых анимаций v2.3 (Playwright recordVideo, мок RPC). Нужен next start на :3100. GIF: ffmpeg, см. отчёт. */
+/** Запись ключевых анимаций v2.3 (Playwright recordVideo, мок RPC). Нужен next start на :3100. Видео в $SHOTS (по умолчанию test-results/motion); GIF — ffmpeg. */
 import { chromium } from 'playwright'
+import { existsSync } from 'node:fs'
 function fakeServer() {
   const st = { applied: [], snapshots: [], orders: new Map(), shifts: new Map(), legacyOrders: 0 }
   const tables = Array.from({ length: 8 }, (_, i) => ({ id: String(i + 1), name: `Стол ${i + 1}`, zone: i < 6 ? '1 этаж' : 'Антресоль', capacity: 4, sort_order: i + 1 }))
@@ -23,8 +24,9 @@ function fakeServer() {
   }
   return { st, handle }
 }
-const VID = '/tmp/motion'
-const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] })
+const VID = process.env.SHOTS || 'test-results/motion'
+const exe = process.env.CHROME || (existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined) // иначе chromium Playwright (npx playwright install chromium)
+const b = await chromium.launch({ executablePath: exe, args: ['--no-sandbox'] })
 async function session(vp, fn) {
   const ctx = await b.newContext({ viewport: vp, deviceScaleFactor: 1, recordVideo: { dir: VID, size: vp } })
   const { handle } = fakeServer()

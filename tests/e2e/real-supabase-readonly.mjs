@@ -1,8 +1,13 @@
-// Запуск: BASE=http://localhost:3100 SHARE=http://localhost:3100/ node tests/e2e/real-supabase-readonly.mjs (сборка с .env.local)
-// Смоук превью на реальном Supabase: только вход (создаёт сессию), чтение pull/отчётов, выход. Без заказов и смен.
+// Запуск: BASE=https://chicken-fit-cafe.vercel.app SHARE=https://chicken-fit-cafe.vercel.app/ ADMIN_PIN=… node tests/e2e/real-supabase-readonly.mjs
+// Смоук прода/превью на реальном Supabase: только вход (создаёт сессию), чтение pull/отчётов, выход. Без заказов и смен.
 import { chromium } from 'playwright'
-const SHARE = process.env.SHARE, BASE = process.env.BASE, OUT = process.env.SHOTS ?? '/workspace/shots'
-const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] })
+import { existsSync, mkdirSync } from 'node:fs'
+const SHARE = process.env.SHARE, BASE = process.env.BASE, OUT = process.env.SHOTS ?? 'test-results/shots'
+const PIN = process.env.ADMIN_PIN
+if (!BASE || !SHARE || !PIN) throw new Error('BASE, SHARE, ADMIN_PIN required')
+mkdirSync(OUT, { recursive: true })
+const exe = process.env.CHROME || (existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined) // иначе chromium Playwright (npx playwright install chromium)
+const browser = await chromium.launch({ executablePath: exe, args: ['--no-sandbox'] })
 const res = []
 const check = (n, ok, extra = '') => { res.push(ok); console.log(ok ? 'PASS' : 'FAIL', n, extra) }
 for (const vp of [{ w: 1366, h: 768, tag: 'real-1366' }, { w: 390, h: 844, tag: 'real-390' }]) {
@@ -15,7 +20,7 @@ for (const vp of [{ w: 1366, h: 768, tag: 'real-1366' }, { w: 390, h: 844, tag: 
   await page.goto(`${BASE}/pos`)
   await page.getByText('Введите PIN сотрудника').waitFor({ timeout: 30000 })
   check(`${vp.tag} PIN-экран`, true)
-  for (const d of '12345678') await page.getByRole('button', { name: d, exact: true }).click()
+  for (const d of PIN) await page.getByRole('button', { name: d, exact: true }).click()
   await page.getByRole('button', { name: 'Войти' }).click()
   await page.getByText('С собой').waitFor({ timeout: 20000 })
   await page.waitForTimeout(4000)

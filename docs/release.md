@@ -1,37 +1,46 @@
 # Релиз и откат
 
 ## Окружения
-| | Где | Supabase env |
+| | Откуда | База |
 |---|---|---|
-| Прод | `main` → https://chicken-fit-cafe.vercel.app (Vercel `prj_TWBQgZ4iXmABwJF3nQIVCSKjdZT7`) | Production: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
-| Preview | любая ветка (защищено Vercel Authentication) | не задан → касса в режиме «только локально» (реальная БД не используется) |
-| Локально | `.env.local` (из `.env.example`) | осторожно: указывает на прод-БД |
+| Прод | push в `main` → Vercel Git integration → https://chicken-fit-cafe.vercel.app | прод Supabase (env Production) |
+| Preview | любая другая ветка/PR → URL `*-akhrors-projects-fc8c3afa.vercel.app` (за Vercel Authentication) | нет env → «Только локально» (#13) |
+| Локально | `npm run dev` | что в `.env.local` (осторожно: прод) |
+
+Переменные — [`setup.md`](setup.md#переменные-окружения-и-секреты). Список деплоев: Vercel → проект `chicken-fit-cafe` → Deployments,
+`vercel ls chicken-fit-cafe --prod --scope akhrors-projects-fc8c3afa` или
+`gh api "repos/SharipovAkhror/chicken-fit-cafe/deployments?environment=Production" --jq '.[]|[.sha[0:7],.created_at]|@tsv'`.
 
 ## Релиз
-1. Ветка от `main`, коммиты, push → CI зелёный: `check` (lint 0 warnings, types, unit, build), `migrations` (PG 17 ×2 + SQL-тесты + импорт legacy), `e2e` (smoke, мок RPC).
-2. Новые миграции применить в Supabase **до** мержа (они аддитивные, старый прод-клиент с ними работает). Отметить в `docs/migrations.md`.
-3. Согласие владельца → `git checkout main && git merge --ff-only <branch> && git push origin main`.
-4. Vercel собирает прод; дождаться `READY`.
-5. Проверка: `/api/keepalive` → 200 `{"status":"ok"}`; `/pos` (экран PIN), `/kds`, `/backup` → 200;
-   `BASE=https://chicken-fit-cafe.vercel.app SHARE=https://chicken-fit-cafe.vercel.app/ node tests/e2e/real-supabase-readonly.mjs`
-   (вход, pull, отчёты, выход — без записи заказов). Записать id нового прод-деплоя ниже.
-6. Касса: перезагрузить вкладку на устройстве (сервис-воркера нет; старая вкладка работает на старом коде до перезагрузки).
+1. Ветка от `main` → push → PR (шаблон с `Closes #N`) → CI зелёный: `check`, `migrations`, `e2e`.
+2. Новые миграции — в Supabase **до** мержа ([`migrations.md`](migrations.md#применение-в-прод-supabase-ikvontqurgzopdmsdmla)).
+3. Согласие владельца → merge PR или `git checkout main && git merge --ff-only <ветка> && git push origin main`.
+4. Vercel собирает прод (~1 мин); дождаться `READY` (дашборд или `vercel ls … --prod`).
+5. Проверка:
+   ```bash
+   for p in api/keepalive pos kds backup ""; do curl -s -o /dev/null -w "%{http_code} /$p\n" https://chicken-fit-cafe.vercel.app/$p; done  # все 200
+   curl -s https://chicken-fit-cafe.vercel.app/api/keepalive          # {"status":"ok",…}
+   BASE=https://chicken-fit-cafe.vercel.app SHARE=https://chicken-fit-cafe.vercel.app/ ADMIN_PIN=… node tests/e2e/real-supabase-readonly.mjs
+   ```
+   Записать id нового прод-деплоя в журнал ниже.
+6. На кассе перезагрузить вкладку (сервис-воркера нет; старая вкладка работает на старом коде до перезагрузки).
 
 ## Откат
-- Код: Vercel → Deployments → предыдущий прод-деплой → **Instant Rollback** (без пересборки).
-- БД: миграции аддитивные — откат кода их не требует; данные, записанные новой версией, остаются и читаются старой.
-- Данные устройства: IndexedDB `cf2` и ключи v1 в localStorage не удаляются; `/backup` даёт JSON-копию.
+- **Код:** Vercel → Deployments → нужный прод-деплой → ⋯ → **Instant Rollback** (без пересборки), или
+  `vercel rollback <dpl_id или URL> --scope akhrors-projects-fc8c3afa`. После отката Vercel перестаёт автоматически
+  выводить новые пуши в `main` на прод-домен — вернуть: «Undo Rollback» в дашборде или `vercel promote <dpl_id> --scope …`.
+- **Текущая цель отката:** при проблемах с v2.1–v2.3 — `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` (v2.0, `74ab3bb`);
+  если плох только последний деплой — предыдущая строка журнала. Деплои только с документацией равноценны по коду.
+- **БД:** миграции аддитивные — откат кода их не требует; данные новой версии остаются и читаются старой.
+- **Данные устройства:** IndexedDB `cf2` и ключи v1 в localStorage не удаляются; `/backup` даёт JSON-копию.
 
 ## Журнал прод-деплоев
 | Дата (UTC+5) | Коммит | Деплой | Что |
 |---|---|---|---|
 | 03.10.2026 | `74ab3bb` | `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` | v2.0 (переход с v1; v1 — `dpl_DtNZzsEdt2aSZUtMJ9pT7aH8Vayj`, тег `pre-v2`) |
 | 04.10.2026 01:16 | `b225f30` (ux/v2.1 → main, ff) | `dpl_s8M5f2VMgYi1PgQLdXyWhkj1raYb` | v2.1–v2.3: типы товаров, правка позиций, аудит цены (0010 применена до деплоя), редизайн, чистка репо. Откат → `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` |
-
-## Тестовые записи в реальной БД
-`tests/e2e/real-supabase-e2e.mjs` — только под сотрудником `staff.is_test=true` (записи `source='dev_test'`, не в отчётах).
-После прогона удалить его заказы (`orders.created_by`), смены (`shifts.opened_by`), `applied_mutations.staff_id`,
-`login_attempts` его устройств и самого сотрудника.
+| 04.10.2026 01:20 | `c22918b` | `dpl_13dfRaq2kwoCaT3SvWwUt8uUV87h` | только docs/тесты |
+| 04.10.2026 01:26 | `48ab237` | `dpl_5YgQTqbiKenXDrKoJ86e32izJoyc` | только docs (Issues, шаблон PR) |
 
 ## Перенос с v1 (выполнен 03.10.2026; путь спасения остаётся в коде)
 При открытии v2 на устройстве со старыми данными снимок localStorage уходит в IndexedDB и на сервер, после входа — импорт

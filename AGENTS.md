@@ -1,7 +1,28 @@
-# AGENTS.md — единственный источник правил для агентов и разработчиков
+# AGENTS.md — точка входа для любого агента или разработчика
 
 Касса (POS) кафе Chicken Fit, Самарканд. Прод: https://chicken-fit-cafe.vercel.app (`/pos`, `/kds`, `/backup`, гостевое меню `/`).
 Язык общения с владельцем — русский. Деньги — целые сумы (UZS). Время бизнеса — Asia/Samarkand (UTC+5).
+Проект ведётся только средствами из этого репозитория и аккаунтов владельца (GitHub, Vercel, Supabase) — стандартными CLI и дашбордами.
+
+## Где что лежит
+| Что | Где |
+|---|---|
+| Код, CI, задачи | GitHub `SharipovAkhror/chicken-fit-cafe`: ветка `main`, Actions, Issues |
+| Хостинг | Vercel: team `akhrors-projects-fc8c3afa`, проект `chicken-fit-cafe` (`prj_TWBQgZ4iXmABwJF3nQIVCSKjdZT7`), Node 24.x, функции `iad1` |
+| Прод-URL | https://chicken-fit-cafe.vercel.app (push в `main` = прод-деплой через Vercel Git integration) |
+| БД | Supabase: проект `chickenfit`, ref `ikvontqurgzopdmsdmla`, регион `eu-central-1` (Frankfurt), Postgres 17 |
+| Переменные окружения и секреты | только имена — [`docs/setup.md`](docs/setup.md#переменные-окружения-и-секреты) |
+
+## Документация
+| Файл | Когда читать |
+|---|---|
+| [`docs/setup.md`](docs/setup.md) | установка с нуля, env-переменные по окружениям, тесты, локальный Postgres |
+| [`docs/architecture.md`](docs/architecture.md), [`docs/data-model.md`](docs/data-model.md) | как устроены синхронизация, офлайн, схема БД |
+| [`docs/migrations.md`](docs/migrations.md) | изменение схемы БД и применение миграций в прод |
+| [`docs/release.md`](docs/release.md) | деплой, проверка, откат, текущая цель отката, журнал деплоев |
+| [`docs/operations.md`](docs/operations.md) | runbook'и: утро, сбой синхронизации, восстановление из бэкапа, смена PIN, тестовый сотрудник |
+| [`docs/design-system.md`](docs/design-system.md) | токены, компоненты, движение |
+| [`SECURITY.md`](SECURITY.md) | PIN, RLS, ключи, что делать при утечке |
 
 ## Стек
 Next.js 16 (App Router, React 19) · TypeScript · Tailwind 4 (только гостевое меню) + свой CSS кассы ·
@@ -13,16 +34,16 @@ Dexie/IndexedDB (офлайн) · Supabase Postgres 17 (RPC security definer, RL
 | `app/` | маршруты: `pos`, `kds`, `backup`, `api/keepalive`, `/`, `uz`, `en` (гостевое меню) |
 | `features/pos` | экраны кассы: столы, заказ, оплата, меню/столы (admin), смена, отчёты, история, печать |
 | `features/kitchen` | экран кухни (KDS) |
-| `features/rescue` | перенос данных старой кассы v1 из localStorage (только чтение ключей) + бэкап |
+| `features/rescue` | перенос данных старой кассы v1 из localStorage (только чтение ключей) + бэкап/восстановление JSON |
 | `features/app/runtime.tsx` | сессия, движок синхронизации, контекст |
-| `features/ui` | `v2.css` — дизайн-система кассы (токены, компоненты, движение); `brand-tokens.css` — бренд для гостевого меню |
+| `features/ui` | `v2.css` — дизайн-система кассы; `brand-tokens.css` — бренд гостевого меню |
 | `data/` | `local-db` (Dexie `cf2`), `api` (RPC), `outbox` (очередь мутаций), `sync` (pull/realtime), `mappers` |
 | `domain/` | чистая логика без I/O: корзина, вес/цена, гарниры, товары, заказ, деньги, id |
 | `components/menu`, `lib/` | гостевое меню (QR) и его утилиты |
 | `content/menu.json` | базовое меню: сид для кассы до первой синхронизации и запасной вариант гостевого меню |
-| `supabase/migrations` | схема (версионные, аддитивные); `supabase/tests` — SQL-тесты и `run-local.sh` |
-| `tests/unit`, `tests/integration`, `tests/e2e` | Vitest; импорт legacy на Postgres; Playwright smoke (мок RPC) |
-| `docs/` | `architecture.md`, `data-model.md`, `migrations.md`, `release.md`, `design-system.md` |
+| `supabase/migrations`, `supabase/tests` | схема (версионные, аддитивные миграции); SQL-тесты и `run-local.sh` |
+| `tests/unit`, `tests/integration`, `tests/e2e` | Vitest; импорт legacy на Postgres; Playwright smoke (мок RPC) и прод-проверки |
+| `.github/workflows` | `ci.yml` (check, migrations, e2e), `supabase-keepalive.yml` |
 
 ## Поток данных
 UI → `domain` → запись в IndexedDB → `outbox` (идемпотентный `mutation_id`) → RPC `pos_apply_mutation` →
@@ -30,33 +51,28 @@ UI → `domain` → запись в IndexedDB → `outbox` (идемпотент
 Касса работает без сети; отчёты (`report_shift`, `report_sales`) считаются только на сервере.
 
 ## Инварианты (нарушать нельзя)
-1. **Никогда не удалять и не изменять ключи localStorage старой версии** (`chickenfit*`, `cf-*`, `cf_*`). Их только читает `features/rescue`.
-2. **БД меняется только новой версионной миграцией** в `supabase/migrations/` — аддитивно и идемпотентно (повторный прогон без ошибок).
-   Перед применением: `npm run test:migrations` (локальный PG) и CI job `migrations`. Старые клиенты должны продолжать работать.
+1. **Никогда не удалять и не изменять ключи localStorage старой версии** (`chickenfit*`, `cf-*`, `cf_*`) и IndexedDB `cf2`. Их только читает `features/rescue`.
+2. **БД меняется только новой версионной миграцией** в `supabase/migrations/` — аддитивно и идемпотентно. Перед прод: `npm run test:migrations` и CI job `migrations`. Старые клиенты должны продолжать работать.
 3. Клиент не пишет в таблицы напрямую: RLS закрыт, вся запись — RPC с PIN-сессией. Публично читаются только меню и столы.
-4. **Секретов в репозитории нет.** В клиенте — только publishable key Supabase (`.env.local`, Vercel env). Service role не используется.
+4. **Секретов в репозитории нет.** В клиенте — только publishable key Supabase. Service role и пароль БД в код и Vercel не попадают.
 5. Ручная цена позиции: `price ≠ originalPrice`; сервер пишет аудит `order_events.type='price_override'`.
 6. Иконки — только lucide (stroke 1.75); цвета — только токены из `features/ui/v2.css`; контраст ≥ WCAG AA.
 7. Анимации 120/180/240 мс ease-out, не блокируют кассира, отключаются при `prefers-reduced-motion`.
-8. Merge в `main` = прод-деплой. Только с явного согласия владельца.
+8. Merge в `main` = прод-деплой; изменения прод-БД, деплой и откат — только с явного согласия владельца.
 
 ## Команды
 ```bash
-npm ci
-npm run dev                 # http://localhost:3000/pos (нужен .env.local, см. .env.example)
-npm run check               # lint (0 warnings) + typecheck + unit + build
-npm run test:migrations     # миграции дважды + SQL-тесты на локальном Postgres (sudo, БД cf_migration_test)
-npm run test:pg             # импорт legacy на том же локальном Postgres
-npm run build && npx next start -p 3100 &  npm run test:e2e   # smoke, мок RPC, скриншоты в $SHOTS
+nvm use && npm ci && cp .env.example .env.local   # Node из .nvmrc; значения env — см. docs/setup.md
+npm run dev                 # http://localhost:3000/pos
+npm run check               # lint (0 warnings) + typecheck + unit + build — то же, что CI job `check`
+npm run test:migrations && npm run test:pg   # локальный Postgres 17, см. docs/setup.md
+npm run test:e2e            # smoke с моком RPC; нужен `npm run build && npx next start -p 3100`
 ```
-`tests/e2e/real-supabase-readonly.mjs` — только чтение на реальной БД (вход/pull/отчёты/выход).
-`tests/e2e/real-supabase-e2e.mjs` — пишет в реальную БД под тестовым сотрудником (`staff.is_test`, `source='dev_test'`); запускать только осознанно.
 
 ## Открытые задачи
-Открытые задачи — GitHub Issues (метки `design`, `owner`, `feature`, `security`); TODO-списки в репозитории не держать.
-Задача закрывается сама: в коммите или PR в `main` пишется `Closes #N`. Задачи `owner` без кода закрывает владелец вручную.
+Только GitHub Issues (`gh issue list`; метки `design`, `owner`, `feature`, `security`); TODO-списки в репозитории не держать.
+Задача закрывается коммитом или PR в `main` с `Closes #N`. Задачи `owner` без кода закрывает владелец вручную.
 
-## Релиз и откат
-Ветка → PR/CI зелёный (lint, types, unit, build, migrations, e2e) → миграции применить в Supabase (до деплоя) →
-`main` (ff) → Vercel собирает прод → проверить `/api/keepalive` 200, `/pos`, `/kds`, `/backup`.
-Откат — Vercel Instant Rollback на предыдущий прод-деплой (id в `docs/release.md`). Миграции аддитивные — откат кода их не требует.
+## Релиз и откат (кратко)
+Ветка → PR → CI зелёный → миграции в Supabase (до мержа) → согласие владельца → `main` → Vercel собирает прод → проверка.
+Откат — Vercel Instant Rollback (`vercel rollback`). Подробно и текущая цель отката — [`docs/release.md`](docs/release.md).
