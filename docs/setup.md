@@ -39,7 +39,7 @@ Supabase CLI (`brew install supabase/tap/supabase` или `npx supabase`) + `sup
 
 | Имя | Зачем | Где взять |
 |---|---|---|
-| `DATABASE_URL` | `psql` к прод-БД: миграции, SQL-runbook'и | Supabase → Connect → Session pooler (IPv4); пароль — Project Settings → Database (там же сброс) |
+| `DATABASE_URL` | прод-БД для `supabase db push --db-url` и `psql` (миграции, SQL-runbook'и) | Supabase → Connect → Session pooler (IPv4); пароль — Project Settings → Database (там же сброс) |
 | `TEST_PIN` | `tests/e2e/real-supabase-e2e.mjs` под тестовым сотрудником | задаётся при создании тестового сотрудника |
 | PIN сотрудников | вход в `/pos`, `/kds`; readonly-проверка прода | у владельца; в БД только bcrypt-хеш (см. `SECURITY.md`) |
 

@@ -17,27 +17,29 @@ npm run test:pg           # импорт legacy-фикстуры через pos_
 Локальный Postgres 17 — см. [`setup.md`](setup.md#тесты). В CI то же делает job `migrations`.
 
 ## Применение в прод (Supabase `ikvontqurgzopdmsdmla`)
-История миграций в прод-БД (`supabase_migrations.schema_migrations`) ведётся под **именами** `v2_00NN_<name>`
-с версией = время применения (например `20261003201356 v2_0010_price_override_audit`), а не под именами файлов.
-Поэтому `supabase db push` сейчас **не использовать**: CLI сочтёт все файлы репозитория неприменёнными и прогонит их заново.
-(Выравнивание истории через `supabase migration repair` — отдельная задача с согласия владельца.)
-
-Стандартный путь — `psql` (или Supabase Dashboard → SQL Editor: вставить файл целиком → Run):
+История в прод-БД (`supabase_migrations.schema_migrations`) совпадает с файлами репозитория: версия = префикс имени файла,
+имя = остаток (выровнена 04.10.2026). Стандартный путь — Supabase CLI:
 ```bash
-export DATABASE_URL='<Supabase → Connect → Session pooler>'   # не сохранять в репозиторий
-F=supabase/migrations/<новый файл>.sql
+npx supabase login                                        # или SUPABASE_ACCESS_TOKEN
+npx supabase link --project-ref ikvontqurgzopdmsdmla      # спросит пароль БД (Project Settings → Database)
+npx supabase migration list                               # Local и Remote совпадают, новая — только в Local
+npx supabase db push --dry-run                            # должна быть ровно новая миграция
+npx supabase db push                                      # применяет и записывает в историю
+```
+Без `link`: `npx supabase db push --db-url "$DATABASE_URL"` (строка Session pooler из Supabase → Connect; в репозиторий не класть).
+После успешного применения `migration list` показывает её в обеих колонках, `db push --dry-run` — «Remote database is up to date».
+
+Запасной путь — `psql` (или SQL Editor: вставить файл целиком → Run), затем вручную записать историю под тем же именем файла:
+```bash
+F=supabase/migrations/20261005000100_example.sql             # пример
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -1 -f "$F"            # одна транзакция: ошибка = ничего не применено
-psql "$DATABASE_URL" -c "insert into supabase_migrations.schema_migrations(version, name)
-  values (to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), 'v2_00NN_<name>')"
+psql "$DATABASE_URL" -c "insert into supabase_migrations.schema_migrations(version, name) values ('20261005000100', 'example')"
 ```
-Проверка после применения:
-```sql
-select version, name from supabase_migrations.schema_migrations order by version desc limit 3;  -- новая запись есть
--- объекты миграции на месте, например:
-select proname from pg_proc where pronamespace = 'public'::regnamespace and proname like 'pos_%';
-```
-Затем `curl -fsS https://chicken-fit-cafe.vercel.app/api/keepalive` и readonly-проверка из [`release.md`](release.md#релиз)
+Проверка в обоих случаях: `select version, name from supabase_migrations.schema_migrations order by version desc limit 3;`,
+затем `curl -fsS https://chicken-fit-cafe.vercel.app/api/keepalive` и readonly-проверка из [`release.md`](release.md#релиз)
 (старый прод-клиент должен работать с новой схемой). Отметить миграцию в таблице ниже.
+Если `db push` пишет «Remote migration versions not found in local migrations directory» — история снова разошлась:
+не чинить наугад, сравнить `migration list` и при согласии владельца выровнять `supabase migration repair`.
 
 ## Список
 | № | Файл | Что | В Supabase |
