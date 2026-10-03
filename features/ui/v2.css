@@ -62,3 +62,4 @@
   #v2-print .r-hr { border-top: 1px dashed #000; margin: 4px 0; }
   #v2-print .r-big { font-size: 1.35em; font-weight: 700; }
 }
+.v2 nav.bottom-nav .rail-btn { width: auto; flex: 1 1 0; min-width: 0; font-size: 10px; padding: 0 2px; }

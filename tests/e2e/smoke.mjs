@@ -140,6 +140,18 @@ async function run() {
     await page.getByRole('button', { name: 'Отчёты' }).click()
     await page.getByText('По дням').waitFor()
     await page.screenshot({ path: `${OUT}/${vp.tag}-08-reports.png`, fullPage: vp.tag === 'phone-390' })
+    await page.getByRole('button', { name: 'Заказы' }).click()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: `${OUT}/${vp.tag}-10-history.png` })
+    if (vp.tag === 'pos-1366') check('оплаченный заказ в истории', await page.getByRole('button', { name: /Печать чека/ }).count() >= 1)
+    await page.getByRole('button', { name: 'Меню' }).click()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: `${OUT}/${vp.tag}-11-menu-admin.png` })
+    if (vp.tag === 'pos-1366') {
+      await page.getByRole('button', { name: 'В продаже' }).first().click()
+      await page.waitForTimeout(1200)
+      check('стоп-лист: menu.upsert отправлен', st.applied.includes('menu.upsert'))
+    }
     await page.getByRole('button', { name: 'Бэкап' }).click()
     await page.waitForTimeout(500)
     await page.screenshot({ path: `${OUT}/${vp.tag}-09-backup.png` })
@@ -163,7 +175,7 @@ async function run() {
     })
     await page.reload()
     await page.getByText('Введите PIN сотрудника').waitFor()
-    await page.screenshot({ path: `${OUT}/pos-1366-10-pin-dark.png` })
+    await page.screenshot({ path: `${OUT}/pos-1366-12-pin-dark.png` })
     await ctx.close()
   }
   await browser.close()

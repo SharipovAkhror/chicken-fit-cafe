@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun } from 'lucide-react'
+import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun, History, BookOpen } from 'lucide-react'
 import { useRuntime, useTheme, RuntimeProvider } from '@/features/app/runtime'
 import type { Order } from '@/domain/order'
 import { KitchenView } from '@/features/kitchen/KitchenView'
@@ -11,12 +11,14 @@ import { TablesView } from './TablesView'
 import { OrderView } from './OrderView'
 import { ShiftView } from './ShiftView'
 import { ReportsView } from './ReportsView'
+import { HistoryView } from './HistoryView'
+import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
 import { newOrder } from './actions'
 import { useActiveOrders, useOpenShift } from './useData'
 
-type Tab = 'tables' | 'kitchen' | 'shift' | 'reports' | 'backup'
+type Tab = 'tables' | 'history' | 'kitchen' | 'menu' | 'shift' | 'reports' | 'backup'
 
 export function PosRoot({ kitchenOnly = false }: { kitchenOnly?: boolean }) {
   return (
@@ -82,7 +84,9 @@ function PosApp() {
   }
   const tabs: Array<{ id: Tab; label: string; icon: React.ReactNode; show: boolean }> = [
     { id: 'tables', label: 'Столы', icon: <LayoutGrid size={22} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'history', label: 'Заказы', icon: <History size={22} />, show: session?.staff.role !== 'kitchen' },
     { id: 'kitchen', label: 'Кухня', icon: <ChefHat size={22} />, show: true },
+    { id: 'menu', label: 'Меню', icon: <BookOpen size={22} />, show: session?.staff.role !== 'kitchen' },
     { id: 'shift', label: 'Смена', icon: <Wallet size={22} />, show: session?.staff.role !== 'kitchen' },
     { id: 'reports', label: 'Отчёты', icon: <BarChart3 size={22} />, show: isAdmin },
     { id: 'backup', label: 'Бэкап', icon: <HardDriveDownload size={22} />, show: session?.staff.role !== 'kitchen' },
@@ -121,10 +125,10 @@ function PosApp() {
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />
-          ) : tab === 'kitchen' ? <KitchenView /> : tab === 'shift' ? <ShiftView /> : tab === 'reports' ? <ReportsView /> : <BackupView r={rescue} />}
+          ) : tab === 'history' ? <HistoryView onOpen={setCurrent} /> : tab === 'menu' ? <MenuAdminView /> : tab === 'kitchen' ? <KitchenView /> : tab === 'shift' ? <ShiftView /> : tab === 'reports' ? <ReportsView /> : <BackupView r={rescue} />}
         </main>
       </div>
-      {compact && !current && <nav className="flex justify-around" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }} aria-label="Разделы">{nav}</nav>}
+      {compact && !current && <nav className="bottom-nav flex justify-around" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }} aria-label="Разделы">{nav}</nav>}
       <PrintArea paper={paper} />
     </div>
   )

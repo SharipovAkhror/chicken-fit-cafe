@@ -53,10 +53,13 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
     printJob({ kind: 'precheck', order: saved, tableLabel })
   }
   const onPaid = async (m: PaymentMethod, cash: number | null, print: boolean) => {
+    const wasOpen = order.status === 'open'
     const saved = await pay(db, order, m, cash)
     setPaying(false)
     setOrder(saved)
-    if (print) printJob({ kind: 'receipt', order: saved, tableLabel })
+    const needKitchen = wasOpen && saved.items.some((i) => i.isKitchen)
+    if (needKitchen) printJob({ kind: 'kitchen', order: saved, tableLabel })
+    if (print) setTimeout(() => printJob({ kind: 'receipt', order: saved, tableLabel }), needKitchen ? 400 : 0)
     flash('Оплачено')
     setTimeout(onBack, print ? 800 : 300)
   }
