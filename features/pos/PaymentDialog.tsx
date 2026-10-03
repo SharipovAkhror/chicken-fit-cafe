@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import type { Order, PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
+import { Banknote, Smartphone } from 'lucide-react'
 import { Modal, Money, Numpad } from './common'
 
 export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
@@ -30,10 +31,11 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
           </div>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 mb-4" role="radiogroup" aria-label="Способ оплаты">
+      {/* способ оплаты — переключатель, а не вторая «главная» кнопка: бренд-цвет остаётся только у «Оплачено + чек» */}
+      <div className="seg seg-fill seg-lg mb-4" role="radiogroup" aria-label="Способ оплаты">
         {(['cash', 'click_payme'] as const).map((m) => (
-          <button key={m} role="radio" aria-checked={method === m} className={`btn btn-lg${method === m ? ' btn-primary' : ''}`} onClick={() => setMethod(m)}>
-            {m === 'cash' ? 'Наличные' : 'Click / Payme'}
+          <button key={m} role="radio" aria-checked={method === m} onClick={() => setMethod(m)}>
+            {m === 'cash' ? <><Banknote size={20} aria-hidden />Наличные</> : <><Smartphone size={20} aria-hidden />Click / Payme</>}
           </button>
         ))}
       </div>
@@ -52,8 +54,8 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
           </div>
         </>
       )}
-      <div className="grid grid-cols-2 gap-2 mt-5">
-        <button className="btn btn-lg" disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, false)}>Оплачено без чека</button>
+      <div className="grid grid-cols-2 gap-2 mt-4">
+        <button className="btn btn-lg" style={{ padding: "0 8px", whiteSpace: "nowrap" }} disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, false)}>Оплачено без чека</button>
         <button className="btn btn-lg btn-primary" disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, true)}>Оплачено + чек</button>
       </div>
     </Modal>

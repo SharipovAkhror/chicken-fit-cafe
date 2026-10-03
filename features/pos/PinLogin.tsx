@@ -1,4 +1,5 @@
 'use client'
+import { Delete } from 'lucide-react'
 import { useState } from 'react'
 import { useRuntime } from '@/features/app/runtime'
 import { SyncBadge } from './common'
@@ -38,8 +39,8 @@ export function PinLogin() {
         {err && <div className="banner banner-danger mb-3" role="alert">{err}</div>}
         <div className="grid grid-cols-3 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'].map((k) => (
-            <button key={k} className={`btn numkey${k === 'OK' ? ' btn-primary' : ''}`} disabled={busy || (k === 'OK' && pin.length < 4)} onClick={() => press(k)}>
-              {k === 'OK' ? (busy ? '…' : 'Войти') : k}
+            <button key={k} className={`btn numkey${k === 'OK' ? ' btn-primary' : ''}`} disabled={busy || (k === 'OK' && pin.length < 4)} onClick={() => press(k)} aria-label={k === '⌫' ? 'Стереть' : undefined}>
+              {k === 'OK' ? (busy ? '…' : 'Войти') : k === '⌫' ? <Delete size={24} /> : k}
             </button>
           ))}
         </div>

@@ -14,7 +14,7 @@ import { cancelOrder, markPrecheck, pay, saveDraftLocal, saveMenuItem, saveOrder
 import { printJob } from './print'
 import { useActiveOrders, useMenu, useTables } from './useData'
 import { GarnishDialog } from './GarnishDialog'
-import { ProductCard } from './ProductCard'
+import { NewProductTile, ProductCard } from './ProductCard'
 import { LinePanel, OptionsDialog, QuickProductDialog, TransferDialog, WeightAdd, type QuickProduct } from './ItemDialogs'
 import { uuidv4 } from '@/domain/ids'
 
@@ -39,6 +39,9 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const [q, setQ] = useState('')
   const [paying, setPaying] = useState(false)
   const [lineIdx, setLineIdx] = useState<number | null>(null)
+  // Анимации чека: новые строки проявляются только после первого рендера (не при открытии стола),
+  // удаляемая строка схлопывается 180 мс, потом реально удаляется.
+  const [leaving, setLeaving] = useState<number | null>(null)
   const [pending, setPending] = useState<Pending>(null)
   const [dialog, setDialog] = useState<'cancel' | 'new' | 'transfer' | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
@@ -58,6 +61,8 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const itemCount = order.items.length
   useEffect(() => { listEnd.current?.scrollIntoView({ block: 'nearest' }) }, [itemCount])
 
+  const orderRef = useRef(order)
+  useEffect(() => { orderRef.current = order }, [order])
   const update = (o: Order) => {
     setOrder(o)
     if (o.items.length > 0 || o.number) void saveDraftLocal(db, o)
@@ -139,7 +144,14 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const editor = editLine && lineIdx !== null && (
     <LinePanel key={lineIdx} line={editLine} onClose={() => setLineIdx(null)}
       onChange={(l) => update(withTotals(order, updateLine(order.items, lineIdx, l)))}
-      onRemove={() => { update(withTotals(order, setQty(order.items, lineIdx, 0))); setLineIdx(null) }} />
+      onRemove={() => {
+        const idx = lineIdx
+        setLineIdx(null)
+        const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        if (reduce) { update(withTotals(order, setQty(order.items, idx, 0))); return }
+        setLeaving(idx)
+        setTimeout(() => { setLeaving(null); const o = orderRef.current; update(withTotals(o, setQty(o.items, idx, 0))) }, 180)
+      }} />
   )
 
   const ticket = (
@@ -171,29 +183,29 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
             onChange={(e) => update(withTotals(order, order.items, order.discountPercent, 0, Number(e.target.value.replace(/\D/g, '')) || 0))} />
         </div>
       )}
-      <ul className="flex-1 overflow-auto px-2" aria-label="Позиции заказа">
+      <LineList className="flex-1 overflow-auto px-2" aria-label="Позиции заказа">
         {order.items.length === 0 && <li className="muted p-6 text-center">Нажмите на блюдо, чтобы добавить</li>}
         {order.items.map((it, idx) => {
           const sub = it.weightKg ? `${gramsOf(it)} г` : null
           const changed = isPriceOverridden(it)
           const note = shortNote(it.name, it.notes, !!it.garnishMix?.length)
           return (
-            <li key={idx} className="line">
+            <li key={idx} className={`line${leaving === idx ? ' is-leaving' : ''}`}>
               <button className="line-main" disabled={locked} aria-current={lineIdx === idx} onClick={() => setLineIdx(lineIdx === idx ? null : idx)} aria-label={`Изменить: ${it.name}`}>
                 <span className="min-w-0">
-                  <span className="font-semibold block">
+                  <span className="line-name">
                     {it.qty > 1 && !it.weightKg && <span className="line-qty">{it.qty}×</span>}{baseName(it)}
                   </span>
                   {(sub || changed) && <span className="line-sub">{[sub, changed ? 'своя цена' : null].filter(Boolean).join(' · ')}</span>}
                   {note && <span className="line-note">{note}</span>}
                 </span>
-                <span className="font-bold whitespace-nowrap">{formatUZS(lineTotal(it))}</span>
+                <span className="line-price">{formatUZS(lineTotal(it))}</span>
               </button>
             </li>
           )
         })}
         <li ref={listEnd} aria-hidden />
-      </ul>
+      </LineList>
       <div className="p-3 grid gap-2" style={{ borderTop: '1px solid var(--border)' }}>
         {order.discountAmount > 0 && <div className="flex justify-between muted"><span>Скидка {order.discountPercent ? `${order.discountPercent}%` : ''}</span><span>−{formatUZS(order.discountAmount)}</span></div>}
         <div className="flex justify-between items-baseline"><span className="text-lg">Итого</span><Money v={order.total} className="text-2xl font-bold" /></div>
@@ -239,6 +251,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
           )}
           <div className="grid gap-2 overflow-auto content-start flex-1" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? 150 : 180}px, 1fr))`, gridAutoRows: "max-content" }}>
             {items.map((m) => <ProductCard key={m.id} item={m} qty={qtyById.get(m.id) ?? 0} onAdd={() => onProduct(m)} />)}
+            {!needle && !locked && items.length > 0 && <NewProductTile onClick={() => setDialog('new')} />}
             {needle && items.length === 0 && <p className="muted p-4">Ничего не найдено</p>}
           </div>
           {compact && (
@@ -301,6 +314,13 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
       )}
     </div>
   )
+}
+
+/** Список строк чека: новые строки проявляются (180 мс), но не при открытии стола/шторки — data-ready ставится после первого кадра. */
+function LineList({ children, ...rest }: React.ComponentProps<'ul'>) {
+  const [ready, setReady] = useState(false)
+  useEffect(() => { const t = requestAnimationFrame(() => setReady(true)); return () => cancelAnimationFrame(t) }, [])
+  return <ul {...rest} data-ready={ready || undefined}>{children}</ul>
 }
 
 function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: (reason: string) => void }) {

@@ -1,5 +1,6 @@
 'use client'
-import { Cloud, CloudOff, RefreshCw, TriangleAlert } from 'lucide-react'
+import { Cloud, CloudOff, Delete, RefreshCw, TriangleAlert, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useSyncState, getEngine } from '@/features/app/runtime'
 import { retryBlocked } from '@/data/outbox'
 import { getDb } from '@/data/local-db'
@@ -27,13 +28,21 @@ export function SyncBadge() {
   return <span className="chip" style={{ color: 'var(--success)' }}><Cloud size={14} />&nbsp;Синхронизировано</span>
 }
 
+/** Диалог: появление 180 мс; на телефоне — нижний лист. Закрытие крестиком/фоном/Esc — с короткой анимацией (140 мс). */
 export function Modal({ title, onClose, children, width = 520 }: { title: string; onClose: () => void; children: ReactNode; width?: number }) {
+  const [closing, setClosing] = useState(false)
+  const close = () => { if (closing) return; setClosing(true); setTimeout(onClose, 140) }
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  })
   return (
-    <div className="scrim" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
-      <div className="panel" style={{ width: '100%', maxWidth: width, maxHeight: '92dvh', overflow: 'auto', padding: 20 }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
+    <div className={`scrim${closing ? ' is-closing' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={close}>
+      <div className="dialog" style={{ maxWidth: width }} onClick={(e) => e.stopPropagation()}>
+        <div className="dialog-head flex items-center justify-between gap-2">
           <h2 className="text-xl font-bold">{title}</h2>
-          <button className="btn btn-ghost" onClick={onClose} aria-label="Закрыть">✕</button>
+          <button className="btn btn-ghost btn-icon" onClick={close} aria-label="Закрыть"><X size={20} /></button>
         </div>
         {children}
       </div>
@@ -56,7 +65,7 @@ export function Numpad({ value, onChange, presets }: { value: string; onChange: 
       )}
       <div className="grid grid-cols-3 gap-2">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((k) => (
-          <button key={k} className="btn numkey" onClick={() => press(k)}>{k}</button>
+          <button key={k} className="btn numkey" onClick={() => press(k)} aria-label={k === '⌫' ? 'Стереть' : undefined}>{k === '⌫' ? <Delete size={24} /> : k}</button>
         ))}
       </div>
     </div>

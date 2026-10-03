@@ -261,7 +261,7 @@ export function OptionsDialog({ name, opts, onClose, onAdd }: { name: string; op
 export function TransferDialog({ from, tables, busy, onClose, onPick }: { from: string; tables: TableRow[]; busy: Set<string>; onClose: () => void; onPick: (id: string) => void }) {
   const zones = [...new Set(tables.map((t) => t.zone))]
   return (
-    <Modal title={`Перенести счёт: ${tables.find((t) => t.id === from)?.label ?? from} →`} onClose={onClose}>
+    <Modal title={`Перенести счёт: ${tables.find((t) => t.id === from)?.label ?? from}`} onClose={onClose}>
       {zones.map((z) => (
         <div key={z} className="mb-3">
           <div className="text-sm muted mb-1">{z}</div>

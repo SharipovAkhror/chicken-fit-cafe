@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun, History, BookOpen } from 'lucide-react'
+import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun, History, BookOpen, Printer } from 'lucide-react'
 import { useRuntime, useTheme, RuntimeProvider } from '@/features/app/runtime'
 import type { Order } from '@/domain/order'
 import { KitchenView } from '@/features/kitchen/KitchenView'
@@ -84,13 +84,13 @@ function PosApp() {
     setCurrent(existing ?? newOrder({ type: 'dine_in', tableId, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))
   }
   const tabs: Array<{ id: Tab; label: string; icon: React.ReactNode; show: boolean }> = [
-    { id: 'tables', label: 'Столы', icon: <LayoutGrid size={22} />, show: session?.staff.role !== 'kitchen' },
-    { id: 'history', label: 'Заказы', icon: <History size={22} />, show: session?.staff.role !== 'kitchen' },
-    { id: 'kitchen', label: 'Кухня', icon: <ChefHat size={22} />, show: true },
-    { id: 'menu', label: 'Меню', icon: <BookOpen size={22} />, show: session?.staff.role !== 'kitchen' },
-    { id: 'shift', label: 'Смена', icon: <Wallet size={22} />, show: session?.staff.role !== 'kitchen' },
-    { id: 'reports', label: 'Отчёты', icon: <BarChart3 size={22} />, show: isAdmin },
-    { id: 'backup', label: 'Бэкап', icon: <HardDriveDownload size={22} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'tables', label: 'Столы', icon: <LayoutGrid size={20} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'history', label: 'Заказы', icon: <History size={20} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'kitchen', label: 'Кухня', icon: <ChefHat size={20} />, show: true },
+    { id: 'menu', label: 'Меню', icon: <BookOpen size={20} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'shift', label: 'Смена', icon: <Wallet size={20} />, show: session?.staff.role !== 'kitchen' },
+    { id: 'reports', label: 'Отчёты', icon: <BarChart3 size={20} />, show: isAdmin },
+    { id: 'backup', label: 'Бэкап', icon: <HardDriveDownload size={20} />, show: session?.staff.role !== 'kitchen' },
   ]
   const nav = tabs.filter((t) => t.show).map((t) => (
     <button key={t.id} className="rail-btn" aria-current={tab === t.id && !current ? 'page' : undefined} onClick={() => { setTab(t.id); setCurrent(null) }}>
@@ -100,7 +100,7 @@ function PosApp() {
 
   return (
     <div className="flex flex-col" style={{ height: '100dvh' }}>
-      <header className="flex items-center justify-between px-3 gap-2" style={{ height: 52, borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+      <header className="app-bar flex items-center justify-between px-3 gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <img src="/logo-mark.svg" alt="Chicken Fit" width={28} height={28} className="shrink-0" style={{ borderRadius: 7 }} />{!compact && <strong className="text-lg whitespace-nowrap">Chicken<span className="brand-mark">Fit</span></strong>}
           {!compact && <span className="muted text-sm truncate">{session?.staff.name}{shift ? ` · смена${shift.number ? ` №${shift.number}` : ''} открыта` : ' · смена не открыта'}</span>}
@@ -108,14 +108,14 @@ function PosApp() {
         <div className="flex items-center gap-2">
           <SyncBadge />
           {!compact && (
-            <button className="btn" style={{ minHeight: 40 }} onClick={() => { const p = paper === '80mm' ? '58mm' : '80mm'; setPaper(p) }} title="Ширина чековой ленты">{paper}</button>
+            <button className="btn btn-ghost" style={{ minHeight: 40, fontSize: 14 }} onClick={() => { const p = paper === '80mm' ? '58mm' : '80mm'; setPaper(p) }} title="Ширина чековой ленты"><Printer size={18} />{paper}</button>
           )}
-          <button className="btn" style={{ minHeight: 40 }} onClick={toggleTheme} aria-label="Тема">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
-          <button className="btn" style={{ minHeight: 40 }} onClick={logout} aria-label="Выйти"><LogOut size={18} /></button>
+          <button className="btn btn-ghost btn-icon" onClick={toggleTheme} aria-label="Тема">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button>
+          <button className="btn btn-ghost btn-icon" onClick={logout} aria-label="Выйти"><LogOut size={20} /></button>
         </div>
       </header>
       <div className="flex flex-1" style={{ minHeight: 0 }}>
-        {!compact && <nav className="flex flex-col gap-1 p-1" style={{ width: 80, borderRight: '1px solid var(--border)', background: 'var(--surface)' }} aria-label="Разделы">{nav}</nav>}
+        {!compact && <nav className="app-rail flex flex-col gap-1 p-1" aria-label="Разделы">{nav}</nav>}
         <main className="flex-1 overflow-auto flex flex-col" style={{ minWidth: 0 }}>
           <div className="px-3 pt-3 grid gap-2 empty:hidden">
             <RescueBanner r={rescue} />

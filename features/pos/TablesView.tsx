@@ -1,14 +1,33 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowRightLeft, ShoppingBag, Truck } from 'lucide-react'
+import { ArrowRightLeft, Clock3, ShoppingBag, Truck, Users } from 'lucide-react'
 import { formatUZS } from '@/domain/money'
 import { useRuntime } from '@/features/app/runtime'
 import { saveOrder } from './actions'
 import { TransferDialog } from './ItemDialogs'
 import { isActive, STATUS_LABEL, type Order } from '@/domain/order'
-import { Money } from './common'
+import { baseName } from '@/domain/cart'
 import { useTables } from './useData'
+
+const LATE_MIN = 45
+const seatsLabel = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'место' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'места' : 'мест'}`
+type Tone = 'brand' | 'info' | 'success' | 'accent' | 'muted'
+/** Состояние стола: одна точка + подпись. Как в iiko — отдельное состояние «счёт выдан». */
+function stateOf(o: Order, billed: boolean): { tone: Tone; label: string } {
+  if (o.paymentStatus === 'paid') return { tone: 'success', label: 'Оплачен' }
+  if (billed) return { tone: 'accent', label: 'Счёт выдан' }
+  if (o.status === 'ready') return { tone: 'success', label: STATUS_LABEL.ready }
+  if (o.status === 'sent' || o.status === 'cooking') return { tone: 'info', label: STATUS_LABEL[o.status] }
+  return { tone: 'brand', label: STATUS_LABEL[o.status] }
+}
+/** Превью заказа (Toast/iiko): первые позиции + «ещё N». */
+function preview(os: Order[]): string {
+  const items = os.flatMap((o) => o.items)
+  if (!items.length) return 'Пустой заказ'
+  const names = items.slice(0, 2).map((i) => `${!i.weightKg && i.qty > 1 ? `${i.qty}× ` : ''}${baseName(i)}`)
+  return names.join(', ') + (items.length > 2 ? ` и ещё ${items.length - 2}` : '')
+}
 
 export function TablesView({ orders, onOpenTable, onNew, onOpenOrder }: {
   orders: Order[]; onOpenTable: (tableId: string) => void; onNew: (type: 'takeaway' | 'delivery') => void; onOpenOrder: (o: Order) => void
@@ -32,8 +51,8 @@ export function TablesView({ orders, onOpenTable, onNew, onOpenOrder }: {
       </div>
       {zones.map((z) => (
         <section key={z}>
-          <h2 className="font-bold mb-2 muted">{z}</h2>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+          <h2 className="zone-title">{z}</h2>
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
             {tables.filter((t) => t.zone === z).map((t) => {
               const os = active.filter((o) => o.type === 'dine_in' && o.tableId === t.id)
               const total = os.reduce((s, o) => s + o.total, 0)
@@ -41,23 +60,26 @@ export function TablesView({ orders, onOpenTable, onNew, onOpenOrder }: {
               const unpaid = os.some((o) => o.paymentStatus === 'unpaid')
               const first = os[0]
               const check = os.some((o) => prechecks.has(o.id))
-              const count = os.reduce((s, o) => s + o.items.reduce((n, i) => n + (i.weightKg ? 1 : i.qty), 0), 0)
+              const m = busy ? mins(first.createdAt) : 0
+              const st = busy ? stateOf(first, check && unpaid) : null
               return (
                 <div key={t.id} className="relative">
-                  <button className="tile w-full" style={{ minHeight: 128, borderWidth: busy ? 2 : 1, borderColor: busy ? (unpaid ? 'var(--brand)' : 'var(--success)') : 'var(--border)', borderStyle: busy ? 'solid' : 'dashed' }}
-                    onClick={() => onOpenTable(t.id)} aria-label={`${t.label}${busy ? `, занят, ${formatUZS(total)} сум` : ', свободен'}`}>
-                    <span>
-                      <span className="text-2xl font-bold block" style={{ paddingRight: busy ? 40 : 0 }}>{t.label.replace('Стол ', '')}</span>
-                      <span className="text-sm muted">{busy ? `${first.number ? (/^\d/.test(first.number) ? `№${first.number} · ` : `${first.number} · `) : ''}${mins(first.createdAt)} мин` : `${t.seats ?? 4} места`}</span>
+                  <button className={`tcard ${busy ? 'is-busy' : 'is-free'}`} data-tone={st?.tone} onClick={() => onOpenTable(t.id)}
+                    aria-label={`${t.label}${busy ? `, занят, ${formatUZS(total)} сум` : ', свободен'}`}>
+                    <span className="tcard-top">
+                      <span className="tcard-num">{t.label.replace('Стол ', '')}</span>
+                      {st && <span className="tcard-status"><i className="dot" data-tone={st.tone} />{st.label}</span>}
                     </span>
-                    {busy ? (
-                      <span className="w-full">
-                        <span className="block text-sm font-semibold" style={{ color: unpaid ? 'var(--primary-ink)' : 'var(--success)' }}>
-                          {check && unpaid ? 'Счёт выдан' : unpaid ? STATUS_LABEL[first.status] : `Оплачен · ${STATUS_LABEL[first.status]}`}
-                        </span>
-                        <span className="flex justify-between items-baseline"><span className="muted text-sm">{count} поз.</span><Money v={total} className="font-bold" /></span>
-                      </span>
-                    ) : <span className="muted text-sm">Свободен</span>}
+                    {busy ? <span className="tcard-preview">{preview(os)}</span>
+                      : <span className="tcard-preview inline-flex items-center gap-1"><Users size={14} aria-hidden />{seatsLabel(t.seats ?? 4)}</span>}
+                    <span className="tcard-foot">
+                      {busy ? (
+                        <>
+                          <span className={`tcard-time${m >= LATE_MIN ? ' is-late' : ''}`}><Clock3 size={14} aria-hidden />{m} мин</span>
+                          <span className="tcard-total">{formatUZS(total)}</span>
+                        </>
+                      ) : <span>Свободен</span>}
+                    </span>
                   </button>
                   {busy && unpaid && first.number && (
                     <button className="btn btn-ghost tcard-act" aria-label={`Перенести счёт ${t.label}`} title="Перенести на другой стол" onClick={() => setMoving(first)}>
@@ -72,15 +94,21 @@ export function TablesView({ orders, onOpenTable, onNew, onOpenOrder }: {
       ))}
       {others.length > 0 && (
         <section>
-          <h2 className="font-bold mb-2 muted">С собой и доставка</h2>
+          <h2 className="zone-title">С собой и доставка</h2>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-            {others.map((o) => (
-              <button key={o.id} className="tile" onClick={() => onOpenOrder(o)}>
-                <span className="font-bold">№{o.number} · {o.type === 'delivery' ? 'Доставка' : 'С собой'}</span>
-                <span className="text-sm">{o.paymentStatus === 'unpaid' ? 'Не оплачен' : 'Оплачен'} · {STATUS_LABEL[o.status]}</span>
-                <Money v={o.total} className="font-bold" />
-              </button>
-            ))}
+            {others.map((o) => {
+              const st = stateOf(o, false)
+              return (
+                <button key={o.id} className="tcard is-busy" data-tone={st.tone} onClick={() => onOpenOrder(o)}>
+                  <span className="tcard-top" style={{ paddingRight: 0 }}>
+                    <span className="font-bold inline-flex items-center gap-2">{o.type === 'delivery' ? <Truck size={18} aria-hidden /> : <ShoppingBag size={18} aria-hidden />}№{o.number}</span>
+                    <span className="tcard-status"><i className="dot" data-tone={st.tone} />{st.label}</span>
+                  </span>
+                  <span className="tcard-preview">{preview([o])}</span>
+                  <span className="tcard-foot"><span className="tcard-time"><Clock3 size={14} aria-hidden />{mins(o.createdAt)} мин</span><span className="tcard-total">{formatUZS(o.total)}</span></span>
+                </button>
+              )
+            })}
           </div>
         </section>
       )}

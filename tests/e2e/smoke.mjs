@@ -58,6 +58,8 @@ async function run() {
     // legacy-данные v1 кладём ДО загрузки приложения (как на реальной кассе)
     await ctx.addInitScript((fx) => { if (!sessionStorage.getItem('seeded')) { for (const [k, v] of Object.entries(fx)) localStorage.setItem(k, v); sessionStorage.setItem('seeded', '1') } }, legacyFixture)
     const page = await ctx.newPage()
+    // скриншоты — в конечном состоянии анимаций (v2.3: появление строк, диалоги)
+    { const shot = page.screenshot.bind(page); page.screenshot = (o = {}) => shot({ animations: 'disabled', ...o }) }
     const errors = []
     page.on('pageerror', (e) => errors.push(String(e)))
     await page.goto(`${BASE}/pos`)
@@ -144,7 +146,7 @@ async function run() {
       check('количество 2 и своя цена 30 000 → 60 000, пометка «своя цена»', /^2×Гуляш с гарниром своя цена Гарнир: Гречка, Без лука 60 000$/.test(gl.trim()) || (gl.includes('2×') && gl.includes('своя цена') && gl.includes('60 000')))
       check('комментарий к позиции через редактор строки', (await line.getByText('Гарнир: Гречка, Без лука').count()) === 1)
       // новое блюдо прямо из заказа: «+ Новое» → название, цена → Добавить в заказ
-      await page.getByRole('button', { name: 'Новое блюдо' }).click()
+      await page.getByRole('button', { name: 'Новое блюдо', exact: true }).click()
       const qd = page.getByRole('dialog')
       await qd.getByLabel('Название').fill('Самса')
       await qd.getByLabel('Цена, сум').fill('12000')

@@ -1,5 +1,5 @@
 'use client'
-import { CupSoda, Layers, Scale, SlidersHorizontal, UtensilsCrossed } from 'lucide-react'
+import { CupSoda, Layers, Plus, Scale, SlidersHorizontal, UtensilsCrossed } from 'lucide-react'
 import type { MenuItemRow } from '@/data/local-db'
 import { formatUZS } from '@/domain/money'
 import { hasOptions, kindOf, pricePerKgOf, stationOf } from '@/domain/product'
@@ -33,17 +33,32 @@ export function ProductCard({ item, qty, onAdd, showPhoto = true }: { item: Menu
   return (
     <button type="button" className="pcard" aria-disabled={!item.available} onClick={() => item.available && onAdd()}
       aria-label={`${item.nameRu}, ${price} сум${item.available ? '' : ', нет в наличии'}${qty ? `, в заказе ${qty}` : ''}`}>
-      {showPhoto && (img
-        ? <img className="pcard-img" src={img} alt="" loading="lazy" decoding="async" />
-        : <span className="pcard-ph" aria-hidden>{stationOf(item) === 'bar' ? <CupSoda size={22} /> : <UtensilsCrossed size={22} />}</span>)}
-      {qty > 0 && <span className="pcard-qty" aria-hidden>{qty}</span>}
+      {showPhoto && (
+        <span className="pcard-media">
+          {img
+            ? <img className="pcard-img" src={img} alt="" loading="lazy" decoding="async" />
+            : <span className="pcard-ph" aria-hidden>{stationOf(item) === 'bar' ? <CupSoda size={22} /> : <UtensilsCrossed size={22} />}</span>}
+        </span>
+      )}
+      {/* key={qty}: бейдж «подпрыгивает» на каждом добавлении — подтверждение без звука и тостов */}
+      {qty > 0 && <span key={qty} className="pcard-qty" aria-hidden>{qty}</span>}
       <span className="pcard-body">
         <span className="pcard-name">{item.nameRu}</span>
         <TypeIndicator item={item} />
         <span className="pcard-foot">
-          {item.available ? <strong>{price}</strong> : <span className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Нет в наличии</span>}
+          {item.available ? <span className="pcard-price">{price}</span> : <span className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Нет в наличии</span>}
         </span>
       </span>
+    </button>
+  )
+}
+
+/** Плитка «+ новое блюдо» в конце сетки (как «+» в Square). */
+export function NewProductTile({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="pcard pcard-new" onClick={onClick} aria-label="Новое блюдо в этой категории">
+      <Plus size={22} aria-hidden />
+      <span>Новое блюдо</span>
     </button>
   )
 }
