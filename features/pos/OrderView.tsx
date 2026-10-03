@@ -5,7 +5,7 @@ import { addItem, cartCount, lineTotal, setQty, updateLine } from '@/domain/cart
 import { STATUS_LABEL, TYPE_LABEL, type Order, type PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { useRuntime } from '@/features/app/runtime'
-import { Modal, Money } from './common'
+import { Modal, Money, Numpad } from './common'
 import { PaymentDialog } from './PaymentDialog'
 import { cancelOrder, pay, saveDraftLocal, saveOrder, sendToKitchen, withTotals } from './actions'
 import { printJob } from './print'
@@ -21,6 +21,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const [noteIdx, setNoteIdx] = useState<number | null>(null)
   const [cancelAsk, setCancelAsk] = useState(false)
   const [sheet, setSheet] = useState(false)
+  const [weighItem, setWeighItem] = useState<{ id: string; name: string; pricePerKg: number; category?: string } | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const locked = order.paymentStatus === 'paid' || order.status === 'cancelled'
   const tableLabel = tables.find((t) => t.id === order.tableId)?.label
@@ -145,7 +146,11 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
           <div className="grid gap-2 overflow-auto content-start" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? 150 : 170}px, 1fr))` }}>
             {items.map((m) => (
               <button key={m.id} className="tile" aria-disabled={!m.available || locked}
-                onClick={() => !locked && m.available && update(withTotals(order, addItem(order.items, { id: m.id, name: m.nameRu, price: m.price, category: m.categoryId ?? undefined, isKitchen: m.isKitchen ?? undefined })))}>
+                onClick={() => {
+                  if (locked || !m.available) return
+                  if (m.unit === 'kg' || /(^|\s)кг$/i.test(m.nameRu)) return setWeighItem({ id: m.id, name: m.nameRu, pricePerKg: m.pricePerKg ?? m.price, category: m.categoryId ?? undefined })
+                  update(withTotals(order, addItem(order.items, { id: m.id, name: m.nameRu, price: m.price, category: m.categoryId ?? undefined, isKitchen: m.isKitchen ?? undefined })))
+                }}>
                 <span className="font-semibold leading-tight">{m.nameRu}</span>
                 <span className="flex justify-between items-end w-full">
                   <span className="font-bold">{formatUZS(m.price)}</span>
@@ -166,6 +171,13 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
       {noteIdx !== null && (
         <NoteDialog initial={order.items[noteIdx]?.notes ?? ''} onClose={() => setNoteIdx(null)}
           onSave={(n) => { update(withTotals(order, updateLine(order.items, noteIdx, { notes: n || undefined }))); setNoteIdx(null) }} />
+      )}
+      {weighItem && (
+        <WeightDialog item={weighItem} onClose={() => setWeighItem(null)} onAdd={(g) => {
+          const kg = g / 1000
+          update(withTotals(order, addItem(order.items, { id: weighItem.id, name: `${weighItem.name.replace(/\s*кг$/i, '')} ${g} г`, price: Math.round(weighItem.pricePerKg * kg), weightKg: kg, pricePerKg: weighItem.pricePerKg, category: weighItem.category, isKitchen: true })))
+          setWeighItem(null)
+        }} />
       )}
       {cancelAsk && (
         <CancelDialog onClose={() => setCancelAsk(false)} onConfirm={async (r) => { await cancelOrder(db, order, r); setCancelAsk(false); onBack() }} />
@@ -193,6 +205,21 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
       <div className="flex flex-wrap gap-2 mb-3">{['Гость ушёл', 'Ошибка кассира', 'Нет продукта'].map((q) => <button key={q} className="btn" onClick={() => setR(q)}>{q}</button>)}</div>
       <input className="input mb-3" placeholder="Причина" value={r} onChange={(e) => setR(e.target.value)} />
       <button className="btn btn-lg btn-danger w-full" disabled={!r.trim()} onClick={() => onConfirm(r.trim())}>Отменить заказ</button>
+    </Modal>
+  )
+}
+
+function WeightDialog({ item, onClose, onAdd }: { item: { name: string; pricePerKg: number }; onClose: () => void; onAdd: (grams: number) => void }) {
+  const [g, setG] = useState('')
+  const grams = Number(g || 0)
+  return (
+    <Modal title={`${item.name} — вес`} onClose={onClose}>
+      <div className="flex justify-between items-baseline mb-3">
+        <span className="text-3xl font-bold">{grams} г</span>
+        <span className="muted">{formatUZS(item.pricePerKg)} сум/кг → <strong>{formatUZS(Math.round((item.pricePerKg * grams) / 1000))}</strong></span>
+      </div>
+      <Numpad value={g} onChange={setG} presets={[250, 500, 750, 1000]} />
+      <button className="btn btn-lg btn-primary w-full mt-3" disabled={grams <= 0} onClick={() => onAdd(grams)}>Добавить</button>
     </Modal>
   )
 }
