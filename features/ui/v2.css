@@ -1,6 +1,6 @@
 /* ChickenFit v2 — дизайн-система кассы (светлая по умолчанию, тёмная через [data-theme=dark]). */
 /*
- * Палитра бренда ChickenFit из v1 (design/tokens.css, коммит cde9b97):
+ * Палитра бренда ChickenFit из v1 (features/ui/brand-tokens.css, из v1 cde9b97):
  *   pastry #FDFCF9 · terracotta #C95530 · graphite #28211D · olive #667447;
  *   тёмная v1: bg #1A1614 · surface #241F1C · text #FAF7F0 · brand #E06A42 · olive #8A9A5B.
  * Корректировки ради WCAG AA (только оттенок, отмечено):

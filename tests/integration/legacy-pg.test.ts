@@ -1,6 +1,6 @@
 /**
  * Интеграция: legacy-фикстура -> parseLegacy -> pos_apply_mutation на ЛОКАЛЬНОМ Postgres (после supabase/tests/run-local.sh).
- * Запуск: LOCAL_PG=1 npx vitest run tests/integration
+ * Запуск: npm run test:pg (после supabase/tests/run-local.sh); в CI — job `migrations`.
  */
 import { describe, expect, it } from 'vitest'
 import { execFileSync } from 'node:child_process'
@@ -11,8 +11,11 @@ import menu from '@/content/menu.json'
 import { buildFixture } from '../unit/fixtures'
 
 const run = process.env.LOCAL_PG ? describe : describe.skip
-const psql = (file: string) =>
-  execFileSync('sudo', ['-u', 'postgres', 'psql', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1', '-d', 'cf_migration_test', '-f', file], { encoding: 'utf8' })
+// локально — через sudo -u postgres (run-local.sh), в CI — по PGHOST/PGUSER/PGPASSWORD (сервис postgres)
+const PSQL_ARGS = ['-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1', '-d', process.env.PGDATABASE ?? 'cf_migration_test']
+const psql = (file: string) => process.env.PGHOST
+  ? execFileSync('psql', [...PSQL_ARGS, '-f', file], { encoding: 'utf8' })
+  : execFileSync('sudo', ['-u', 'postgres', 'psql', ...PSQL_ARGS, '-f', file], { encoding: 'utf8' })
 
 run('legacy import on local Postgres', () => {
   it('все legacy-мутации применяются, повторно — без дублей, сверка по дням совпадает', async () => {

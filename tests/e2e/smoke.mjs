@@ -41,20 +41,27 @@ const legacyFixture = {
   'cf-pos-user': JSON.stringify({ name: 'Кассир 1', role: 'cashier', pin: '1234' }),
 }
 
+/** Все запросы к Supabase перехватываются: RPC — поддельный сервер, REST/realtime — блок. Реальная БД не используется. */
+async function mockSupabase(ctx) {
+  const server = fakeServer()
+  await ctx.route(/\.supabase\.co\//, async (route) => {
+    const url = route.request().url()
+    if (!url.includes('/rest/v1/rpc/')) return route.abort()
+    const fn = url.split('/rpc/')[1].split('?')[0]
+    const body = JSON.parse(route.request().postData() || '{}')
+    try { await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(server.handle(fn, body)) }) }
+    catch (e) { await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: String(e) }) }) }
+  })
+  return server
+}
+
 async function run() {
   const browser = await chromium.launch({ executablePath: exe, args: ['--no-sandbox'] })
   const results = []
   const check = (name, ok) => { results.push([name, ok]); console.log(ok ? 'PASS' : 'FAIL', name) }
   for (const vp of [{ w: 1366, h: 768, tag: 'pos-1366' }, { w: 390, h: 844, tag: 'phone-390' }, { w: 1920, h: 1080, tag: 'pos-1920' }]) {
     const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 1 })
-    const { st, handle } = fakeServer()
-    await ctx.route('**/rest/v1/rpc/**', async (route) => {
-      const fn = route.request().url().split('/rpc/')[1].split('?')[0]
-      const body = JSON.parse(route.request().postData() || '{}')
-      try { await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(handle(fn, body)) }) }
-      catch (e) { await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: String(e) }) }) }
-    })
-    await ctx.route('**/realtime/**', (r) => r.abort())
+    const { st } = await mockSupabase(ctx)
     // legacy-данные v1 кладём ДО загрузки приложения (как на реальной кассе)
     await ctx.addInitScript((fx) => { if (!sessionStorage.getItem('seeded')) { for (const [k, v] of Object.entries(fx)) localStorage.setItem(k, v); sessionStorage.setItem('seeded', '1') } }, legacyFixture)
     const page = await ctx.newPage()
@@ -302,7 +309,9 @@ async function run() {
   // тёмная тема
   {
     const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 } })
+    await mockSupabase(ctx)
     const page = await ctx.newPage()
+    { const shot = page.screenshot.bind(page); page.screenshot = (o = {}) => shot({ animations: 'disabled', ...o }) }
     await page.goto(`${BASE}/pos`)
     await page.getByText('Введите PIN сотрудника').waitFor()
     await page.waitForTimeout(500)

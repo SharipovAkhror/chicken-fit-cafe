@@ -1,7 +1,7 @@
 // Запуск: BASE=http://localhost:3100 SHARE=http://localhost:3100/ node tests/e2e/real-supabase-readonly.mjs (сборка с .env.local)
 // Смоук превью на реальном Supabase: только вход (создаёт сессию), чтение pull/отчётов, выход. Без заказов и смен.
 import { chromium } from 'playwright'
-const SHARE = process.env.SHARE, BASE = process.env.BASE, OUT = '/workspace/shots'
+const SHARE = process.env.SHARE, BASE = process.env.BASE, OUT = process.env.SHOTS ?? '/workspace/shots'
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] })
 const res = []
 const check = (n, ok, extra = '') => { res.push(ok); console.log(ok ? 'PASS' : 'FAIL', n, extra) }

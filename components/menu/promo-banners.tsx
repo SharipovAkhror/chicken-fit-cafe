@@ -93,7 +93,7 @@ export function PromoBanners({ onSelectCategory }: { onSelectCategory?: (id: str
               >
                 {/* Фоновое изображение */}
                 <div className="absolute inset-0 z-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img
                     src={b.image}
                     alt={b.title}

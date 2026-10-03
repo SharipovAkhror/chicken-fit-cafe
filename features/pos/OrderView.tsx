@@ -35,7 +35,8 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const tables = useTables()
   const active = useActiveOrders() ?? []
   const [order, setOrder] = useState<Order>(initial)
-  const [cat, setCat] = useState<string | null>(null)
+  const [catSel, setCat] = useState<string | null>(null)
+  const cat = catSel ?? menu?.categories[0]?.id ?? null
   const [q, setQ] = useState('')
   const [paying, setPaying] = useState(false)
   const [lineIdx, setLineIdx] = useState<number | null>(null)
@@ -55,8 +56,6 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
   const wBase = wItem ? wItem.nameRu.replace(/\s*кг$/i, '') : ''
   const tableLabel = tables.find((t) => t.id === order.tableId)?.label
 
-  useEffect(() => setOrder(initial), [initial.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (menu && !cat) setCat(menu.categories[0]?.id ?? null) }, [menu, cat])
 
   const itemCount = order.items.length
   useEffect(() => { listEnd.current?.scrollIntoView({ block: 'nearest' }) }, [itemCount])
@@ -327,7 +326,7 @@ function CancelDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
   const [r, setR] = useState('')
   return (
     <Modal title="Отменить заказ?" onClose={onClose}>
-      <div className="flex flex-wrap gap-2 mb-3">{['Гость ушёл', 'Ошибка кассира', 'Нет продукта'].map((x) => <button key={x} className="cat-chip" aria-selected={r === x} onClick={() => setR(x)}>{x}</button>)}</div>
+      <div className="flex flex-wrap gap-2 mb-3">{['Гость ушёл', 'Ошибка кассира', 'Нет продукта'].map((x) => <button key={x} className="cat-chip" aria-pressed={r === x} onClick={() => setR(x)}>{x}</button>)}</div>
       <input className="input mb-3" placeholder="Причина" value={r} onChange={(e) => setR(e.target.value)} />
       <button className="btn btn-lg btn-danger w-full" disabled={!r.trim()} onClick={() => onConfirm(r.trim())}>Отменить заказ</button>
     </Modal>

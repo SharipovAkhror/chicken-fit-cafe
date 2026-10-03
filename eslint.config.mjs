@@ -3,10 +3,10 @@ import next from 'eslint-config-next'
 const config = [
   ...next,
   {
+    files: ['features/**', 'components/**'],
     rules: {
-      // правила React Compiler: пока предупреждения (старое гостевое меню и синхронизация состояния с IndexedDB)
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/immutability': 'warn',
+      // фото — локальные webp-миниатюры, кэшируются офлайн; оптимизатор next/image кассе не нужен
+      '@next/next/no-img-element': 'off',
     },
   },
   { ignores: ['.next/**', 'node_modules/**', 'supabase/**', 'next-env.d.ts'] },

@@ -19,7 +19,7 @@ function Variants({ opts, variant, setVariant, extras, setExtras }: {
         </div>
       )}
       {opts.extras?.map((x) => (
-        <button key={x} className="cat-chip" aria-pressed={extras.includes(x)} aria-selected={extras.includes(x)}
+        <button key={x} className="cat-chip" aria-pressed={extras.includes(x)}
           onClick={() => setExtras(extras.includes(x) ? extras.filter((e) => e !== x) : [...extras, x])}>{x}</button>
       ))}
     </div>
@@ -177,7 +177,7 @@ export function LinePanel({ line, onChange, onRemove, onClose }: { line: CartIte
       <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Быстрые комментарии">
         {QUICK_TAGS.map((t) => {
           const on = notes.split(',').map((x) => x.trim()).includes(t)
-          return <button key={t} type="button" className="cat-chip shrink-0" aria-pressed={on} aria-selected={on} onClick={() => toggle(t)}>{t}</button>
+          return <button key={t} type="button" className="cat-chip shrink-0" aria-pressed={on} onClick={() => toggle(t)}>{t}</button>
         })}
         <button type="button" className="cat-chip shrink-0" aria-expanded={noteOpen} onClick={() => setNoteOpen(!noteOpen)}>Свой комментарий…</button>
       </div>

@@ -64,7 +64,7 @@ export function GarnishDialog({ kind, title, prices, initialSize = 'half', onClo
       )}
       <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Ингредиенты гарнира">
         {GARNISHES.map((g) => (
-          <button key={g.id} className="cat-chip" aria-pressed={ids.includes(g.id)} aria-selected={ids.includes(g.id)} onClick={() => toggle(g.id)}>{g.name}</button>
+          <button key={g.id} className="cat-chip" aria-pressed={ids.includes(g.id)} onClick={() => toggle(g.id)}>{g.name}</button>
         ))}
       </div>
       {ids.length > 1 && (

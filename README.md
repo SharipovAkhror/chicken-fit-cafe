@@ -1,29 +1,21 @@
 # Chicken Fit — касса
 
-Касса кафе Chicken Fit (Самарканд): столы, заказы, оплата наличными/Click, печать чеков 58/80 мм,
-экран кухни, смены с X/Z-отчётами, отчёты продаж, гостевое меню по QR.
+Касса кафе Chicken Fit (Самарканд): столы, заказы (порции, на вес, гарниры), оплата наличными / Click·Payme,
+печать чеков 58/80 мм, экран кухни, смены с X/Z-отчётами, отчёты продаж, гостевое меню по QR.
+Работает офлайн и синхронизируется через Supabase.
 
-## Запуск
-```bash
-npm ci
-cp .env.example .env.local   # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-npm run dev                   # http://localhost:3000/pos
-```
-Без переменных Supabase касса работает «только локально» (вход по PIN недоступен).
-
-## Маршруты
 | Путь | Что |
 |---|---|
-| `/pos` | касса (PIN) |
+| `/pos` | касса (вход по PIN) |
 | `/kds` | экран кухни (PIN) |
-| `/backup` | скачать JSON-бэкап устройства без PIN |
+| `/backup` | JSON-бэкап данных устройства без PIN |
 | `/`, `/uz`, `/en` | гостевое меню |
 
-## Данные
-- Supabase: таблицы закрыты RLS, доступ только через RPC с PIN-сессией (`supabase/migrations`).
-- Устройство: IndexedDB `cf2` (меню, заказы, смены, очередь изменений, снимки старой версии).
-- Перенос со старой версии (v1, localStorage): при первом открытии снимок уходит в IndexedDB и на сервер,
-  после входа по PIN заказы/смены/меню импортируются идемпотентно и сверяются по дням (раздел «Бэкап»).
+```bash
+npm ci
+cp .env.example .env.local   # URL проекта Supabase и publishable key
+npm run dev                  # http://localhost:3000/pos
+npm run check                # lint + typecheck + unit + build
+```
 
-## Проверки
-`npm run lint`, `npm run typecheck`, `npm test`, `npm run build`; миграции — `supabase/tests/run-local.sh`.
+Правила, архитектура, команды и релиз — [AGENTS.md](AGENTS.md); подробности — [`docs/`](docs).

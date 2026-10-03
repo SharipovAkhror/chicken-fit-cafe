@@ -76,8 +76,3 @@ export function formatPrice(price: number, locale: Locale): string {
   return `${grouped} ${UI[locale].currency}`
 }
 
-/** 2026-08-05 → 05.08.2026 */
-export function formatDate(iso: string): string {
-  const [year, month, day] = iso.split('-')
-  return `${day}.${month}.${year}`
-}

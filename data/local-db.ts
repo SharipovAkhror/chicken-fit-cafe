@@ -96,10 +96,6 @@ export function getDb(): LocalDb {
   if (!_db) _db = new LocalDb()
   return _db
 }
-/** для тестов */
-export function setDb(db: LocalDb | null) {
-  _db = db
-}
 
 export async function kvGet<T>(db: LocalDb, key: string): Promise<T | undefined> {
   return (await db.kv.get(key))?.value as T | undefined

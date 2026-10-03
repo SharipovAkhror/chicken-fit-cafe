@@ -50,7 +50,7 @@ export function RuntimeProvider({ children }: { children: ReactNode }) {
   }, [db])
 
   useEffect(() => {
-    if (sync.sessionExpired) setSession(null)
+    if (sync.sessionExpired) setSession(null) // eslint-disable-line react-hooks/set-state-in-effect -- реакция на внешний сигнал движка синхронизации
   }, [sync.sessionExpired])
 
   const login = useCallback(async (pin: string) => {

@@ -65,7 +65,7 @@ export function MenuPage({ locale }: { locale: Locale }) {
   // Отслеживание текущей активной категории при скролле
   useEffect(() => {
     if (categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0].id)
+      setActiveCategory(categories[0].id) // eslint-disable-line react-hooks/set-state-in-effect -- начальная категория после загрузки меню
     }
 
     const observer = new IntersectionObserver(

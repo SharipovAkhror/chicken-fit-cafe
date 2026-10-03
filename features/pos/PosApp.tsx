@@ -122,7 +122,7 @@ function PosApp() {
             {shift === null && tab === 'tables' && !current && <div className="banner banner-warn">Смена не открыта. Откройте смену в разделе «Смена», чтобы итоги считались по смене.</div>}
           </div>
           {current ? (
-            <OrderView initial={current} compact={compact} onBack={() => setCurrent(null)} />
+            <OrderView key={current.id} initial={current} compact={compact} onBack={() => setCurrent(null)} />
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />

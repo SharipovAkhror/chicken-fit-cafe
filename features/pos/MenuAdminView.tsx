@@ -24,8 +24,8 @@ export function MenuAdminView({ isAdmin = false }: { isAdmin?: boolean }) {
       {isAdmin && (
         <div className="px-4 pt-4">
           <div className="seg" role="tablist" aria-label="Раздел">
-            <button role="tab" aria-selected={section === 'menu'} aria-pressed={section === 'menu'} onClick={() => setSection('menu')}>Блюда</button>
-            <button role="tab" aria-selected={section === 'tables'} aria-pressed={section === 'tables'} onClick={() => setSection('tables')}>Столы</button>
+            <button role="tab" aria-selected={section === 'menu'} onClick={() => setSection('menu')}>Блюда</button>
+            <button role="tab" aria-selected={section === 'tables'} onClick={() => setSection('tables')}>Столы</button>
           </div>
         </div>
       )}

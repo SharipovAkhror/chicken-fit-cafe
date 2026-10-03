@@ -99,7 +99,7 @@ function Thumb({
   }
 
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
+     
     <img
       src={item.image}
       alt={item.name}
@@ -158,7 +158,7 @@ export function MenuBoard({
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const t = params.get('table')
-      if (t) setSelectedTable(t)
+      if (t) setSelectedTable(t) // eslint-disable-line react-hooks/set-state-in-effect -- URL доступен только на клиенте
     }
   }, [])
 

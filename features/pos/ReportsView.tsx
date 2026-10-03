@@ -27,8 +27,7 @@ export function ReportsView() {
   const [err, setErr] = useState<string | null>(null)
   useEffect(() => {
     if (!session) return
-    setErr(null)
-    api.reportSales(session.token, from, to).then((d) => setData(d as unknown as Sales)).catch((e) => setErr(navigator.onLine ? e.message : 'Отчёты доступны только при наличии интернета'))
+    api.reportSales(session.token, from, to).then((d) => { setErr(null); setData(d as unknown as Sales) }).catch((e) => setErr(navigator.onLine ? e.message : 'Отчёты доступны только при наличии интернета'))
   }, [session, from, to])
   const preset = (a: string, b: string) => { setFrom(a); setTo(b) }
   return (

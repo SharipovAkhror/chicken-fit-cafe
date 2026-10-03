@@ -16,10 +16,6 @@ export function printJob(job: PrintJob) {
   setJobGlobal?.(job)
 }
 
-export function getPaper(): Paper {
-  if (typeof document === 'undefined') return '80mm'
-  return (document.documentElement.dataset.paper as Paper) || '80mm'
-}
 
 const dt = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString('ru-RU', { timeZone: 'Asia/Samarkand', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'

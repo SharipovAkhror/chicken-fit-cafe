@@ -1,10 +1,11 @@
 name: CI
 on:
   push:
-    branches: [main, 'rebuild/**', 'ux/**']
+    branches: [main, 'ux/**', 'feat/**', 'fix/**']
   pull_request:
 jobs:
   check:
+    name: lint · types · unit · build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,6 +17,7 @@ jobs:
       - run: npm test
       - run: npm run build
   migrations:
+    name: migrations (Postgres 17, twice) + legacy import
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -23,18 +25,43 @@ jobs:
         env: { POSTGRES_PASSWORD: postgres }
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env: { PGHOST: localhost, PGUSER: postgres, PGPASSWORD: postgres, PGDATABASE: cf_test }
     steps:
       - uses: actions/checkout@v4
-      - name: Apply migrations twice + tests
-        env: { PGHOST: localhost, PGUSER: postgres, PGPASSWORD: postgres }
+      - name: Apply migrations twice + SQL tests
         run: |
           createdb cf_test
-          run() { psql -q -v ON_ERROR_STOP=1 -d cf_test -f "$1"; }
+          run() { psql -q -v ON_ERROR_STOP=1 -f "$1"; }
           run supabase/tests/00_local_supabase_stub.sql
           run supabase/tests/01_prod_state_fixture.sql
           for f in supabase/migrations/*.sql; do run "$f"; done
           for f in supabase/migrations/*.sql; do run "$f"; done
-          run supabase/tests/02_tests.sql
-          run supabase/tests/03_tests_v8.sql
-          run supabase/tests/04_tests_v9.sql
-          run supabase/tests/05_tests_v10.sql
+          for f in supabase/tests/0[2-9]_*.sql; do run "$f"; done
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: Legacy import integration test
+        run: npm run test:pg
+  e2e:
+    name: e2e smoke (mock RPC)
+    runs-on: ubuntu-latest
+    env:
+      # фиктивный проект: smoke перехватывает все RPC в браузере, реальная БД не используется
+      NEXT_PUBLIC_SUPABASE_URL: https://e2e-mock.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_e2e_mock
+      SHOTS: /tmp/shots
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Smoke
+        run: |
+          mkdir -p "$SHOTS"
+          (npx next start -p 3100 > /tmp/next.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:3100/pos > /dev/null && break; sleep 1; done
+          npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: e2e-shots, path: /tmp/shots, retention-days: 7 }

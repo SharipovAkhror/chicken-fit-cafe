@@ -83,11 +83,6 @@ export const tableFromRow = (r: Row): TableRow => ({
   id: r.id, label: r.name, zone: r.zone, seats: r.capacity ?? null, sortOrder: n(r.sort_order),
 })
 
-/** Локальный пункт меню -> payload menu.upsert */
-export const menuToPayload = (m: MenuItemRow) => ({
-  id: m.id, categoryId: m.categoryId, nameRu: m.nameRu, price: m.price, available: m.available, isDeleted: m.isDeleted,
-  isKitchen: m.isKitchen, unit: m.unit, pricePerKg: m.pricePerKg, sortOrder: m.sortOrder, needsReview: m.needsReview,
-})
 
 /** Локальный заказ -> payload order.upsert (только серверные поля). */
 export function orderToPayload(o: Order, extra: Record<string, unknown> = {}) {

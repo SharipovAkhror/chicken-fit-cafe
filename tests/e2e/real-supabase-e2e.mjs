@@ -3,7 +3,7 @@
 // Сценарий: вход (POS + KDS в двух контекстах), открыть смену, заказ на стол, кухня, realtime, оплата, X-отчёт.
 // Смену НЕ закрывает (Z-отчёт не делается). Удаление тестовых строк — отдельным SQL после прогона.
 import { chromium } from 'playwright'
-const BASE = process.env.BASE ?? 'http://localhost:3100', PIN = process.env.TEST_PIN, OUT = '/workspace/shots', TABLE = process.env.TABLE ?? '2'
+const BASE = process.env.BASE ?? 'http://localhost:3100', PIN = process.env.TEST_PIN, OUT = process.env.SHOTS ?? '/workspace/shots', TABLE = process.env.TABLE ?? '2'
 if (!PIN) throw new Error('TEST_PIN required')
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] })
 const res = [], devices = new Set(), log = []

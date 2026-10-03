@@ -61,11 +61,9 @@ export function updateLine(cart: CartItem[], index: number, updates: Partial<Car
   return cart.map((c, i) => (i === index ? { ...c, ...updates, price: Math.max(0, updates.price ?? c.price) } : c))
 }
 
-export const removeLine = (cart: CartItem[], index: number): CartItem[] => cart.filter((_, i) => i !== index)
 export const lineTotal = (item: CartItem): number => roundUZS(item.price * item.qty)
 export const cartSubtotal = (cart: CartItem[]): number => cart.reduce((s, i) => s + lineTotal(i), 0)
 export const cartCount = (cart: CartItem[]): number => cart.reduce((s, i) => s + (i.weightKg ? 1 : i.qty), 0)
-export const kitchenItems = (cart: CartItem[]): CartItem[] => cart.filter((i) => isKitchenItem(i))
 
 export type Totals = { subtotal: number; discountAmount: number; deliveryFee: number; total: number }
 

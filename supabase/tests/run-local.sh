@@ -10,8 +10,5 @@ run tests/00_local_supabase_stub.sql
 run tests/01_prod_state_fixture.sql
 for f in migrations/*.sql; do echo "apply $f"; run "$f"; done
 echo "re-apply (idempotency)"; for f in migrations/*.sql; do run "$f"; done
-run tests/02_tests.sql
-run tests/03_tests_v8.sql
-run tests/04_tests_v9.sql
-run tests/05_tests_v10.sql
+for f in tests/0[2-9]_*.sql; do echo "test $f"; run "$f"; done
 echo "ALL MIGRATION TESTS PASSED"
