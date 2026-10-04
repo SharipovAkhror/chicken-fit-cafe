@@ -1,14 +1,24 @@
 'use client'
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useRuntime } from '@/features/app/runtime'
 import type { Order, PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
-import { Banknote, Smartphone } from 'lucide-react'
+import { Banknote, Check, ChefHat, Printer, Smartphone } from 'lucide-react'
 import { Modal, Money, Numpad } from './common'
 
 export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
-  order: Order; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: boolean) => void; onDiscount?: (percent: number) => void
+  order: Order; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => void; onDiscount?: (percent: number) => void
 }) {
+  const { db } = useRuntime()
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  // что печатать — выбор кассира, запоминается на устройстве: чек гостю (по умолчанию да), бегунок на кухню (по умолчанию нет)
+  const prefs = useLiveQuery(async () => ({ r: (await db.kv.get('pref:printReceipt'))?.value, k: (await db.kv.get('pref:printKitchen'))?.value }), [db])
+  const [sel, setSel] = useState<{ receipt?: boolean; kitchen?: boolean }>({})
+  const receipt = sel.receipt ?? (prefs?.r as boolean | undefined) ?? true
+  const kitchen = sel.kitchen ?? (prefs?.k as boolean | undefined) ?? false
+  const hasKitchen = order.items.some((i) => i.isKitchen)
+  const toggle = (k: 'receipt' | 'kitchen', v: boolean) => { setSel((s) => ({ ...s, [k]: v })); void db.kv.put({ key: k === 'receipt' ? 'pref:printReceipt' : 'pref:printKitchen', value: v }) }
   const [cash, setCash] = useState('')
   const received = Number(cash || 0)
   const change = received - order.total
@@ -31,7 +41,7 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
           </div>
         </div>
       )}
-      {/* способ оплаты — переключатель, а не вторая «главная» кнопка: бренд-цвет остаётся только у «Оплачено + чек» */}
+      {/* способ оплаты — переключатель; бренд-цвет только у «Оплачено» */}
       <div className="seg seg-fill seg-lg mb-4" role="radiogroup" aria-label="Способ оплаты">
         {(['cash', 'click_payme'] as const).map((m) => (
           <button key={m} role="radio" aria-checked={method === m} onClick={() => setMethod(m)}>
@@ -54,10 +64,22 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
           </div>
         </>
       )}
-      <div className="grid grid-cols-2 gap-2 mt-4">
-        <button className="btn btn-lg" style={{ padding: "0 8px", whiteSpace: "nowrap" }} disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, false)}>Оплачено без чека</button>
-        <button className="btn btn-lg btn-primary" disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, true)}>Оплачено + чек</button>
+      <div className="flex flex-wrap gap-x-6 mt-4">
+        <label className="flex items-center gap-3" style={{ minHeight: 44, cursor: 'pointer' }}>
+          <input type="checkbox" checked={receipt} onChange={(e) => toggle('receipt', e.target.checked)} style={{ width: 22, height: 22 }} />
+          <Printer size={18} aria-hidden className="muted" />Печатать чек
+        </label>
+        {hasKitchen && (
+          <label className="flex items-center gap-3" style={{ minHeight: 44, cursor: 'pointer' }}>
+            <input type="checkbox" checked={kitchen} onChange={(e) => toggle('kitchen', e.target.checked)} style={{ width: 22, height: 22 }} />
+            <ChefHat size={18} aria-hidden className="muted" />Бегунок на кухню
+          </label>
+        )}
       </div>
+      <button className="btn btn-lg btn-primary w-full mt-2" disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, { receipt, kitchen: hasKitchen && kitchen })}>
+        <Check size={20} aria-hidden />Оплачено
+      </button>
+      <p className="muted text-sm mt-2 text-center">Заказ закроется, стол освободится</p>
     </Modal>
   )
 }

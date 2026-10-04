@@ -84,6 +84,8 @@
 .v2 .banner-warn { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 45%, transparent); background: color-mix(in srgb, var(--warning) 7%, var(--surface)); }
 .v2 .banner-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); background: color-mix(in srgb, var(--danger) 7%, var(--surface)); }
 .v2 .banner-info { color: var(--info); border-color: color-mix(in srgb, var(--info) 40%, transparent); background: color-mix(in srgb, var(--info) 6%, var(--surface)); }
+.v2 .banner-success { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 15px; border-color: color-mix(in srgb, var(--success) 45%, transparent); background: color-mix(in srgb, var(--success) 9%, var(--surface)); }
+.v2 .banner-success svg { color: var(--success); flex-shrink: 0; }
 .v2 .scrim { position: fixed; inset: 0; background: rgba(20, 16, 14, .42); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px;
   animation: v2-fade var(--t) var(--ease-out); }
 .v2 .dialog { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-pop); width: 100%; max-height: 94dvh; overflow: auto; --dlg-pad: 20px; padding: var(--dlg-pad);
@@ -114,22 +116,7 @@
 .v2 table.data th, .v2 table.data td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; }
 .v2 table.data td.num, .v2 table.data th.num { text-align: right; }
 
-/* ── Печать: только #v2-print, ширина бумаги через data-paper ── */
-#v2-print { display: none; }
-@media print {
-  @page { margin: 0; size: auto; }
-  body * { visibility: hidden !important; }
-  #v2-print, #v2-print * { visibility: visible !important; color: #000 !important; background: #fff !important; }
-  #v2-print { display: block !important; position: absolute; left: 0; top: 0; padding: 2mm 3mm;
-    font-family: 'DejaVu Sans Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.35; }
-  #v2-print[data-paper='58mm'] { width: 58mm; font-size: 11px; }
-  #v2-print[data-paper='80mm'] { width: 80mm; }
-  #v2-print .r-c { text-align: center; }
-  #v2-print .r-b { font-weight: 700; }
-  #v2-print .r-row { display: flex; justify-content: space-between; gap: 6px; }
-  #v2-print .r-hr { border-top: 1px dashed #000; margin: 4px 0; }
-  #v2-print .r-big { font-size: 1.35em; font-weight: 700; }
-}
+/* Печать: разметка и стили термочека v1 — features/pos/receipt-v1.tsx + app/globals.css (@media print). */
 .v2 nav.bottom-nav .rail-btn { width: auto; flex: 1 1 0; min-width: 0; font-size: 10px; padding: 0 2px; }
 .v2 nav.bottom-nav .rail-btn[aria-current='page']::before { left: 28%; right: 28%; top: 0; bottom: auto; width: auto; height: 3px; }
 

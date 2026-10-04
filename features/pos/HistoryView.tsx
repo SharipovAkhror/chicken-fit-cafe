@@ -2,7 +2,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
-import { businessDate, PAYMENT_LABEL, STATUS_LABEL, TYPE_LABEL, type Order } from '@/domain/order'
+import { businessDate, displayStatus, isClosed, PAYMENT_LABEL, TYPE_LABEL, type Order } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { useRuntime } from '@/features/app/runtime'
 import { printJob } from './print'
@@ -39,7 +39,7 @@ export function HistoryView({ onOpen }: { onOpen: (o: Order) => void }) {
                 <td className="font-bold">{o.number}</td>
                 <td>{new Date(o.createdAt).toLocaleTimeString('ru-RU', { timeZone: 'Asia/Samarkand', hour: '2-digit', minute: '2-digit' })}</td>
                 <td>{label(o)}</td>
-                <td>{STATUS_LABEL[o.status]}{o.dataQuality?.length ? ' · из старой версии' : ''}</td>
+                <td><span className="inline-flex items-center gap-2"><i className="dot" data-tone={isClosed(o) ? 'success' : o.status === 'cancelled' ? 'muted' : 'brand'} />{displayStatus(o)}</span>{o.dataQuality?.length ? ' · из старой версии' : ''}</td>
                 <td>{o.paymentStatus === 'paid' ? (o.paymentMethod ? PAYMENT_LABEL[o.paymentMethod] : 'оплачен') : 'не оплачен'}</td>
                 <td className="num">{formatUZS(o.total)}</td>
                 <td onClick={(e) => e.stopPropagation()}>

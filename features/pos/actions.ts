@@ -1,7 +1,7 @@
 /** Операции кассы: сначала локально (IndexedDB), затем в outbox. Работают без сети. */
 import { uuidv4 } from '@/domain/ids'
 import { computeTotals, type CartItem } from '@/domain/cart'
-import type { Order, OrderStatus, OrderType, PaymentMethod, Shift } from '@/domain/order'
+import { statusAfterPayment, type Order, type OrderStatus, type OrderType, type PaymentMethod, type Shift } from '@/domain/order'
 import type { LocalDb, MenuItemRow } from '@/data/local-db'
 import { enqueue } from '@/data/outbox'
 import { orderToPayload, shiftToPayload } from '@/data/mappers'
@@ -43,9 +43,8 @@ export async function sendToKitchen(db: LocalDb, o: Order): Promise<Order> {
   return saveOrder(db, { ...o, status: 'sent' }, resend ? { resend: true } : {})
 }
 
+/** Оплата закрывает заказ (освобождает стол). Неотправленные кухонные позиции печатаются на кухню вызывающим кодом. */
 export async function pay(db: LocalDb, o: Order, method: PaymentMethod, cashReceived: number | null): Promise<Order> {
-  const hasKitchen = o.items.some((i) => i.isKitchen)
-  const kitchenDone = !hasKitchen || o.status === 'served' || o.status === 'ready'
   return saveOrder(db, {
     ...o,
     paymentStatus: 'paid',
@@ -53,8 +52,7 @@ export async function pay(db: LocalDb, o: Order, method: PaymentMethod, cashRece
     paidAt: new Date().toISOString(),
     cashReceived: method === 'cash' ? cashReceived : null,
     changeAmount: method === 'cash' && cashReceived ? Math.max(0, cashReceived - o.total) : null,
-    // если кухонные позиции ещё не отправлены — отправляем при оплате
-    status: hasKitchen && o.status === 'open' ? 'sent' : kitchenDone ? 'completed' : o.status,
+    status: statusAfterPayment(o),
   })
 }
 

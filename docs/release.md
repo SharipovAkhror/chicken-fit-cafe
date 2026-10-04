@@ -41,6 +41,8 @@
 | 04.10.2026 01:16 | `b225f30` (ux/v2.1 → main, ff) | `dpl_s8M5f2VMgYi1PgQLdXyWhkj1raYb` | v2.1–v2.3: типы товаров, правка позиций, аудит цены (0010 применена до деплоя), редизайн, чистка репо. Откат → `dpl_BrqYthiJSCDCiYwdgECR7sdL9JJZ` |
 | 04.10.2026 01:20 | `c22918b` | `dpl_13dfRaq2kwoCaT3SvWwUt8uUV87h` | только docs/тесты |
 | 04.10.2026 01:26 | `48ab237` | `dpl_5YgQTqbiKenXDrKoJ86e32izJoyc` | только docs (Issues, шаблон PR) |
+| 04.10.2026 01:38 | `ecfafb1` | `chicken-fit-cafe-mod49awb1-…vercel.app` | только docs (setup/env, runbook'и), скрипты тестов |
+| 04.10.2026 01:47 | `d403800` | `dpl_9P2KGDskBYftHEuscq7uqJhoS2mv` | только docs (история миграций выровнена) |
 
 ## Перенос с v1 (выполнен 03.10.2026; путь спасения остаётся в коде)
 При открытии v2 на устройстве со старыми данными снимок localStorage уходит в IndexedDB и на сервер, после входа — импорт

@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRightLeft, Ban, ChefHat, MoreHorizontal, Plus, PlusCircle, Printer, Search, X } from 'lucide-react'
+import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, MoreHorizontal, Plus, PlusCircle, Printer, Search, X } from 'lucide-react'
 import { addItem, baseName, cartCount, gramsOf, isPriceOverridden, lineTotal, setQty, updateLine } from '@/domain/cart'
-import { STATUS_LABEL, TYPE_LABEL, isActive, type Order, type PaymentMethod } from '@/domain/order'
+import { PAYMENT_LABEL, TYPE_LABEL, displayStatus, isActive, isClosed, type Order, type PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { kindOf, optionsOf, hasOptions, pricePerKgOf, type ProductOptions } from '@/domain/product'
 import { PORTION, portionOf, type PortionSize } from '@/domain/garnish'
@@ -29,7 +29,7 @@ const shortNote = (name: string, notes?: string, mix?: boolean) => {
 
 const minutesSince = (iso: string) => Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 60000))
 
-export function OrderView({ initial, onBack, compact }: { initial: Order; onBack: () => void; compact: boolean }) {
+export function OrderView({ initial, onBack, compact }: { initial: Order; onBack: (notice?: string) => void; compact: boolean }) {
   const { db } = useRuntime()
   const menu = useMenu()
   const tables = useTables()
@@ -110,7 +110,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
     setOrder(saved)
     if (saved.items.some((i) => i.isKitchen)) printJob({ kind: 'kitchen', order: saved, tableLabel })
     // как в v1: после отправки на кухню — обратно к столам
-    setTimeout(onBack, 400)
+    setTimeout(() => onBack(), 400)
   }
   const precheck = async () => {
     const saved = await saveOrder(db, order)
@@ -119,15 +119,15 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
     printJob({ kind: 'precheck', order: saved, tableLabel })
     flash('Счёт напечатан')
   }
-  const onPaid = async (m: PaymentMethod, cash: number | null, print: boolean) => {
-    const wasOpen = order.status === 'open'
+  const onPaid = async (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => {
     const saved = await pay(db, order, m, cash)
     setPaying(false)
     setOrder(saved)
-    const needKitchen = wasOpen && saved.items.some((i) => i.isKitchen)
-    if (needKitchen) printJob({ kind: 'kitchen', order: saved, tableLabel })
-    if (print) setTimeout(() => printJob({ kind: 'receipt', order: saved, tableLabel }), needKitchen ? 400 : 0)
-    setTimeout(onBack, print ? 800 : 300)
+    // печать — только то, что выбрал кассир: по умолчанию чек гостю; бегунок на кухню — если включён
+    if (print.receipt) printJob({ kind: 'receipt', order: saved, tableLabel })
+    if (print.kitchen && saved.items.some((i) => i.isKitchen)) printJob({ kind: 'kitchen', order: saved, tableLabel })
+    const where = saved.type === 'dine_in' ? ` · ${tableLabel ?? `Стол ${saved.tableId}`} свободен` : ''
+    setTimeout(() => onBack(`Заказ №${saved.number} оплачен и закрыт${where}`), print.receipt || print.kitchen ? 800 : 300)
   }
   const transfer = async (tableId: string) => {
     const moved = { ...order, tableId }
@@ -160,7 +160,8 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
         <div className="flex-1 min-w-0">
           <div className="font-bold text-lg truncate">{title}{order.number && ` · №${order.number}`}</div>
           <div className="text-sm muted">
-            {order.number ? `${STATUS_LABEL[order.status]} · ${minutesSince(order.createdAt)} мин` : 'Новый заказ'} · {order.paymentStatus === 'paid' ? 'оплачен' : 'не оплачен'}
+            {!order.number ? 'Новый заказ · не оплачен' : isClosed(order) ? `Закрыт · оплачен${order.paymentMethod ? ` (${PAYMENT_LABEL[order.paymentMethod]})` : ''}`
+              : `${displayStatus(order)} · ${minutesSince(order.createdAt)} мин · не оплачен`}
           </div>
         </div>
         {!locked && (
@@ -216,7 +217,10 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
             <button className="btn btn-lg btn-primary" disabled={!order.items.length} onClick={() => setPaying(true)}>Оплатить</button>
           </div>
         ) : (
-          <button className="btn btn-lg" onClick={() => printJob({ kind: 'receipt', order, tableLabel })}><Printer size={20} />Печать чека</button>
+          <>
+            {isClosed(order) && <div className="banner banner-success" role="status"><CheckCircle2 size={18} aria-hidden />Заказ закрыт и оплачен — менять его нельзя</div>}
+            <button className="btn btn-lg" onClick={() => printJob({ kind: 'receipt', order, tableLabel })}><Printer size={20} />Печать чека</button>
+          </>
         )}
       </div>
     </aside>
@@ -232,7 +236,7 @@ export function OrderView({ initial, onBack, compact }: { initial: Order; onBack
       {(compact ? !sheet : !editLine) && (
         <section className="flex-1 flex flex-col gap-3" style={{ minWidth: 0 }}>
           <div className="flex items-center gap-2">
-            <button className="btn shrink-0" onClick={onBack} aria-label="Столы"><ArrowLeft size={18} />{!compact && 'Столы'}</button>
+            <button className="btn shrink-0" onClick={() => onBack()} aria-label="Столы"><ArrowLeft size={18} />{!compact && 'Столы'}</button>
             <label className="relative flex-1" style={{ maxWidth: 360 }}>
               <Search size={18} className="muted" style={{ position: 'absolute', left: 12, top: 15 }} aria-hidden />
               <input className="input" style={{ paddingLeft: 38, paddingRight: q ? 40 : 12 }} placeholder="Поиск блюда" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Поиск блюда" />

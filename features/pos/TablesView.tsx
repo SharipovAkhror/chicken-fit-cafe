@@ -15,7 +15,6 @@ const seatsLabel = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'ме
 type Tone = 'brand' | 'info' | 'success' | 'accent' | 'muted'
 /** Состояние стола: одна точка + подпись. Как в iiko — отдельное состояние «счёт выдан». */
 function stateOf(o: Order, billed: boolean): { tone: Tone; label: string } {
-  if (o.paymentStatus === 'paid') return { tone: 'success', label: 'Оплачен' }
   if (billed) return { tone: 'accent', label: 'Счёт выдан' }
   if (o.status === 'ready') return { tone: 'success', label: STATUS_LABEL.ready }
   if (o.status === 'sent' || o.status === 'cooking') return { tone: 'info', label: STATUS_LABEL[o.status] }

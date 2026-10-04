@@ -88,16 +88,33 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 export const TYPE_LABEL: Record<OrderType, string> = { dine_in: 'В зале', takeaway: 'С собой', delivery: 'Доставка' }
 export const PAYMENT_LABEL: Record<PaymentMethod, string> = { cash: 'Наличные', click_payme: 'Click / Payme' }
 
-/** Активный (не закрытый) заказ: не отменён и (не оплачен или ещё готовится). */
+/**
+ * Активный (открытый) заказ для кассы: не отменён и не оплачен. Оплата закрывает заказ и освобождает стол —
+ * независимо от статуса кухни (кухонный экран может быть не в работе; раньше оплаченный заказ «висел» до «Выдано»).
+ */
 export function isActive(o: Order): boolean {
-  if (o.status === 'cancelled') return false
-  if (o.paymentStatus === 'unpaid') return true
-  return o.status === 'sent' || o.status === 'cooking' || o.status === 'ready'
+  return o.status !== 'cancelled' && o.paymentStatus === 'unpaid'
 }
 
-/** Заказ виден на кухне. */
+/** Оплаченный и не отменённый заказ — закрыт. */
+export const isClosed = (o: Order): boolean => o.status !== 'cancelled' && o.paymentStatus === 'paid'
+
+/** Статус после оплаты: закрыт; если кухня уже начала готовить на экране — остаётся у неё до «Выдано» (тогда → completed). */
+export function statusAfterPayment(o: Order): OrderStatus {
+  if (o.status === 'cancelled') return 'cancelled'
+  return o.status === 'cooking' || o.status === 'ready' ? o.status : 'completed'
+}
+
+/** Статус для людей: оплаченный заказ всегда «Закрыт». */
+export function displayStatus(o: Order): string {
+  if (o.status === 'cancelled') return STATUS_LABEL.cancelled
+  if (o.paymentStatus === 'paid') return STATUS_LABEL.completed
+  return STATUS_LABEL[o.status]
+}
+
+/** Заказ виден на кухне: отправлен и не оплачен, либо кухня уже готовит/приготовила. */
 export const isKitchenVisible = (o: Order): boolean =>
-  o.status === 'sent' || o.status === 'cooking' || o.status === 'ready'
+  (o.status === 'sent' && o.paymentStatus === 'unpaid') || o.status === 'cooking' || o.status === 'ready'
 
 /** Бизнес-дата в Самарканде (UTC+5) — как на сервере (_business_date). */
 export function businessDate(iso: string): string {

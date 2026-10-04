@@ -11,6 +11,14 @@ const OUT = process.env.SHOTS || 'test-results/shots'
 mkdirSync(OUT, { recursive: true })
 const exe = process.env.CHROME || (existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined) // иначе chromium Playwright (npx playwright install chromium)
 
+// Как 17 реальных заказов 04.10.2026: оплачен, но status='sent' (кухонный экран не используется) — должен считаться закрытым.
+function stuckPaidOrder() {
+  const t = new Date(Date.now() - 3600_000).toISOString()
+  return { id: '00000000-0000-4000-8000-000000000013', order_number: '013', order_type: 'dine_in', table_id: '5', table_number: '5',
+    items: [{ id: 'combo-chicken', name: 'Супер Комбо Chicken', price: 45000, originalPrice: 45000, qty: 1, isKitchen: true }],
+    subtotal: 45000, total_amount: 45000, discount_percent: 0, discount_amount: 0, delivery_fee: 0, status: 'sent', payment_status: 'paid',
+    payment_method: 'cash', paid_at: t, cashier_name: 'Кассир 1', created_at: t, updated_at: t, source: 'pos', version: 1 }
+}
 function fakeServer() {
   const st = { applied: [], snapshots: [], orders: new Map(), shifts: new Map(), legacyOrders: 0 }
   const tables = Array.from({ length: 8 }, (_, i) => ({ id: String(i + 1), name: `Стол ${i + 1}`, zone: i < 6 ? '1 этаж' : 'Антресоль', capacity: 4, sort_order: i + 1 }))
@@ -19,7 +27,7 @@ function fakeServer() {
       case 'pos_login': return a.p_pin === '12345678' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 's', name: 'Администратор', role: 'admin' } }
         : a.p_pin === '1234' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 'c', name: 'Кассир 1', role: 'cashier' } } : { error: 'invalid_pin' }
       case 'pos_apply_mutation': st.applied.push(a.p_kind); (st.payloads ||= []).push({ kind: a.p_kind, payload: a.p_payload }); if (a.p_kind === 'table.upsert') { const t = a.p_payload, i = tables.findIndex((x) => x.id === t.id); if (t.isActive === false) { if (i >= 0) tables.splice(i, 1) } else { const row = { id: t.id, name: t.name, zone: t.zone, capacity: t.capacity, sort_order: t.sortOrder }; if (i >= 0) tables[i] = row; else tables.push(row) } } if (a.p_kind === 'legacy.order') st.legacyOrders++; return { duplicate: false, result: {} }
-      case 'pos_pull': return { server_time: new Date().toISOString(), staff: { id: 's', name: 'A', role: 'admin' }, orders: [], shifts: [], menu: [], categories: [], tables }
+      case 'pos_pull': return { server_time: new Date().toISOString(), staff: { id: 's', name: 'A', role: 'admin' }, orders: [stuckPaidOrder()], shifts: [], menu: [], categories: [], tables }
       case 'rescue_store_snapshot': st.snapshots.push(a.p_snapshot.sha256); return { id: 'x', duplicate: false }
       case 'rescue_verify': return { orders_by_day: {}, orders: st.legacyOrders, shifts: 0 }
       case 'rescue_save_report': case 'pos_logout': return null
@@ -90,6 +98,7 @@ async function run() {
       if (!same) console.log('localStorage now:', ls)
       check('legacy-ключи localStorage не изменены, новых ключей нет', same)
       check('черновик стола 4 показан как занятый стол', await page.getByRole('button', { name: /Стол 4, занят/ }).count() === 1)
+      check('оплаченный заказ со статусом кухни «sent» (прод 04.10) не держит стол 5', await page.getByRole('button', { name: 'Стол 5, свободен' }).count() === 1)
     }
     // смена
     await page.getByRole('button', { name: 'Смена' }).click()
@@ -178,7 +187,7 @@ async function run() {
       await page.screenshot({ path: `${OUT}/phone-390-12-edit-line.png` })
       await page.getByLabel('Правка позиции').getByRole('button', { name: 'Готово' }).click()
     }
-    await page.evaluate(() => { window.__prints = []; window.print = () => { window.__printed = (window.__printed || 0) + 1; window.__prints.push(document.getElementById('v2-print').outerHTML) } })
+    await page.evaluate(() => { window.__prints = []; window.print = () => { window.__printed = (window.__printed || 0) + 1; window.__prints.push(document.getElementById('receipt-print-wrapper').outerHTML) } })
     await page.getByRole('button', { name: 'Кухня' }).last().click()
     // после отправки на кухню касса сама возвращается к столам (как в v1)
     await page.getByRole('button', { name: /^Стол 1, занят/ }).waitFor()
@@ -189,6 +198,15 @@ async function run() {
       await page.getByRole('button', { name: /^Стол 3, занят/ }).waitFor()
       await page.waitForTimeout(800)
       check('перенос счёта со стола 1 на 3 (order.upsert tableId=3)', (st.payloads || []).some((x) => x.kind === 'order.upsert' && x.payload.tableId === '3'))
+      // кухня до оплаты: видит отправленный заказ (оплаченный «зависший» №013 — нет), начинает готовить
+      await page.getByRole('button', { name: 'Кухня' }).first().click()
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: `${OUT}/${vp.tag}-06-kitchen.png` })
+      check('заказ виден на кухне, оплаченный №013 — нет', await page.getByRole('button', { name: 'Начать' }).count() === 1)
+      await page.getByRole('button', { name: 'Начать' }).first().click()
+      await page.waitForTimeout(300)
+      check('статус кухни меняется', await page.getByRole('button', { name: 'Готово' }).count() >= 1)
+      await page.getByRole('button', { name: 'Столы' }).click()
       await page.getByRole('button', { name: /^Стол 3, занят/ }).click()
     } else await page.getByRole('button', { name: /^Стол 1, занят/ }).click()
     if (vp.tag === 'phone-390') await page.getByRole('button', { name: /^Заказ ·/ }).click()
@@ -197,38 +215,64 @@ async function run() {
     await page.getByRole('button', { name: '1', exact: true }).click()
     for (let i = 0; i < 6; i++) await page.getByRole('button', { name: '0', exact: true }).click()
     await page.screenshot({ path: `${OUT}/${vp.tag}-05-payment.png` })
-    await page.getByRole('button', { name: 'Оплачено + чек' }).click()
-    await page.waitForTimeout(1500)
+    check(`${vp.tag} в окне оплаты одна главная кнопка «Оплачено»; чек — да, бегунок — нет (по умолчанию)`, await page.getByRole('button', { name: 'Оплачено', exact: true }).count() === 1
+      && await page.getByRole('checkbox', { name: 'Печатать чек' }).isChecked() && !(await page.getByRole('checkbox', { name: 'Бегунок на кухню' }).isChecked()))
+    const printsBeforePay = await page.evaluate(() => (window.__prints || []).length)
+    await page.getByRole('button', { name: 'Оплачено', exact: true }).click()
+    await page.getByRole('status').filter({ hasText: /оплачен и закрыт/ }).waitFor()
+    const freed = vp.tag === 'pos-1366' ? 'Стол 3' : 'Стол 1'
+    check(`${vp.tag} после оплаты: подтверждение «оплачен и закрыт», ${freed} свободен`, (await page.getByRole('status').filter({ hasText: `${freed} свободен` }).count()) === 1 && (await page.getByRole('button', { name: `${freed}, свободен` }).count()) === 1)
+    await page.screenshot({ path: `${OUT}/${vp.tag}-05b-paid-closed.png` })
+    await page.waitForTimeout(1000)
+    const paidPayload = (st.payloads || []).filter((x) => x.kind === 'order.upsert' && x.payload.paymentStatus === 'paid').at(-1)?.payload
+    check(`${vp.tag} на сервер ушло paid + ${vp.tag === 'pos-1366' ? 'cooking (кухня уже готовит)' : 'completed'}`, paidPayload?.status === (vp.tag === 'pos-1366' ? 'cooking' : 'completed'))
     if (vp.tag === 'pos-1366') {
-      check('печать вызвана (кухня + чек)', (await page.evaluate(() => window.__printed)) >= 2)
       const prints = await page.evaluate(() => window.__prints)
+      const payPrints = prints.slice(printsBeforePay)
+      check('при оплате по умолчанию печатается только чек гостю (без бегунка)', payPrints.length === 1 && payPrints[0].includes('data-kind="receipt"') && payPrints[0].includes('КАССОВЫЙ ЧЕК ПРОДАЖИ'))
+      check('бегунок печатается только по кнопке «Кухня»', prints.length === 2 && prints[0].includes('data-kind="kitchen"') && prints[0].includes('ЗАКАЗ НА КУХНЮ'))
+      check('чек в разметке v1: лента 80 мм (paper-80mm), без QR', prints[1].includes('paper-80mm') && !prints[1].includes('<svg'))
       const css = await page.evaluate(() => [...document.styleSheets].map((ss) => { try { return [...ss.cssRules].map((r) => r.cssText).join('\n') } catch { return '' } }).join('\n'))
       for (const [i, paper] of [[0, '80mm'], [1, '58mm']]) {
         const pp = await ctx.newPage()
         await pp.setViewportSize({ width: 400, height: 900 })
-        await pp.setContent(`<html><head><style>${css}</style></head><body>${prints[Math.min(i, prints.length - 1)].replace(/data-paper="[^"]+"/, `data-paper="${paper}"`)}</body></html>`)
+        await pp.setContent(`<html><head><style>${css}</style></head><body>${prints[Math.min(i, prints.length - 1)].replace(/paper-80mm/, `paper-${paper}`)}</body></html>`)
         await pp.emulateMedia({ media: 'print' })
         await pp.screenshot({ path: `${OUT}/print-${i === 0 ? 'kitchen' : 'receipt'}-${paper}.png`, fullPage: true })
         await pp.close()
       }
       const last = prints[prints.length - 1]
       const pp = await ctx.newPage(); await pp.setViewportSize({ width: 400, height: 900 })
-      await pp.setContent(`<html><head><style>${css}</style></head><body>${last.replace(/data-paper="[^"]+"/, 'data-paper="58mm"')}</body></html>`)
+      await pp.setContent(`<html><head><style>${css}</style></head><body>${last.replace(/paper-80mm/, 'paper-58mm')}</body></html>`)
       await pp.emulateMedia({ media: 'print' }); await pp.screenshot({ path: `${OUT}/print-receipt-58mm.png`, fullPage: true }); await pp.close()
       check('order.upsert отправлен', st.applied.filter((k) => k === 'order.upsert').length >= 2)
       check('доли микса сохранены для кухни (notes), в чеке на экране скрыты', (st.payloads || []).some((x) => x.kind === 'order.upsert' && x.payload.items?.some((i) => i.notes === 'Пюре 44% + Рис 28% + Гречка 28% (180г)')))
       check('своя цена уходит на сервер (price ≠ originalPrice → аудит)', (st.payloads || []).some((x) => x.kind === 'order.upsert' && x.payload.items?.some((i) => i.name === 'Гуляш с гарниром' && i.price === 30000 && i.originalPrice === 35000 && i.qty === 2)))
       check('скидка 10% из окна оплаты в заказе', (st.payloads || []).some((x) => x.kind === 'order.upsert' && x.payload.paymentStatus === 'paid' && Number(x.payload.discountPercent) === 10))
     }
-    // кухня
+    // кухня после оплаты: начатый кухней заказ остаётся до «Выдано», оплаченный неначатый — нет
     await page.getByRole('button', { name: 'Кухня' }).first().click()
     await page.waitForTimeout(400)
-    await page.screenshot({ path: `${OUT}/${vp.tag}-06-kitchen.png` })
     if (vp.tag === 'pos-1366') {
-      check('заказ виден на кухне', await page.getByRole('button', { name: 'Начать' }).count() >= 1)
-      await page.getByRole('button', { name: 'Начать' }).first().click()
+      check('кухня: оплаченный, но уже готовящийся заказ остаётся на экране', await page.getByRole('button', { name: 'Готово' }).count() === 1)
+      await page.getByRole('button', { name: 'Готово' }).click()
+      await page.getByRole('button', { name: 'Выдано' }).click()
       await page.waitForTimeout(300)
-      check('статус кухни меняется', await page.getByRole('button', { name: 'Готово' }).count() >= 1)
+    }
+    check(`${vp.tag} кухня пуста после оплаты/выдачи`, await page.getByText('Нет заказов на кухне').count() === 1)
+    if (vp.tag === 'pos-1366') {
+      // как на проде: «С собой» → блюдо → сразу «Оплатить» (без «Кухня»), чек выключен
+      await page.getByRole('button', { name: 'Столы' }).click()
+      await page.getByRole('button', { name: 'С собой' }).click()
+      await page.locator('.pcard').first().click(); await page.waitForTimeout(150); await pickGarnishIfAsked()
+      const printedBefore = await page.evaluate(() => window.__printed || 0)
+      await page.getByRole('button', { name: 'Оплатить' }).click()
+      await page.getByRole('checkbox', { name: 'Печатать чек' }).uncheck()
+      await page.getByRole('button', { name: 'Оплачено', exact: true }).click()
+      await page.getByRole('status').filter({ hasText: /оплачен и закрыт/ }).waitFor()
+      await page.waitForTimeout(800)
+      check('«С собой» оплачен сразу → закрыт, не висит в «С собой и доставка»', await page.getByText('С собой и доставка').count() === 0)
+      check('чек выключен, бегунок не выбран → ничего не печатается', (await page.evaluate(() => window.__printed || 0)) - printedBefore === 0)
     }
     await page.getByRole('button', { name: 'Смена' }).click()
     await page.getByRole('button', { name: 'X-отчёт' }).click()
@@ -240,7 +284,7 @@ async function run() {
     await page.getByRole('button', { name: 'Заказы' }).click()
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/${vp.tag}-10-history.png` })
-    if (vp.tag === 'pos-1366') check('оплаченный заказ в истории', await page.getByRole('button', { name: /Печать чека/ }).count() >= 1)
+    if (vp.tag === 'pos-1366') check('оплаченные заказы в истории со статусом «Закрыт»', await page.getByRole('button', { name: /Печать чека/ }).count() >= 2 && await page.getByRole('cell', { name: 'Закрыт' }).count() >= 2)
     await page.getByRole('button', { name: 'Меню' }).click()
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/${vp.tag}-11-menu-admin.png` })

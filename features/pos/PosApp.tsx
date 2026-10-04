@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun, History, BookOpen, Printer } from 'lucide-react'
+import { LayoutGrid, ChefHat, Wallet, BarChart3, HardDriveDownload, LogOut, Moon, Sun, History, BookOpen, Printer, CheckCircle2 } from 'lucide-react'
 import { useRuntime, useTheme, RuntimeProvider } from '@/features/app/runtime'
-import type { Order } from '@/domain/order'
+import { isActive, type Order } from '@/domain/order'
 import { KitchenView } from '@/features/kitchen/KitchenView'
 import { useRescueImport } from '@/features/rescue/useRescueImport'
 import { BackupView, RescueBanner } from '@/features/rescue/RescuePanel'
@@ -15,6 +15,8 @@ import { HistoryView } from './HistoryView'
 import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
+import type { Paper } from './receipt-v1'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { newOrder } from './actions'
 import { inter } from '@/features/ui/font'
 import { useActiveOrders, useOpenShift } from './useData'
@@ -54,6 +56,12 @@ function KitchenGate() {
   )
 }
 
+/** Ширина ленты, выбранная в v1 (chickenfit-pos-paper-width), — только чтение. На кассе кафе было 80mm. */
+function legacyPaper(): Paper {
+  try { const v = typeof window !== 'undefined' ? window.localStorage.getItem('chickenfit-pos-paper-width') : null; if (v === '58mm' || v === '80mm') return v } catch {}
+  return '80mm'
+}
+
 function useCompact() {
   const [c, setC] = useState(false)
   useEffect(() => {
@@ -67,11 +75,17 @@ function useCompact() {
 }
 
 function PosApp() {
-  const { session, logout, deviceId } = useRuntime()
+  const { session, logout, deviceId, db } = useRuntime()
   const [theme, toggleTheme] = useTheme()
   const [tab, setTab] = useState<Tab>(session?.staff.role === 'kitchen' ? 'kitchen' : 'tables')
   const [current, setCurrent] = useState<Order | null>(null)
-  const [paper, setPaper] = useState<'58mm' | '80mm'>('80mm')
+  const [notice, setNotice] = useState<string | null>(null)
+  useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(null), 6000); return () => clearTimeout(t) }, [notice])
+  // ширина ленты: выбор на устройстве; по умолчанию — как в v1 на этом устройстве (ключ v1 только читаем), иначе 80 мм
+  const paperPref = useLiveQuery(() => db.kv.get('pref:paper'), [db])
+  const [paperSel, setPaperSel] = useState<Paper | null>(null)
+  const paper: Paper = paperSel ?? (paperPref?.value as Paper | undefined) ?? legacyPaper()
+  const setPaper = (p: Paper) => { setPaperSel(p); void db.kv.put({ key: 'pref:paper', value: p }) }
   const orders = useActiveOrders() ?? []
   const shift = useOpenShift()
   const rescue = useRescueImport()
@@ -79,8 +93,8 @@ function PosApp() {
   const isAdmin = session?.staff.role === 'admin'
 
   const openTable = (tableId: string) => {
-    const existing = orders.find((o) => o.type === 'dine_in' && o.tableId === tableId && o.paymentStatus === 'unpaid' && o.status !== 'cancelled')
-      ?? orders.find((o) => o.type === 'dine_in' && o.tableId === tableId && o.status !== 'cancelled' && ['sent', 'cooking', 'ready'].includes(o.status))
+    // открытый (неоплаченный) заказ стола; оплаченные закрыты — стол свободен для нового заказа
+    const existing = orders.find((o) => o.type === 'dine_in' && o.tableId === tableId && isActive(o))
     setCurrent(existing ?? newOrder({ type: 'dine_in', tableId, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))
   }
   const tabs: Array<{ id: Tab; label: string; icon: React.ReactNode; show: boolean }> = [
@@ -119,10 +133,11 @@ function PosApp() {
         <main className="flex-1 overflow-auto flex flex-col" style={{ minWidth: 0 }}>
           <div className="px-3 pt-3 grid gap-2 empty:hidden">
             <RescueBanner r={rescue} />
+            {notice && !current && <div className="banner banner-success" role="status"><CheckCircle2 size={18} aria-hidden />{notice}</div>}
             {shift === null && tab === 'tables' && !current && <div className="banner banner-warn">Смена не открыта. Откройте смену в разделе «Смена», чтобы итоги считались по смене.</div>}
           </div>
           {current ? (
-            <OrderView key={current.id} initial={current} compact={compact} onBack={() => setCurrent(null)} />
+            <OrderView key={current.id} initial={current} compact={compact} onBack={(m?: string) => { setCurrent(null); if (m) setNotice(m) }} />
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />
@@ -130,7 +145,7 @@ function PosApp() {
         </main>
       </div>
       {compact && !current && <nav className="bottom-nav flex justify-around" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }} aria-label="Разделы">{nav}</nav>}
-      <PrintArea paper={paper} />
+      <PrintArea paper={paper} shiftNumber={shift?.number} />
     </div>
   )
 }
