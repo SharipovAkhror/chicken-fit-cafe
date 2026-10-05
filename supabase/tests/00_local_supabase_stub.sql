@@ -12,3 +12,13 @@ grant usage on schema public to anon, authenticated;
 -- Supabase по умолчанию выдаёт anon/authenticated все права на таблицы public
 alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on functions to anon, authenticated;
+-- Storage (минимум для миграции 0012): бакеты и объекты с RLS, как в Supabase
+create schema if not exists storage;
+create table if not exists storage.buckets (id text primary key, name text not null, public boolean default false,
+  file_size_limit bigint, allowed_mime_types text[], created_at timestamptz default now());
+create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id),
+  name text, owner uuid, metadata jsonb, created_at timestamptz default now(), unique (bucket_id, name));
+alter table storage.objects enable row level security;
+grant usage on schema storage to anon, authenticated;
+grant select, insert, update, delete on storage.objects to anon, authenticated;
+grant select on storage.buckets to anon, authenticated;
