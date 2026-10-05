@@ -83,3 +83,15 @@ delete from public.login_attempts where device_id in (select device_id from d);
 delete from public.staff where id in (select id from t);                     -- сессии удаляются каскадом
 commit;
 ```
+
+## Отменить или возобновить заказ (v3)
+- Отмена: стол → «⋯» → «Отменить заказ…» → причина. Если заказ уже на кухне или счёт выдан, кассир вводит PIN администратора.
+- Ошибка в оплаченном заказе: «Заказы» → заказ → «Возобновить» → причина (кассиру — PIN админа). Только при связи с сервером
+  и пока смена этого заказа открыта. После закрытия смены — оформить новый заказ/возврат вне кассы.
+- Стол «завис» занятым: «⋯» → «Освободить стол» (черновик удаляется, заказ с номером отменяется с причиной).
+- Журнал: `select type, payload, created_at from order_events where order_id = '…' order by created_at;`
+
+## Фото блюд и место в Supabase
+- Фото добавляются в «Меню» → блюдо → «Добавить фото» (камера или галерея). Если не грузится — проверить связь; сохранить можно без фото.
+- Использование: `select pg_size_pretty(pg_database_size(current_database()));` и
+  `select count(*), pg_size_pretty(sum((metadata->>'size')::bigint)) from storage.objects where bucket_id = 'menu-photos';`

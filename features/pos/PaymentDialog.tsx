@@ -7,8 +7,8 @@ import { formatUZS } from '@/domain/money'
 import { Banknote, Check, ChefHat, Printer, Smartphone } from 'lucide-react'
 import { Modal, Money, Numpad } from './common'
 
-export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
-  order: Order; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => void; onDiscount?: (percent: number) => void
+export function PaymentDialog({ order, prepaid = 0, onClose, onPaid, onDiscount }: {
+  order: Order; prepaid?: number; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => void; onDiscount?: (percent: number) => void
 }) {
   const { db } = useRuntime()
   const [method, setMethod] = useState<PaymentMethod>('cash')
@@ -21,16 +21,22 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
   const toggle = (k: 'receipt' | 'kitchen', v: boolean) => { setSel((s) => ({ ...s, [k]: v })); void db.kv.put({ key: k === 'receipt' ? 'pref:printReceipt' : 'pref:printKitchen', value: v }) }
   const [cash, setCash] = useState('')
   const received = Number(cash || 0)
-  const change = received - order.total
-  const presets = [order.total, Math.ceil(order.total / 10000) * 10000, Math.ceil(order.total / 50000) * 50000, Math.ceil(order.total / 100000) * 100000]
-    .filter((v, i, a) => a.indexOf(v) === i).slice(0, 4)
-  const ok = method === 'click_payme' || cash === '' || received >= order.total
+  // возобновлённый заказ: ранее принятое уже в кассе — просим только разницу (или возвращаем излишек)
+  const due = order.total - prepaid
+  const toPay = Math.max(0, due)
+  const change = received - toPay
+  const presets = [toPay, Math.ceil(toPay / 10000) * 10000, Math.ceil(toPay / 50000) * 50000, Math.ceil(toPay / 100000) * 100000]
+    .filter((v, i, a) => v > 0 && a.indexOf(v) === i).slice(0, 4)
+  const ok = toPay === 0 || method === 'click_payme' || cash === '' || received >= toPay
   return (
     <Modal title={`Оплата · заказ №${order.number || 'новый'}`} onClose={onClose} width={560}>
-      <div className="flex items-baseline justify-between mb-3">
-        <span className="muted">К оплате{order.discountAmount > 0 ? ` (скидка −${formatUZS(order.discountAmount)})` : ''}</span>
-        <Money v={order.total} className="text-3xl font-bold" />
+      <div className="pay-due mb-3">
+        <span className="muted">{prepaid ? 'К доплате' : 'К оплате'}{order.discountAmount > 0 ? ` (скидка −${formatUZS(order.discountAmount)})` : ''}</span>
+        <Money v={toPay} className="pay-due-sum" />
       </div>
+      {prepaid > 0 && (
+        <div className="banner banner-info mb-3">Итого {formatUZS(order.total)} · ранее оплачено {formatUZS(prepaid)}{due < 0 ? ` · вернуть гостю ${formatUZS(-due)} сум` : ''}</div>
+      )}
       {onDiscount && (
         <div className="flex items-center gap-2 mb-4">
           <span className="muted text-sm">Скидка</span>
@@ -49,7 +55,7 @@ export function PaymentDialog({ order, onClose, onPaid, onDiscount }: {
           </button>
         ))}
       </div>
-      {method === 'cash' && (
+      {method === 'cash' && toPay > 0 && (
         <>
           <div className="flex items-center justify-between mb-2">
             <span className="muted">Получено</span>

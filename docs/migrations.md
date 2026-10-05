@@ -54,3 +54,9 @@ psql "$DATABASE_URL" -c "insert into supabase_migrations.schema_migrations(versi
 | 0008 | `…000800_tables_and_test_staff` | `table.upsert`, `staff.is_test` → `dev_test` | применена |
 | 0009 | `…000900_product_kinds` | `menu_items.kind/options` | применена |
 | 0010 | `…001000_price_override_audit` | аудит ручной цены → `order_events.price_override` | применена 04.10.2026 |
+| 0011 | `20261005000100_data_constraints` | CHECK/NOT NULL под free tier, `app_meta`, `housekeeping()` | **не применена** (ветка `ux/v3`) |
+| 0012 | `20261005000200_menu_photos` | бакет `menu-photos`, талоны, политики Storage, проверки блюда в `_upsert_menu_item` | **не применена** |
+| 0013 | `20261005000300_order_controls` | `order.cancel`, PIN админа, `pos_reopen_order`, `precheck_at`, защита от двойной оплаты | **не применена** |
+| 0014 | `20261005000400_public_menu` | `public_menu()` для гостевого меню | **не применена** |
+
+0011–0014 применять до мержа `ux/v3` в `main` (старые клиенты совместимы: новые поля необязательны, `precheckAt` без ключа не трогается).

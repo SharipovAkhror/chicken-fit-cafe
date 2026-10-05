@@ -33,6 +33,10 @@ export function orderFromRow(r: Row): Order {
     updatedAt: r.updated_at,
     source: r.source,
     dataQuality: r.data_quality ?? [],
+    precheckAt: r.precheck_at ?? null,
+    reopenedAt: r.reopened_at ?? null,
+    reopenPaidAmount: r.reopen_paid_amount == null ? null : n(r.reopen_paid_amount),
+    reopenPaidMethod: r.reopen_paid_method ?? null,
   }
 }
 
@@ -86,7 +90,8 @@ export const tableFromRow = (r: Row): TableRow => ({
 
 /** Локальный заказ -> payload order.upsert (только серверные поля). */
 export function orderToPayload(o: Order, extra: Record<string, unknown> = {}) {
-  const { dirty: _d, updatedAt: _u, source: _s, ...rest } = o  
+  const { dirty: _d, updatedAt: _u, source: _s, reopenPaidAmount: _ra, reopenPaidMethod: _rm, ...rest } = o
+  // precheckAt: undefined — не трогать на сервере; null — снять «Счёт выдан» (0013)
   return { ...rest, ...extra }
 }
 export function shiftToPayload(s: Shift) {

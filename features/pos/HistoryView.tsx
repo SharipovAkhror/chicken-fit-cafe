@@ -16,16 +16,23 @@ export function HistoryView({ onOpen }: { onOpen: (o: Order) => void }) {
   const tables = useTables()
   const [day, setDay] = useState(today())
   const [q, setQ] = useState('')
+  const [f, setF] = useState<'all' | 'open' | 'paid' | 'cancelled'>('all')
   const orders = useLiveQuery(async () => {
     const from = new Date(Date.parse(`${day}T00:00:00+05:00`)).toISOString()
     const to = new Date(Date.parse(`${day}T00:00:00+05:00`) + 86400_000).toISOString()
     return (await db.orders.where('createdAt').between(from, to).toArray()).filter((o) => o.number).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }, [db, day]) ?? []
-  const list = orders.filter((o) => !q || o.number.includes(q))
+  const byF = (o: Order) => f === 'all' || (f === 'cancelled' ? o.status === 'cancelled' : f === 'paid' ? isClosed(o) : o.status !== 'cancelled' && o.paymentStatus === 'unpaid')
+  const list = orders.filter((o) => (!q || o.number.includes(q)) && byF(o))
   const label = (o: Order) => (o.type === 'dine_in' ? tables.find((t) => t.id === o.tableId)?.label ?? `Стол ${o.tableId ?? '?'}` : TYPE_LABEL[o.type])
   return (
-    <div className="p-4 grid gap-3">
-      <div className="flex gap-2 flex-wrap">
+    <div className="page grid gap-3">
+      <div className="flex gap-2 flex-wrap items-center">
+        <div className="seg" role="radiogroup" aria-label="Фильтр заказов">
+          {([['all', 'Все'], ['open', 'Открытые'], ['paid', 'Закрытые'], ['cancelled', 'Отменённые']] as const).map(([k, l]) => (
+            <button key={k} role="radio" aria-checked={f === k} onClick={() => setF(k)}>{l}</button>
+          ))}
+        </div>
         <input type="date" className="input" style={{ width: 170 }} value={day} onChange={(e) => setDay(e.target.value)} aria-label="День" />
         <input className="input" style={{ width: 200 }} inputMode="numeric" placeholder="Номер заказа" value={q} onChange={(e) => setQ(e.target.value)} />
         <span className="muted self-center">Заказов: {list.length} · оплачено {formatUZS(list.filter((o) => o.paymentStatus === 'paid' && o.status !== 'cancelled').reduce((s, o) => s + o.total, 0))} сум</span>
@@ -35,11 +42,11 @@ export function HistoryView({ onOpen }: { onOpen: (o: Order) => void }) {
           <thead><tr><th>№</th><th>Время</th><th>Где</th><th>Статус</th><th>Оплата</th><th className="num">Сумма</th><th /></tr></thead>
           <tbody>
             {list.map((o) => (
-              <tr key={o.id} onClick={() => onOpen(o)} style={{ cursor: 'pointer', opacity: o.status === 'cancelled' ? 0.5 : 1 }}>
+              <tr key={o.id} onClick={() => onOpen(o)} style={{ cursor: 'pointer', opacity: o.status === 'cancelled' ? 0.55 : 1, height: 52 }}>
                 <td className="font-bold">{o.number}</td>
                 <td>{new Date(o.createdAt).toLocaleTimeString('ru-RU', { timeZone: 'Asia/Samarkand', hour: '2-digit', minute: '2-digit' })}</td>
                 <td>{label(o)}</td>
-                <td><span className="inline-flex items-center gap-2"><i className="dot" data-tone={isClosed(o) ? 'success' : o.status === 'cancelled' ? 'muted' : 'brand'} />{displayStatus(o)}</span>{o.dataQuality?.length ? ' · из старой версии' : ''}</td>
+                <td><span className="inline-flex items-center gap-2"><i className="dot" data-tone={isClosed(o) ? 'success' : o.status === 'cancelled' ? 'muted' : 'brand'} />{displayStatus(o)}</span>{o.reopenedAt && o.status !== 'cancelled' ? ' · возобновлён' : ''}{o.dataQuality?.length ? ' · из старой версии' : ''}</td>
                 <td>{o.paymentStatus === 'paid' ? (o.paymentMethod ? PAYMENT_LABEL[o.paymentMethod] : 'оплачен') : 'не оплачен'}</td>
                 <td className="num">{formatUZS(o.total)}</td>
                 <td onClick={(e) => e.stopPropagation()}>

@@ -35,7 +35,7 @@ export type CategoryRow = { id: string; titleRu: string; titleUz?: string | null
 export type TableRow = { id: string; label: string; zone: string; seats: number | null; sortOrder: number }
 
 export type MutationKind =
-  | 'order.upsert' | 'order.set_status' | 'shift.upsert' | 'menu.upsert' | 'table.upsert'
+  | 'order.upsert' | 'order.set_status' | 'order.cancel' | 'shift.upsert' | 'menu.upsert' | 'table.upsert'
   | 'legacy.order' | 'legacy.shift' | 'legacy.menu'
 
 export type OutboxRow = {

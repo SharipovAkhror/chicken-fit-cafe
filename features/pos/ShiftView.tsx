@@ -31,7 +31,7 @@ export function ShiftView() {
   if (shift === undefined) return null
   if (!shift)
     return (
-      <div className="p-4 grid gap-4" style={{ maxWidth: 420 }}>
+      <div className="page grid gap-4" style={{ maxWidth: 420 }}>
         <h2 className="text-2xl font-bold">Открыть смену</h2>
         <p className="muted">Размен в кассе на начало смены</p>
         <div className="text-3xl font-bold">{formatUZS(Number(cash || 0))} сум</div>
@@ -45,7 +45,7 @@ export function ShiftView() {
 
   const x = async () => setRep(await summary(db, session?.token, shift))
   return (
-    <div className="p-4 grid gap-4" style={{ maxWidth: 640 }}>
+    <div className="page grid gap-4" style={{ maxWidth: 640 }}>
       <h2 className="text-2xl font-bold">Смена{shift.number ? ` №${shift.number}` : ''} · {shift.cashierName}</h2>
       <p className="muted">Открыта {new Date(shift.openedAt).toLocaleString('ru-RU', { timeZone: 'Asia/Samarkand' })} · размен {formatUZS(shift.initialCash)} сум</p>
       {shift.source === 'legacy_rescue' && <div className="banner banner-warn">Эта смена открыта в старой версии кассы. Закройте её и откройте новую.</div>}

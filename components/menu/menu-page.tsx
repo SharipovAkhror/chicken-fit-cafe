@@ -52,7 +52,7 @@ export function MenuPage({ locale }: { locale: Locale }) {
         id: item.id,
         name: t(item.name, locale),
         description: t(item.description, locale),
-        price: formatPrice(item.price, locale),
+        price: formatPrice(item.price, locale) + (item.unit === 'kg' ? (locale === 'ru' ? ' / кг' : ' / kg') : ''),
         rawPrice: item.price,
         image: item.image?.trim() ?? '',
         available: item.available !== false,

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import '@/features/ui/v2.css'
+import '@/features/ui/pos.css'
 
 export const metadata: Metadata = { title: 'Касса · Chicken Fit', robots: 'noindex, nofollow' }
 export const viewport: Viewport = { themeColor: '#F4F1EC', width: 'device-width', initialScale: 1 }

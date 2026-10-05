@@ -188,3 +188,22 @@ do $$ declare o4 uuid := current_setting('t.o4'); sh uuid := current_setting('t.
   if (s->>'total_revenue')::int <> 15000 or (s->>'cash_revenue')::int <> 15000 then raise exception 'FAIL: shift revenue %', s; end if;
   raise notice 'OK v11.8 reopen: one active payment, stale writes ignored, shift guard';
 end $$;
+
+-- 0014: public_menu — без удалённых и непроверенных, только нужные поля, доступна anon
+do $$
+declare r jsonb; item jsonb;
+begin
+  insert into public.categories(id, title_ru, sort_order, is_active) values ('pm-cat', 'Тест меню', 999, true) on conflict (id) do nothing;
+  insert into public.menu_items(id, category_id, name_ru, price, is_deleted) values ('pm-ok', 'pm-cat', 'Видимое', 1000, false), ('pm-del', 'pm-cat', 'Удалённое', 1000, true)
+    on conflict (id) do nothing;
+  set local role anon;
+  r := public.public_menu();
+  reset role;
+  if not exists (select 1 from jsonb_array_elements(r->'items') e where e->>'id' = 'pm-ok') then raise exception 'public_menu: visible item missing'; end if;
+  if exists (select 1 from jsonb_array_elements(r->'items') e where e->>'id' = 'pm-del') then raise exception 'public_menu: deleted item leaked'; end if;
+  select e into item from jsonb_array_elements(r->'items') e where e->>'id' = 'pm-ok';
+  if item ? 'is_deleted' or item ? 'needs_review' or item ? 'options' then raise exception 'public_menu: extra fields %', item; end if;
+  delete from public.menu_items where id in ('pm-ok', 'pm-del');
+  delete from public.categories where id = 'pm-cat';
+  raise notice 'OK public_menu';
+end $$;

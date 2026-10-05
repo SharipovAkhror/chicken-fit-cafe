@@ -102,3 +102,18 @@ export function weighLine(item: CartItem, change: { grams?: number; sum?: number
   const originalPrice = ppk === listPpk ? price : roundUZS((grams * listPpk) / 1000)
   return { ...item, qty: 1, weightKg: grams / 1000, pricePerKg: ppk, listPricePerKg: listPpk, price, originalPrice, name: `${baseName(item)} ${grams} г` }
 }
+
+/**
+ * Объединение счетов (слияние столов): позиции второго заказа добавляются к первому.
+ * Одинаковые простые позиции (тот же id и цена, без веса/микса/комментария) складываются по количеству.
+ */
+export function mergeCarts(into: CartItem[], from: CartItem[]): CartItem[] {
+  const out = into.map((c) => ({ ...c }))
+  const simple = (c: CartItem) => !c.garnishMix && !c.weightKg && !c.notes
+  for (const it of from) {
+    const idx = simple(it) ? out.findIndex((c) => simple(c) && c.id === it.id && c.price === it.price && c.originalPrice === it.originalPrice) : -1
+    if (idx >= 0) out[idx] = { ...out[idx], qty: out[idx].qty + it.qty }
+    else out.push({ ...it })
+  }
+  return out
+}

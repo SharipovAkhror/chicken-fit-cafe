@@ -11,8 +11,14 @@ export function Money({ v, className }: { v: number; className?: string }) {
   return <span className={className}>{formatUZS(v)}<span className="muted" style={{ fontSize: '.8em' }}>&nbsp;сум</span></span>
 }
 
-export function SyncBadge() {
+/** Состояние синхронизации. compact — только значок (телефон), текст остаётся в aria-label/title. */
+export function SyncBadge({ compact = false }: { compact?: boolean }) {
   const s = useSyncState()
+  if (compact && s.blocked === 0) {
+    const [Icon, color, label] = !s.configured ? [CloudOff, 'var(--warning)', 'Только локально'] : !s.online || s.lastError ? [CloudOff, 'var(--warning)', `Офлайн${s.pending ? ` · в очереди ${s.pending}` : ''}`]
+      : s.pending > 0 || s.syncing ? [RefreshCw, 'var(--info)', 'Отправка'] : [Cloud, 'var(--success)', 'Синхронизировано']
+    return <span className="chip" role="status" style={{ color, minHeight: 36, padding: '0 8px' }} aria-label={label} title={label}><Icon size={16} aria-hidden /></span>
+  }
   if (!s.configured) return <span className="chip" style={{ color: 'var(--warning)' }}><CloudOff size={14} />&nbsp;Только локально</span>
   if (s.blocked > 0)
     return (
