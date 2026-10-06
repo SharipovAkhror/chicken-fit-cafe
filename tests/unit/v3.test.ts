@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mergeCarts, type CartItem } from '@/domain/cart'
-import { amountDue, cashierCanCancel, prepaidOf, tableStateOf, type Order } from '@/domain/order'
+import { amountDue, prepaidOf, tableStateOf, type Order } from '@/domain/order'
 import { normalizeName, validateProduct, type ProductDraft } from '@/domain/product-form'
 import { fitSize, thumbOf } from '@/features/pos/photo'
 import { orderFromRow, orderToPayload } from '@/data/mappers'
@@ -34,11 +34,6 @@ describe('состояние стола и роли', () => {
     expect(tableStateOf([order({ status: 'cancelled' })])).toBe('free')
     expect(tableStateOf([order()])).toBe('busy')
     expect(tableStateOf([order({ precheckAt: '2026-10-05T10:00:00Z' })])).toBe('billed')
-  })
-  it('кассир отменяет сам только неотправленный заказ без счёта', () => {
-    expect(cashierCanCancel(order())).toBe(true)
-    expect(cashierCanCancel(order({ status: 'sent' }))).toBe(false)
-    expect(cashierCanCancel(order({ precheckAt: '2026-10-05T10:00:00Z' }))).toBe(false)
   })
   it('возобновлённый заказ: к оплате только разница', () => {
     const o = order({ total: 70000, reopenedAt: '2026-10-05T10:00:00Z', reopenPaidAmount: 50000 })

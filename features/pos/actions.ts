@@ -65,15 +65,15 @@ export async function setStatus(db: LocalDb, o: Order, status: OrderStatus): Pro
 }
 
 /**
- * Отмена заказа с причиной (0013): локально + мутация order.cancel — сервер пишет аудит (order_events 'cancelled').
- * Черновик без номера (не уходил на сервер) просто удаляется. Отмену отправленного на кухню или по выданному счёту
- * кассир делает только с одноразовым подтверждением админа (approvalId из pos_manager_approve).
+ * Отмена заказа (0013): локально + мутация order.cancel — сервер пишет аудит (order_events 'cancelled': кто, сумма, причина).
+ * Без PIN (решение владельца); причина необязательна — пустую сервер запишет как «Без причины».
+ * Черновик без номера (не уходил на сервер) просто удаляется.
  */
-export async function cancelOrder(db: LocalDb, o: Order, reason: string, opts: { approvalId?: string; mergedInto?: string } = {}): Promise<void> {
+export async function cancelOrder(db: LocalDb, o: Order, reason: string, opts: { mergedInto?: string } = {}): Promise<void> {
   if (!o.number) { await db.orders.delete(o.id); return }
   const r = reason.trim().slice(0, 200)
-  await db.orders.put({ ...o, status: 'cancelled', notes: [o.notes, `${opts.mergedInto ? 'Объединён' : 'Отмена'}: ${r}`].filter(Boolean).join('\n'), updatedAt: new Date().toISOString(), dirty: false })
-  await enqueue(db, 'order.cancel', o.id, { id: o.id, reason: r, approvalId: opts.approvalId ?? null, mergedInto: opts.mergedInto ?? null })
+  await db.orders.put({ ...o, status: 'cancelled', notes: [o.notes, `${opts.mergedInto ? 'Объединён' : 'Отмена'}: ${r || 'Без причины'}`].filter(Boolean).join('\n'), updatedAt: new Date().toISOString(), dirty: false })
+  await enqueue(db, 'order.cancel', o.id, { id: o.id, reason: r, mergedInto: opts.mergedInto ?? null })
   getEngine().kick()
 }
 

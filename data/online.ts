@@ -1,6 +1,6 @@
 /**
- * Операции, которым нужна сеть (не через outbox): фото блюд в Supabase Storage, подтверждение PIN админа,
- * возобновление оплаченного заказа. Миграции 0012/0013. Без сервера — понятная ошибка, касса продолжает работать.
+ * Операции, которым нужна сеть (не через outbox): фото блюд в Supabase Storage,
+ * возобновление оплаченного заказа (без PIN — решение владельца 06.10). Миграции 0012/0013. Без сервера — понятная ошибка, касса продолжает работать.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { ServerError, supabaseConfigured } from './api'
@@ -43,10 +43,7 @@ export async function releaseMenuPhoto(token: string, url: string | null | undef
   } catch (e) { console.warn('photo release', e) } // мусорный файл не мешает работе; повторим при следующем удалении
 }
 
-export type Approval = { approval_id: string; approver: string } | { error: 'invalid_pin' | 'too_many_attempts' }
-export const managerApprove = (token: string, pin: string, action: 'cancel' | 'reopen', orderId: string) =>
-  rpc<Approval>('pos_manager_approve', { p_token: token, p_pin: pin, p_action: action, p_order_id: orderId })
-
-export type ReopenResult = { order: Record<string, unknown> } | { error: 'reason_required' | 'not_found' | 'not_paid' | 'shift_closed' | 'manager_required' | 'forbidden' }
-export const reopenOrderOnline = (token: string, orderId: string, reason: string, approvalId: string | null) =>
-  rpc<ReopenResult>('pos_reopen_order', { p_token: token, p_order_id: orderId, p_reason: reason, p_approval: approvalId })
+export type ReopenResult = { order: Record<string, unknown> } | { error: 'not_found' | 'not_paid' | 'shift_closed' | 'forbidden' }
+/** Причина необязательна: пустую сервер пишет как «Без причины». */
+export const reopenOrderOnline = (token: string, orderId: string, reason: string) =>
+  rpc<ReopenResult>('pos_reopen_order', { p_token: token, p_order_id: orderId, p_reason: reason.trim() })

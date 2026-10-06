@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, Minus, MoreHorizontal, Plus, PlusCircle, Printer, ReceiptText, RotateCcw, Search, X } from 'lucide-react'
+import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, Clock3, HandPlatter, Minus, MoreHorizontal, Plus, PlusCircle, Printer, ReceiptText, RotateCcw, Search, ShoppingBasket, StickyNote, X } from 'lucide-react'
 import { addItem, baseName, cartCount, gramsOf, isPriceOverridden, lineTotal, setQty, updateLine } from '@/domain/cart'
 import { PAYMENT_LABEL, TYPE_LABEL, amountDue, displayStatus, isActive, isClosed, prepaidOf, type Order, type PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
@@ -18,6 +18,11 @@ import { NewProductTile, ProductCard } from './ProductCard'
 import { LinePanel, OptionsDialog, QuickProductDialog, TransferDialog, WeightAdd, type QuickProduct } from './ItemDialogs'
 import { uuidv4 } from '@/domain/ids'
 import { CancelOrderDialog, ReopenOrderDialog } from './OrderActions'
+import { TopDishes, useNow } from './Insights'
+import { toast } from './toast'
+import { daySales, dayOf, durationLabel, timerTone, type TopItem } from '@/domain/metrics'
+
+const NO_ORDERS: Order[] = []
 
 type Pending = { kind: 'garnish' | 'portion' | 'weight' | 'options'; item: MenuItemRow } | null
 
@@ -28,13 +33,11 @@ const shortNote = (name: string, notes?: string, mix?: boolean) => {
   return t || undefined
 }
 
-const minutesSince = (iso: string) => Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 60000))
-
 export function OrderView({ initial, onBack, compact, wide = false }: { initial: Order; onBack: (notice?: string) => void; compact: boolean; wide?: boolean }) {
   const { db, session } = useRuntime()
   const menu = useMenu()
   const tables = useTables()
-  const active = useActiveOrders() ?? []
+  const active = useActiveOrders() ?? NO_ORDERS
   const [order, setOrder] = useState<Order>(initial)
   const [catSel, setCat] = useState<string | null>(null)
   const cat = catSel ?? menu?.categories[0]?.id ?? null
@@ -48,7 +51,9 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
   const [dialog, setDialog] = useState<'cancel' | 'new' | 'transfer' | 'reopen' | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sheet, setSheet] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
+  // последнее добавленное блюдо: карточка мигает и показывает «+1», итог «подпрыгивает»
+  const [pulse, setPulse] = useState<{ id: string; n: number } | null>(null)
+  const now = useNow(30000)
   const listEnd = useRef<HTMLLIElement>(null)
   const locked = order.paymentStatus === 'paid' || order.status === 'cancelled'
   const wItem = pending?.kind === 'weight' ? pending.item : null
@@ -69,13 +74,18 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
     setOrder(o)
     if (o.items.length > 0 || o.number) void saveDraftLocal(db, o)
   }
-  const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(null), 2500) }
+  const flash = (m: string) => toast(m, 'info')
   const add = (it: Parameters<typeof addItem>[1]) => {
     update(withTotals(order, addItem(order.items, it)))
+    setPulse((p) => ({ id: it.id, n: (p?.n ?? 0) + 1 }))
   }
 
   const needle = q.trim().toLowerCase()
   const items = useMemo(() => (menu?.items ?? []).filter((i) => (needle ? i.nameRu.toLowerCase().includes(needle) : i.categoryId === cat)), [menu, cat, needle])
+  // хиты сегодня (топ-5 по количеству) — из тех же локальных заказов, что и экран «Зал»
+  const top = useMemo(() => daySales(active, dayOf(new Date(now).toISOString())).top, [active, now])
+  const hitById = useMemo(() => new Map(top.map((t) => [t.id, t.qty])), [top])
+  const pickTop = (t: TopItem) => { const m = menu?.items.find((x) => x.id === t.id); if (m && m.available) onProduct(m) }
   const qtyById = useMemo(() => {
     const m = new Map<string, number>()
     for (const l of order.items) m.set(l.id, (m.get(l.id) ?? 0) + (l.weightKg ? 1 : l.qty))
@@ -165,10 +175,13 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
         {compact && <button className="btn" onClick={() => setSheet(false)} aria-label="К меню"><ArrowLeft size={18} /></button>}
         <div className="flex-1 min-w-0">
           <div className="ticket-title truncate">{title}{order.number && <span className="muted"> · №{order.number}</span>}</div>
-          <div className="text-sm muted">
-            {!order.number ? 'Новый заказ · не оплачен' : isClosed(order) ? `Закрыт · оплачен${order.paymentMethod ? ` (${PAYMENT_LABEL[order.paymentMethod]})` : ''}`
-              : `${displayStatus(order)} · ${minutesSince(order.createdAt)} мин · не оплачен`}
-            {order.precheckAt && !locked && <span className="chip chip-accent ml-2"><ReceiptText size={13} aria-hidden />Счёт выдан</span>}
+          <div className="ticket-chips">
+            {!order.number ? <span className="tchip" data-state="free">Новый заказ</span>
+              : isClosed(order) ? <span className="tchip" data-state="paid"><CheckCircle2 size={14} aria-hidden />Оплачен{order.paymentMethod ? ` · ${PAYMENT_LABEL[order.paymentMethod]}` : ''}</span>
+              : order.precheckAt && !locked ? <span className="tchip" data-state="billed"><ReceiptText size={14} aria-hidden />Счёт выдан</span>
+              : <span className="tchip" data-state="busy">{displayStatus(order)}</span>}
+            {order.number && !locked && (() => { const m = Math.max(0, Math.floor((now - Date.parse(order.createdAt)) / 60000)); return <span className="tmini" data-tone={timerTone(m)}><Clock3 size={14} aria-hidden />{durationLabel(m)}</span> })()}
+            {order.items.length > 0 && <span key={cartCount(order.items)} className="tmini tmini-count" aria-label={`В заказе ${cartCount(order.items)} шт`}><ShoppingBasket size={14} aria-hidden />{cartCount(order.items)} шт</span>}
           </div>
         </div>
         {!locked && (
@@ -191,7 +204,14 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
         </div>
       )}
       <LineList className="flex-1 overflow-auto px-2" aria-label="Позиции заказа">
-        {order.items.length === 0 && <li className="muted p-6 text-center">Нажмите на блюдо, чтобы добавить</li>}
+        {order.items.length === 0 && (
+          <li className="ticket-empty">
+            <span className="empty-ico empty-ico-lg"><HandPlatter size={30} aria-hidden /></span>
+            <b>Чек пока пуст</b>
+            <span className="muted">Нажмите на блюдо — оно сразу появится здесь</span>
+            {!wide && !locked && top.length > 0 && <TopDishes top={top} onPick={pickTop} title="Хиты сегодня — нажмите, чтобы добавить" compact />}
+          </li>
+        )}
         {order.items.map((it, idx) => {
           const sub = it.weightKg ? `${gramsOf(it)} г` : null
           const changed = isPriceOverridden(it)
@@ -222,12 +242,15 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
         })}
         <li ref={listEnd} aria-hidden />
       </LineList>
+      {order.notes && <div className="ticket-notes"><StickyNote size={16} aria-hidden /><span>{order.notes}</span></div>}
       <div className="ticket-foot p-3 grid gap-2">
         {order.discountAmount > 0 && <div className="flex justify-between muted"><span>Скидка {order.discountPercent ? `${order.discountPercent}%` : ''}</span><span>−{formatUZS(order.discountAmount)}</span></div>}
         {order.deliveryFee > 0 && <div className="flex justify-between muted"><span>Доставка</span><span>{formatUZS(order.deliveryFee)}</span></div>}
-        <div className="flex justify-between items-baseline"><span className="text-lg font-semibold">Итого</span><Money v={order.total} className="ticket-total" /></div>
+        <div className="flex justify-between items-baseline">
+          <span className="text-lg font-semibold">Итого{order.items.length > 0 && <span className="ticket-count"> · {order.items.length} поз.</span>}</span>
+          <span key={order.total} className="ticket-total-wrap"><Money v={order.total} className="ticket-total" /></span>
+        </div>
         {prepaid > 0 && !locked && <div className="flex justify-between text-sm"><span className="muted">Ранее оплачено</span><span>{formatUZS(prepaid)} · {due >= 0 ? `к доплате ${formatUZS(due)}` : `вернуть ${formatUZS(-due)}`}</span></div>}
-        {msg && <div className="banner banner-info" role="status">{msg}</div>}
         {!locked ? (
           <>
             <div className="grid grid-cols-2 gap-2">
@@ -279,6 +302,7 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
           )}
           <div className="flex gap-3 flex-1" style={{ minHeight: 0 }}>
           {!needle && wide && (
+            <div className="cat-col">
             <div className="cat-rail" role="tablist" aria-label="Категории" aria-orientation="vertical">
               {menu?.categories.map((c) => (
                 <button key={c.id} role="tab" aria-selected={cat === c.id} className="cat-rail-btn" onClick={() => setCat(c.id)}>
@@ -286,9 +310,11 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
                 </button>
               ))}
             </div>
+            {!locked && <TopDishes top={top} onPick={pickTop} title="Хиты сегодня" compact />}
+            </div>
           )}
           <div className="pgrid grid gap-3 overflow-auto content-start flex-1" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? 148 : 176}px, 1fr))`, gridAutoRows: "max-content" }}>
-            {items.map((m) => <ProductCard key={m.id} item={m} qty={qtyById.get(m.id) ?? 0} onAdd={() => onProduct(m)} />)}
+            {items.map((m) => <ProductCard key={m.id} item={m} qty={qtyById.get(m.id) ?? 0} onAdd={() => onProduct(m)} hit={hitById.get(m.id)} pulse={pulse?.id === m.id ? pulse.n : undefined} />)}
             {!needle && !locked && items.length > 0 && <NewProductTile onClick={() => setDialog('new')} />}
             {needle && items.length === 0 && <p className="muted p-4">Ничего не найдено</p>}
           </div>

@@ -163,8 +163,6 @@ export function tableStateOf(orders: Order[]): TableState {
   return open.some((o) => o.precheckAt) ? 'billed' : 'busy'
 }
 
-/** Кассир сам отменяет только заказ, который не уходил на кухню и по которому не печатали счёт (как на сервере, 0013). */
-export const cashierCanCancel = (o: Order): boolean => o.status === 'open' && !o.precheckAt
 
 /** Возобновлённый заказ: ранее принятая сумма (касса просит только разницу). */
 export const prepaidOf = (o: Order): number => (o.reopenedAt && o.paymentStatus === 'unpaid' ? Math.max(0, o.reopenPaidAmount ?? 0) : 0)

@@ -101,7 +101,7 @@ end $$;
 set role anon;
 do $$ declare
   ta text; tc text; sh uuid := gen_random_uuid(); o1 uuid := gen_random_uuid(); o2 uuid := gen_random_uuid(); o3 uuid := gen_random_uuid();
-  o4 uuid := gen_random_uuid(); r jsonb; ap jsonb; t0 timestamptz;
+  o4 uuid := gen_random_uuid(); r jsonb; t0 timestamptz;
   it jsonb := jsonb_build_array(jsonb_build_object('id','x','name','Чай','price',5000,'originalPrice',5000,'qty',2));
   base jsonb;
 begin
@@ -112,20 +112,10 @@ begin
   -- 5. кассир отменяет неотправленный заказ сам
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('id', o1, 'number','V1','status','open'));
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o1, 'reason', 'Гость ушёл'));
-  -- отправленный на кухню: без подтверждения нельзя (ни order.cancel, ни order.upsert)
+  -- отправленный на кухню: кассир отменяет сам, без PIN (решение владельца 06.10), причина необязательна
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('id', o2, 'number','V2','status','sent'));
-  begin perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o2, 'reason', 'Ошибка'));
-    raise exception 'FAIL: cashier cancelled sent order'; exception when insufficient_privilege then null; end;
-  begin perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('id', o2, 'number','V2','status','cancelled'));
-    raise exception 'FAIL: cashier cancelled via upsert'; exception when insufficient_privilege then null; end;
-  if public.pos_manager_approve(tc, '1234', 'cancel', o2)->>'error' <> 'invalid_pin' then raise exception 'FAIL: cashier pin approved'; end if;
-  ap := public.pos_manager_approve(tc, '12345678', 'cancel', o2);
-  if ap->>'approval_id' is null then raise exception 'FAIL: approve %', ap; end if;
-  perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o2, 'reason', 'Ошибка кассира', 'approvalId', ap->>'approval_id'));
-  -- подтверждение одноразовое
+  perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o2));
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('id', o3, 'number','V3','status','sent'));
-  begin perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o3, 'reason', 'x', 'approvalId', ap->>'approval_id'));
-    raise exception 'FAIL: approval reused'; exception when insufficient_privilege then null; end;
   -- 6. объединение: o3 → o4 (кассиру можно)
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('id', o4, 'number','V4','status','open','tableId','3'));
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.cancel', jsonb_build_object('id', o3, 'reason', 'Объединён со столом 3', 'mergedInto', o4));
@@ -140,7 +130,8 @@ reset role;
 do $$ declare o1 uuid := current_setting('t.o1'); o2 uuid := current_setting('t.o2'); o3 uuid := current_setting('t.o3'); o4 uuid := current_setting('t.o4'); begin
   if (select status from public.orders where id = o1) <> 'cancelled' or (select status from public.orders where id = o2) <> 'cancelled' then raise exception 'FAIL: cancel'; end if;
   if (select payload->>'reason' from public.order_events where order_id = o1 and type = 'cancelled') <> 'Гость ушёл' then raise exception 'FAIL: cancel audit'; end if;
-  if (select payload->>'approved_by' from public.order_events where order_id = o2 and type = 'cancelled') is null then raise exception 'FAIL: approver not audited'; end if;
+  if (select payload->>'reason' from public.order_events where order_id = o2 and type = 'cancelled') <> 'Без причины'
+     or (select staff_id from public.order_events where order_id = o2 and type = 'cancelled') is null then raise exception 'FAIL: cancel w/o reason audit'; end if;
   if (select payload->>'merged_into' from public.order_events where order_id = o3 and type = 'merged')::uuid <> o4 then raise exception 'FAIL: merge audit'; end if;
   if (select precheck_at from public.orders where id = o4) is null then raise exception 'FAIL: precheck_at lost'; end if;
   raise notice 'OK v11.5-7 cancel rights, merge, precheck';
@@ -149,7 +140,7 @@ set role anon;
 do $$ declare tc text := current_setting('t.tc'); ta text := current_setting('t.ta'); o4 uuid := current_setting('t.o4'); sh uuid := current_setting('t.sh');
   it jsonb := jsonb_build_array(jsonb_build_object('id','x','name','Чай','price',5000,'originalPrice',5000,'qty',2));
   it2 jsonb := jsonb_build_array(jsonb_build_object('id','x','name','Чай','price',5000,'originalPrice',5000,'qty',3));
-  paid1 timestamptz := now() - interval '1 minute'; r jsonb; ap jsonb;
+  paid1 timestamptz := now() - interval '1 minute'; r jsonb;
   base jsonb := jsonb_build_object('id', o4, 'number','V4','type','dine_in','tableId','3','shiftId',sh);
 begin
   perform public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('items',it,'subtotal',10000,'total',10000,'status','open','precheckAt',''));
@@ -159,11 +150,8 @@ begin
   -- устаревшая копия «не оплачен» с другого устройства не снимает оплату
   r := public.pos_apply_mutation(tc, gen_random_uuid(), 'order.upsert', base || jsonb_build_object('items',it2,'subtotal',15000,'total',15000,'status','open','paymentStatus','unpaid'));
   if r->'result'->>'ignored' <> 'paid' then raise exception 'FAIL: unpay via upsert %', r; end if;
-  -- кассир без подтверждения не возобновляет
-  if public.pos_reopen_order(tc, o4, 'Дозаказ')->>'error' <> 'manager_required' then raise exception 'FAIL: cashier reopened'; end if;
-  if public.pos_reopen_order(tc, o4, '')->>'error' <> 'reason_required' then raise exception 'FAIL: reason'; end if;
-  ap := public.pos_manager_approve(tc, '12345678', 'reopen', o4);
-  r := public.pos_reopen_order(tc, o4, 'Дозаказ', (ap->>'approval_id')::uuid);
+  -- кассир возобновляет сам, без PIN (решение владельца 06.10); защита от двойной оплаты — ниже
+  r := public.pos_reopen_order(tc, o4, 'Дозаказ');
   base := base || jsonb_build_object('reopenedAt', r->'order'->>'reopened_at');
   if r->'order'->>'payment_status' <> 'unpaid' or (r->'order'->>'reopen_paid_amount')::int <> 10000 or r->'order'->>'reopen_paid_method' <> 'cash' then raise exception 'FAIL: reopen %', r; end if;
   -- запоздалая оплата, сделанная до возобновления, не применяется повторно

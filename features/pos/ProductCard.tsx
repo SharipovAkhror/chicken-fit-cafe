@@ -1,5 +1,5 @@
 'use client'
-import { CupSoda, Layers, Plus, Scale, SlidersHorizontal, UtensilsCrossed } from 'lucide-react'
+import { CupSoda, Flame, Layers, Plus, Scale, SlidersHorizontal, UtensilsCrossed } from 'lucide-react'
 import type { MenuItemRow } from '@/data/local-db'
 import { formatUZS } from '@/domain/money'
 import { hasOptions, kindOf, pricePerKgOf, stationOf } from '@/domain/product'
@@ -20,12 +20,16 @@ export function TypeIndicator({ item, reserve = true }: { item: MenuItemRow; res
   return <span className="pcard-type">{parts[0][0]}{parts.map((p) => p[1]).join(' · ')}</span>
 }
 
-export function ProductCard({ item, qty, onAdd, showPhoto = true }: { item: MenuItemRow; qty: number; onAdd: () => void; showPhoto?: boolean }) {
+/**
+ * Карточка блюда. hit — продано сегодня (для топ-5: значок «Хит»); pulse — меняется при каждом добавлении этого блюда:
+ * карточка мигает рамкой бренда и показывает «+1» (подтверждение нажатия без звука).
+ */
+export function ProductCard({ item, qty, onAdd, showPhoto = true, hit, pulse }: { item: MenuItemRow; qty: number; onAdd: () => void; showPhoto?: boolean; hit?: number; pulse?: number }) {
   const k = kindOf(item)
   const img = thumbOf(item.imageUrl)
   const price = k === 'weighted' ? `${formatUZS(pricePerKgOf(item))} / кг` : formatUZS(item.price)
   return (
-    <button type="button" className="pcard" data-in={qty > 0 || undefined} aria-disabled={!item.available} onClick={() => item.available && onAdd()}
+    <button type="button" className="pcard" data-in={qty > 0 || undefined} data-pulse={pulse ? pulse % 2 : undefined} aria-disabled={!item.available} onClick={() => item.available && onAdd()}
       aria-label={`${item.nameRu}, ${price} сум${item.available ? '' : ', нет в наличии'}${qty ? `, в заказе ${qty}` : ''}`}>
       {showPhoto && (
         <span className="pcard-media">
@@ -36,6 +40,8 @@ export function ProductCard({ item, qty, onAdd, showPhoto = true }: { item: Menu
       )}
       {/* key={qty}: бейдж «подпрыгивает» на каждом добавлении — подтверждение без звука и тостов */}
       {qty > 0 && <span key={qty} className="pcard-qty" aria-hidden>{qty}</span>}
+      {!!pulse && <span key={`p${pulse}`} className="pcard-plus" aria-hidden>+1</span>}
+      {!!hit && <span className="pcard-hit" title={`Сегодня продано: ${hit}`}><Flame size={13} aria-hidden />Хит · {hit}</span>}
       <span className="pcard-body">
         <span className="pcard-name">{item.nameRu}</span>
         <TypeIndicator item={item} />

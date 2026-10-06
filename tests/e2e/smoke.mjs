@@ -19,6 +19,32 @@ function stuckPaidOrder() {
     subtotal: 45000, total_amount: 45000, discount_percent: 0, discount_amount: 0, delivery_fee: 0, status: 'sent', payment_status: 'paid',
     payment_method: 'cash', paid_at: t, cashier_name: 'Кассир 1', created_at: t, updated_at: t, source: 'pos', version: 1 }
 }
+// Продажи «сегодня» и «вчера» (только оплаченные, в зале) — чтобы показатели «Зала» и хиты были живыми, как в работающем кафе.
+// Время — относительно текущего (в пределах сегодняшнего дня по Самарканду), позиции — из меню.
+function historyOrders() {
+  const dish = [['combo-chicken', 'Супер Комбо Chicken', 45000], ['compote-05', 'Освежающий компот 0.5л', 8000], ['borscht', 'Борщ домашний', 20000],
+    ['cutlet-chicken', 'Котлеты куриные с гарниром', 35000], ['tea-pot', 'Чай в чайнике', 5000], ['salad-vinegret', 'Винегрет', 12000], ['somsa', 'Сомса с мясом', 8000]]
+  const startOfDay = (ms) => { const d = new Date(ms + 5 * 3600_000); d.setUTCHours(0, 0, 0, 0); return d.getTime() - 5 * 3600_000 }
+  const out = []
+  let seed = 7
+  const rnd = (n) => { seed = (seed * 9301 + 49297) % 233280; return Math.floor((seed / 233280) * n) }
+  for (const [dayShift, count] of [[0, 26], [1, 22]]) {
+    const now = Date.now() - dayShift * 86400_000
+    const sod = startOfDay(now) + 8 * 3600_000 // кафе с 8:00
+    for (let i = 0; i < count; i++) {
+      const t = now - 40 * 60_000 - i * 23 * 60_000
+      if (t < sod) break
+      const items = []
+      for (let k = 0; k < 1 + rnd(3); k++) { const [id, name, price] = dish[(k === 0 ? rnd(3) : rnd(dish.length))]; const qty = 1 + rnd(2); items.push({ id, name, price, originalPrice: price, qty, isKitchen: !/compote|tea/.test(id) }) }
+      const total = items.reduce((s, x) => s + x.price * x.qty, 0)
+      const iso = new Date(t).toISOString()
+      out.push({ id: `00000000-0000-4000-9000-${String(dayShift * 100 + i).padStart(12, '0')}`, order_number: String(100 + dayShift * 100 + i), order_type: 'dine_in', table_id: String(1 + rnd(8)), table_number: null,
+        items, subtotal: total, total_amount: total, discount_percent: 0, discount_amount: 0, delivery_fee: 0, status: 'completed', payment_status: 'paid',
+        payment_method: rnd(3) === 0 ? 'click_payme' : 'cash', paid_at: iso, cashier_name: 'Кассир 1', created_at: new Date(t - 30 * 60_000).toISOString(), updated_at: iso, source: 'pos', version: 1 })
+    }
+  }
+  return out
+}
 function fakeServer() {
   const st = { applied: [], snapshots: [], orders: new Map(), shifts: new Map(), legacyOrders: 0 }
   const tables = Array.from({ length: 8 }, (_, i) => ({ id: String(i + 1), name: `Стол ${i + 1}`, zone: i < 6 ? '1 этаж' : 'Антресоль', capacity: 4, sort_order: i + 1 }))
@@ -27,7 +53,7 @@ function fakeServer() {
       case 'pos_login': return a.p_pin === '12345678' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 's', name: 'Администратор', role: 'admin' } }
         : a.p_pin === '1234' ? { token: 't', expires_at: new Date(Date.now() + 36e5).toISOString(), staff: { id: 'c', name: 'Кассир 1', role: 'cashier' } } : { error: 'invalid_pin' }
       case 'pos_apply_mutation': st.applied.push(a.p_kind); (st.payloads ||= []).push({ kind: a.p_kind, payload: a.p_payload }); if (a.p_kind === 'table.upsert') { const t = a.p_payload, i = tables.findIndex((x) => x.id === t.id); if (t.isActive === false) { if (i >= 0) tables.splice(i, 1) } else { const row = { id: t.id, name: t.name, zone: t.zone, capacity: t.capacity, sort_order: t.sortOrder }; if (i >= 0) tables[i] = row; else tables.push(row) } } if (a.p_kind === 'legacy.order') st.legacyOrders++; return { duplicate: false, result: {} }
-      case 'pos_pull': return { server_time: new Date().toISOString(), staff: { id: 's', name: 'A', role: 'admin' }, orders: [stuckPaidOrder()], shifts: [], menu: [], categories: [], tables }
+      case 'pos_pull': return { server_time: new Date().toISOString(), staff: { id: 's', name: 'A', role: 'admin' }, orders: [stuckPaidOrder(), ...(st.history ||= historyOrders())], shifts: [], menu: [], categories: [], tables }
       case 'rescue_store_snapshot': st.snapshots.push(a.p_snapshot.sha256); return { id: 'x', duplicate: false }
       case 'rescue_verify': return { orders_by_day: {}, orders: st.legacyOrders, shifts: 0 }
       case 'rescue_save_report': case 'pos_logout': return null
@@ -39,7 +65,6 @@ function fakeServer() {
         quality: { legacy_orders: 20, flagged_orders: 3, flags: { shift_inferred: 3 }, unknown_cashier: 0, earliest_legacy_day: '2026-09-12', earliest_any_day: '2026-09-12' } }
       case 'pos_photo_ticket': st.photoTickets = (st.photoTickets || 0) + 1; return { bucket: 'menu-photos', path: `items/0000000${st.photoTickets}-0000-4000-8000-000000000000.${a.p_ext}`, thumb: `items/0000000${st.photoTickets}-0000-4000-8000-000000000000-t.${a.p_ext}` }
       case 'pos_photo_release': (st.released ||= []).push(a.p_url); return { bucket: 'menu-photos', paths: [] }
-      case 'pos_manager_approve': (st.approvals ||= []).push(a); return a.p_pin === '12345678' ? { approval_id: 'appr-1', approver: 'Администратор' } : { error: 'invalid_pin' }
       case 'pos_reopen_order': {
         const src = (st.payloads || []).filter((x) => x.kind === 'order.upsert' && x.payload.id === a.p_order_id).at(-1)?.payload
         if (!src) return { error: 'not_found' }
@@ -293,7 +318,7 @@ async function run() {
       await page.getByRole('button', { name: 'Оплачено', exact: true }).click()
       await page.getByRole('status').filter({ hasText: /оплачен и закрыт/ }).waitFor()
       await page.waitForTimeout(800)
-      check('«С собой» оплачен сразу → закрыт, не висит в «С собой и доставка»', await page.getByText('С собой и доставка').count() === 0)
+      check('«С собой» оплачен сразу → закрыт, не висит в «С собой и доставка»', await page.getByText('Сейчас нет заказов навынос').count() === 1)
       check('чек выключен, бегунок не выбран → ничего не печатается', (await page.evaluate(() => window.__printed || 0)) - printedBefore === 0)
     }
     if (vp.tag === 'pos-1366') {
@@ -322,7 +347,8 @@ async function run() {
       await page.getByRole('menuitem', { name: 'Отменить заказ…' }).click()
       await page.getByRole('dialog').getByRole('button', { name: 'Гость ушёл' }).click()
       await page.screenshot({ path: `${OUT}/pos-1366-27-cancel.png` })
-      await page.getByRole('dialog').getByRole('button', { name: 'Отменить заказ', exact: true }).click()
+      check('отмена: одно красное подтверждение, без PIN', await page.getByRole('dialog').getByText(/PIN/).count() === 0)
+      await page.getByRole('dialog').getByRole('button', { name: 'Да, отменить', exact: true }).click()
       await page.getByRole('button', { name: 'Стол 2, свободен' }).waitFor()
       await page.waitForTimeout(800)
       check('отмена с причиной: order.cancel {reason}', (st.payloads || []).some((x) => x.kind === 'order.cancel' && x.payload.reason === 'Гость ушёл' && !x.payload.mergedInto))
@@ -332,7 +358,8 @@ async function run() {
       await page.getByRole('row', { name: /С собой/ }).first().click()
       await page.getByRole('button', { name: 'Возобновить' }).click()
       await page.getByRole('dialog').getByRole('button', { name: 'Добавить позиции' }).click()
-      await page.getByRole('dialog').getByRole('button', { name: 'Возобновить', exact: true }).click()
+      await page.screenshot({ path: `${OUT}/pos-1366-27b-reopen-confirm.png` })
+      await page.getByRole('dialog').getByRole('button', { name: 'Да, возобновить', exact: true }).click()
       await page.getByText('Ранее оплачено').waitFor()
       check('возобновление: pos_reopen_order с причиной, касса показывает «Ранее оплачено»', st.reopens?.[0]?.p_reason === 'Добавить позиции')
       await page.locator('.pcard').first().click(); await page.waitForTimeout(150); await pickGarnishIfAsked()
@@ -478,7 +505,7 @@ async function run() {
     await page.screenshot({ path: `${OUT}/pos-1366-20-menu-admin-dark.png` })
     await ctx.close()
   }
-  // кассир на планшете 1180×820: отмена отправленного на кухню заказа — только с PIN администратора
+  // кассир на планшете 1180×820: отмена отправленного на кухню заказа — без PIN (решение владельца 06.10), одно подтверждение
   {
     const ctx = await browser.newContext({ viewport: { width: 1180, height: 820 } })
     const { st } = await mockSupabase(ctx)
@@ -502,15 +529,12 @@ async function run() {
     await page.getByRole('button', { name: /^Стол 1, занят/ }).waitFor()
     await page.getByRole('button', { name: 'Действия: Стол 1' }).click()
     await page.getByRole('menuitem', { name: 'Отменить заказ…' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Ошибка кассира' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Отменить заказ', exact: true }).click()
-    await page.getByRole('dialog').getByText('Нужен PIN администратора').waitFor()
-    for (const d of '12345678') await page.getByRole('dialog').getByRole('button', { name: d, exact: true }).click()
-    await page.screenshot({ path: `${OUT}/tab-1180-04-cancel-pin.png` })
-    await page.getByRole('dialog').getByRole('button', { name: 'Подтвердить' }).click()
+    await page.screenshot({ path: `${OUT}/tab-1180-04-cancel-confirm.png` })
+    check('кассир: отмена отправленного заказа — без PIN, только красное подтверждение', await page.getByRole('dialog').getByText(/PIN/).count() === 0)
+    await page.getByRole('dialog').getByRole('button', { name: 'Да, отменить', exact: true }).click()
     await page.getByRole('button', { name: 'Стол 1, свободен' }).waitFor()
     await page.waitForTimeout(800)
-    check('кассир: отмена отправленного заказа — PIN админа → order.cancel с approvalId', st.approvals?.[0]?.p_action === 'cancel' && (st.payloads || []).some((x) => x.kind === 'order.cancel' && x.payload.approvalId === 'appr-1' && x.payload.reason === 'Ошибка кассира'))
+    check('кассир: отмена без причины → order.cancel (сервер запишет «Без причины»)', (st.payloads || []).some((x) => x.kind === 'order.cancel' && x.payload.reason === '' && !('approvalId' in x.payload)))
     await page.nav('Меню')
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/tab-1180-05-menu-cashier.png` })

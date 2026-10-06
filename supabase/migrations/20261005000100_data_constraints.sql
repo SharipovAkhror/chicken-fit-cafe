@@ -73,10 +73,6 @@ begin
     execute 'delete from public.photo_tickets where expires_at < now() - interval ''1 day''';
     get diagnostics n = row_count; r := r || jsonb_build_object('photo_tickets', n);
   end if;
-  if to_regclass('public.manager_approvals') is not null then
-    execute 'delete from public.manager_approvals where created_at < now() - interval ''90 days''';
-    get diagnostics n = row_count; r := r || jsonb_build_object('manager_approvals', n);
-  end if;
   insert into public.app_meta(key, value, updated_at) values ('housekeeping', r, now())
   on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at;
   return r;

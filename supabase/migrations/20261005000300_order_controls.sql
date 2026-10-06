@@ -1,12 +1,11 @@
 -- 0013 Управление столами и заказами (аддитивно, идемпотентно). Closes #10, #12, часть #9.
 --  * orders.precheck_at — «Счёт выдан» синхронизируется между устройствами (#12). Старые клиенты поле не шлют — значение не трогается.
---  * Отмена заказа — мутация order.cancel с причиной и аудитом (order_events 'cancelled'/'merged').
---    Кассир сам отменяет только заказ, который не уходил на кухню и по которому не печатали счёт;
---    иначе нужен администратор (вход админа или подтверждение PIN-кодом админа — pos_manager_approve).
---    Та же проверка — в order.upsert (старый путь отмены), кроме импорта старой кассы.
+--  * Отмена заказа — мутация order.cancel с аудитом (order_events 'cancelled'/'merged': кто, когда, причина, сумма, статус).
+--    Решение владельца (06.10.2026): без PIN администратора — достаточно красного подтверждения на кассе; отменяют админ и кассир.
+--    Причина необязательна (одно нажатие на готовый вариант); пустая пишется как «Без причины».
 --  * Объединение столов (#9): order.cancel с mergedInto — исходный заказ отменяется с причиной, позиции уже в целевом.
 --  * Возобновление оплаченного заказа (#10) — pos_reopen_order, только онлайн:
---      - только админ или кассир с подтверждением PIN админа; только пока открыта смена этого заказа;
+--      - админ или кассир, без PIN (решение владельца), одно красное подтверждение; только пока открыта смена этого заказа;
 --      - оплата сторнируется: заказ снова «не оплачен», прежние сумма/способ сохраняются в reopen_paid_*
 --        и в событии 'reopened' (аудит); при повторной оплате касса просит только разницу;
 --      - защита от двойной оплаты: у заказа всегда одна действующая оплата; обычная запись (order.upsert)
@@ -21,50 +20,6 @@ do $$ begin
     alter table public.orders add constraint orders_reopen_paid check ((reopen_paid_amount is null or reopen_paid_amount >= 0)
       and (reopen_paid_method is null or reopen_paid_method in ('cash', 'click_payme')));
   end if;
-end $$;
-
-create table if not exists public.manager_approvals (
-  id uuid primary key default gen_random_uuid(),
-  action text not null check (action in ('cancel', 'reopen')),
-  order_id uuid not null,
-  approver_id uuid not null references public.staff(id) on delete cascade,
-  requested_by uuid references public.staff(id) on delete set null,
-  created_at timestamptz not null default now(),
-  used_at timestamptz
-);
-alter table public.manager_approvals enable row level security;
-revoke all on public.manager_approvals from anon, authenticated;
-
--- подтверждение действия PIN-кодом администратора (кассир просит админа ввести PIN на своём экране)
-create or replace function public.pos_manager_approve(p_token text, p_pin text, p_action text, p_order_id uuid)
-returns jsonb language plpgsql volatile security definer set search_path = '' as $$
-declare
-  st public.staff := public._session_staff(p_token);
-  a public.staff;
-  fails integer;
-  v_id uuid;
-  v_dev text := 'approve:' || st.id::text;
-begin
-  if p_action not in ('cancel', 'reopen') or p_order_id is null then raise exception 'invalid action' using errcode = '22023'; end if;
-  select count(*) into fails from public.login_attempts where device_id = v_dev and not success and at > now() - interval '5 minutes';
-  if fails >= 5 then return jsonb_build_object('error', 'too_many_attempts'); end if;
-  select * into a from public.staff
-   where is_active and role = 'admin' and (not is_test or st.is_test) and pin_hash = extensions.crypt(coalesce(p_pin, ''), pin_hash) limit 1;
-  insert into public.login_attempts(device_id, success) values (v_dev, a.id is not null);
-  if a.id is null then return jsonb_build_object('error', 'invalid_pin'); end if;
-  insert into public.manager_approvals(action, order_id, approver_id, requested_by) values (p_action, p_order_id, a.id, st.id) returning id into v_id;
-  return jsonb_build_object('approval_id', v_id, 'approver', a.name);
-end $$;
-
-create or replace function public._use_approval(p_id uuid, p_action text, p_order uuid)
-returns uuid language plpgsql volatile security definer set search_path = '' as $$
-declare v uuid;
-begin
-  if p_id is null then return null; end if;
-  update public.manager_approvals set used_at = now()
-   where id = p_id and action = p_action and order_id = p_order and used_at is null and created_at > now() - interval '15 minutes'
-  returning approver_id into v;
-  return v;
 end $$;
 
 -- запись заказа (как 0010) + precheck_at, защита оплаты и проверка права на отмену
@@ -114,11 +69,6 @@ begin
     elsif v_status <> 'cancelled' and not coalesce((p->>'resend')::boolean, false)
           and public._status_rank(cur.status) > public._status_rank(v_status) then
       v_status := cur.status;
-    end if;
-    -- отмена отправленного на кухню или по счёту — только админ (кассир — через order.cancel с подтверждением)
-    if v_status = 'cancelled' and cur.status <> 'cancelled' and p_staff.role <> 'admin'
-       and (cur.status <> 'open' or cur.precheck_at is not null) then
-      raise exception 'manager_required' using errcode = '42501';
     end if;
     update public.orders set
       order_number = coalesce(p->>'number', order_number),
@@ -196,11 +146,10 @@ create or replace function public._cancel_order(p jsonb, p_staff public.staff)
 returns jsonb language plpgsql volatile security definer set search_path = '' as $$
 declare
   cur public.orders;
-  v_reason text := left(btrim(coalesce(p->>'reason', '')), 200);
+  v_reason text := coalesce(nullif(left(btrim(coalesce(p->>'reason', '')), 200), ''), 'Без причины');
   v_into uuid := nullif(p->>'mergedInto', '')::uuid;
-  v_appr uuid;
 begin
-  if v_reason = '' then raise exception 'reason_required' using errcode = '22023'; end if;
+  if p_staff.role not in ('admin', 'cashier') then raise exception 'forbidden' using errcode = '42501'; end if;
   select * into cur from public.orders where id = (p->>'id')::uuid for update;
   if not found then raise exception 'order_not_found' using errcode = '22023'; end if;
   if p_staff.is_test and cur.source <> 'dev_test' then raise exception 'forbidden' using errcode = '42501'; end if;
@@ -210,9 +159,6 @@ begin
     if not exists (select 1 from public.orders where id = v_into and id <> cur.id and status <> 'cancelled' and payment_status = 'unpaid') then
       raise exception 'merge_target_invalid' using errcode = '22023';
     end if;
-  elsif p_staff.role <> 'admin' and (cur.status <> 'open' or cur.precheck_at is not null) then
-    v_appr := public._use_approval(nullif(p->>'approvalId', '')::uuid, 'cancel', cur.id);
-    if v_appr is null then raise exception 'manager_required' using errcode = '42501'; end if;
   end if;
   update public.orders set status = 'cancelled',
     notes = left(concat_ws(E'\n', nullif(notes, ''), case when v_into is null then 'Отмена: ' else 'Объединён: ' end || v_reason), 2000),
@@ -221,21 +167,19 @@ begin
   insert into public.order_events(order_id, type, payload, staff_id)
   values (cur.id, case when v_into is null then 'cancelled' else 'merged' end,
     jsonb_strip_nulls(jsonb_build_object('reason', v_reason, 'from_status', cur.status, 'total', cur.total_amount,
-      'approved_by', v_appr, 'merged_into', v_into)), p_staff.id);
+      'merged_into', v_into)), p_staff.id);
   return jsonb_build_object('id', cur.id, 'status', 'cancelled');
 end $$;
 
 -- возобновление оплаченного заказа (только онлайн, сразу возвращает строку заказа)
-create or replace function public.pos_reopen_order(p_token text, p_order_id uuid, p_reason text, p_approval uuid default null)
+create or replace function public.pos_reopen_order(p_token text, p_order_id uuid, p_reason text default null)
 returns jsonb language plpgsql volatile security definer set search_path = '' as $$
 declare
   st public.staff := public._session_staff(p_token);
   cur public.orders;
-  v_reason text := left(btrim(coalesce(p_reason, '')), 200);
-  v_appr uuid;
+  v_reason text := coalesce(nullif(left(btrim(coalesce(p_reason, '')), 200), ''), 'Без причины');
   res public.orders;
 begin
-  if v_reason = '' then return jsonb_build_object('error', 'reason_required'); end if;
   select * into cur from public.orders where id = p_order_id for update;
   if not found then return jsonb_build_object('error', 'not_found'); end if;
   if st.is_test and cur.source <> 'dev_test' then return jsonb_build_object('error', 'forbidden'); end if;
@@ -244,17 +188,13 @@ begin
     return jsonb_build_object('error', 'shift_closed');
   end if;
   if st.role not in ('admin', 'cashier') then return jsonb_build_object('error', 'forbidden'); end if;
-  if st.role <> 'admin' then
-    v_appr := public._use_approval(p_approval, 'reopen', cur.id);
-    if v_appr is null then return jsonb_build_object('error', 'manager_required'); end if;
-  end if;
   update public.orders set payment_status = 'unpaid', paid_at = null, payment_method = null, cash_received = null, change_amount = null,
     status = 'open', precheck_at = null, reopened_at = now(), reopen_paid_amount = cur.total_amount, reopen_paid_method = cur.payment_method,
     version = version + 1, updated_at = now()
   where id = cur.id returning * into res;
   insert into public.order_events(order_id, type, payload, staff_id)
   values (cur.id, 'reopened', jsonb_strip_nulls(jsonb_build_object('reason', v_reason, 'amount', cur.total_amount, 'method', cur.payment_method,
-    'paid_at', cur.paid_at, 'approved_by', v_appr)), st.id);
+    'paid_at', cur.paid_at)), st.id);
   return jsonb_build_object('order', to_jsonb(res));
 end $$;
 
@@ -316,9 +256,6 @@ end $$;
 
 revoke execute on function public._upsert_order(jsonb, public.staff, text, boolean) from public, anon, authenticated;
 revoke execute on function public._cancel_order(jsonb, public.staff) from public, anon, authenticated;
-revoke execute on function public._use_approval(uuid, text, uuid) from public, anon, authenticated;
-revoke execute on function public.pos_manager_approve(text, text, text, uuid) from public;
-revoke execute on function public.pos_reopen_order(text, uuid, text, uuid) from public;
-grant execute on function public.pos_manager_approve(text, text, text, uuid) to anon, authenticated;
-grant execute on function public.pos_reopen_order(text, uuid, text, uuid) to anon, authenticated;
+revoke execute on function public.pos_reopen_order(text, uuid, text) from public;
+grant execute on function public.pos_reopen_order(text, uuid, text) to anon, authenticated;
 grant execute on function public.pos_apply_mutation(text, uuid, text, jsonb) to anon, authenticated;

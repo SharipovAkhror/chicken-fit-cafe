@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { LayoutGrid, ChefHat, Wallet, BarChart3, LogOut, History, BookOpen, CheckCircle2, Menu, Settings } from 'lucide-react'
+import { LayoutGrid, ChefHat, Wallet, BarChart3, LogOut, History, BookOpen, Menu, Settings } from 'lucide-react'
 import { useRuntime, useTheme, RuntimeProvider } from '@/features/app/runtime'
 import { isActive, type Order } from '@/domain/order'
 import { KitchenView } from '@/features/kitchen/KitchenView'
@@ -16,6 +16,7 @@ import { HistoryView } from './HistoryView'
 import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
+import { Toaster, toast } from './toast'
 import type { Paper } from './receipt-v1'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { newOrder } from './actions'
@@ -84,9 +85,7 @@ function PosApp() {
   const role = session?.staff.role
   const [tab, setTab] = useState<Tab>(role === 'kitchen' ? 'kitchen' : 'tables')
   const [current, setCurrent] = useState<Order | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
   const [more, setMore] = useState(false)
-  useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(null), 6000); return () => clearTimeout(t) }, [notice])
   // ширина ленты: выбор на устройстве; по умолчанию — как в v1 на этом устройстве (ключ v1 только читаем), иначе 80 мм
   const paperPref = useLiveQuery(() => db.kv.get('pref:paper'), [db])
   const [paperSel, setPaperSel] = useState<Paper | null>(null)
@@ -157,11 +156,10 @@ function PosApp() {
           {!current && (
             <div className="notices empty:hidden">
               <RescueBanner r={rescue} />
-              {notice && <div className="banner banner-success" role="status"><CheckCircle2 size={18} aria-hidden />{notice}</div>}
             </div>
           )}
           {current ? (
-            <OrderView key={current.id} initial={current} compact={compact} wide={wide} onBack={(m?: string) => { setCurrent(null); if (m) setNotice(m) }} />
+            <OrderView key={current.id} initial={current} compact={compact} wide={wide} onBack={(m?: string) => { setCurrent(null); if (m) toast(m) }} />
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />
@@ -185,6 +183,7 @@ function PosApp() {
         )}
       </div>
       <PrintArea paper={paper} shiftNumber={shift?.number} />
+      <Toaster />
     </div>
   )
 }
