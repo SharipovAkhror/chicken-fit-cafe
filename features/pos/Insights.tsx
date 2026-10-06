@@ -75,7 +75,7 @@ function Ring({ pct }: { pct: number }) {
   return (
     <svg className="occ-ring" viewBox="0 0 56 56" aria-hidden>
       <circle cx="28" cy="28" r={r} className="occ-ring-bg" />
-      <circle cx="28" cy="28" r={r} className="occ-ring-fg" strokeDasharray={`${(c * Math.min(100, pct)) / 100} ${c}`} transform="rotate(-90 28 28)" />
+      {pct > 0 && <circle cx="28" cy="28" r={r} className="occ-ring-fg" strokeDasharray={`${(c * Math.min(100, pct)) / 100} ${c}`} transform="rotate(-90 28 28)" />}
       <text x="28" y="33" textAnchor="middle" className="occ-ring-text">{pct}%</text>
     </svg>
   )
