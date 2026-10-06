@@ -585,3 +585,13 @@
   .pos .cat-wrap > .cat-chip { scroll-snap-align: start; flex-shrink: 0; }
   .pos .page-title { font-size: 20px; }
 }
+
+/* Подсказка «Часто берут сегодня» под позициями — заполняет пустое место чека полезным */
+.pos .ticket-suggest { list-style: none; margin: 14px 4px 6px; padding: 12px; border-radius: var(--r); border: 1px dashed var(--border-strong); background: color-mix(in srgb, var(--brand) 4%, var(--surface)); display: grid; gap: 6px; }
+.pos .ticket-suggest-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.pos .ticket-suggest-title svg { color: var(--brand); }
+.pos .ticket-suggest-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); background: var(--surface); box-shadow: var(--ring); font-weight: 600; text-align: left; transition: transform var(--t-fast) var(--ease-out), background var(--t-fast); }
+.pos .ticket-suggest-row:active { transform: scale(.98); }
+.pos .ticket-suggest-row svg { color: var(--brand); flex-shrink: 0; }
+.pos .ticket-suggest-row span { flex: 1; min-width: 0; }
+.pos .ticket-suggest-row small { color: var(--muted); font-weight: 600; }

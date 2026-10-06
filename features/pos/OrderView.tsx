@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, Clock3, HandPlatter, Minus, MoreHorizontal, Plus, PlusCircle, Printer, ReceiptText, RotateCcw, Search, ShoppingBasket, StickyNote, X } from 'lucide-react'
+import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, Clock3, Flame, HandPlatter, Minus, MoreHorizontal, Plus, PlusCircle, Printer, ReceiptText, RotateCcw, Search, ShoppingBasket, StickyNote, X } from 'lucide-react'
 import { addItem, baseName, cartCount, gramsOf, isPriceOverridden, lineTotal, setQty, updateLine } from '@/domain/cart'
 import { PAYMENT_LABEL, TYPE_LABEL, amountDue, displayStatus, isActive, isClosed, prepaidOf, type Order, type PaymentMethod } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
@@ -240,6 +240,20 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
             </li>
           )
         })}
+        {!wide && !locked && order.items.length > 0 && order.items.length <= 5 && (() => {
+          const inOrder = new Set(order.items.map((it) => it.id))
+          const more = top.filter((t) => !inOrder.has(t.id) && menu?.items.some((m) => m.id === t.id && m.available)).slice(0, 3)
+          return more.length > 0 && (
+            <li className="ticket-suggest">
+              <span className="ticket-suggest-title"><Flame size={15} aria-hidden />Часто берут сегодня</span>
+              {more.map((t) => (
+                <button key={t.id + t.name} type="button" className="ticket-suggest-row" onClick={() => pickTop(t)} aria-label={`Добавить: ${t.name}`}>
+                  <Plus size={16} aria-hidden /><span className="truncate">{t.name}</span><small>{t.qty} шт</small>
+                </button>
+              ))}
+            </li>
+          )
+        })()}
         <li ref={listEnd} aria-hidden />
       </LineList>
       {order.notes && <div className="ticket-notes"><StickyNote size={16} aria-hidden /><span>{order.notes}</span></div>}
