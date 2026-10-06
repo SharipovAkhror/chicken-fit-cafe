@@ -9,7 +9,6 @@
 | `orders`, `order_items` | заказы и строки (`price`, `original_price`, `weight_kg`, `price_per_kg`, `garnish_mix`, `notes`) |
 | `order_events` | журнал заказа: `created`, `status`, `paid`, `cancelled`, `merged`, `reopened`, `price_override` (payload ≤ 16 КБ) |
 | `orders.precheck_at`, `reopened_at`, `reopen_paid_amount/method` | «Счёт выдан» и сторно при возобновлении (0013) |
-| `manager_approvals` | одноразовые подтверждения PIN админа (отмена/возобновление, 15 мин; чистка 90 дн.) |
 | `photo_tickets` | талоны на запись/удаление фото в Storage (10 мин) |
 | `app_meta` | служебные отметки (время последней уборки `housekeeping`) |
 | Storage `menu-photos` | фото блюд: public read, ≤ 512 КБ, только webp/jpeg/png, запись/удаление только по талону |
@@ -23,9 +22,9 @@
 ## RPC (все `security definer`, доступ по токену сессии)
 - `pos_login(pin, device)`, `pos_logout(token)`, `pos_pull(token, since)`
 - `pos_apply_mutation(token, mutation_id, kind, payload)`, где `kind`:
-  `order.upsert`, `order.set_status`, `order.cancel` (причина, `approvalId`, `mergedInto`), `shift.upsert`, `menu.upsert` (admin, cashier), `table.upsert` (admin),
+  `order.upsert`, `order.set_status`, `order.cancel` (причина по желанию, `mergedInto`), `shift.upsert`, `menu.upsert` (admin, cashier), `table.upsert` (admin),
   `legacy.order`, `legacy.shift`, `legacy.menu`
-- `pos_manager_approve`, `pos_reopen_order`, `pos_photo_ticket`, `pos_photo_release` (0012–0013); `public_menu()` — гостевое меню (anon, 0014);
+- `pos_reopen_order` (без PIN), `pos_photo_ticket`, `pos_photo_release` (0012–0013); `public_menu()` — гостевое меню (anon, 0014);
   `housekeeping()` — уборка старых служебных строк (anon, не чаще раза в 6 ч, вызывается `/api/keepalive`)
 - `report_shift`, `report_sales` — отчёты; `rescue_store_snapshot`, `rescue_verify`, `rescue_save_report` — перенос v1
 - Внутренние (`_upsert_order`, `_audit_price_overrides`, `_session_staff`, …) клиенту недоступны.
