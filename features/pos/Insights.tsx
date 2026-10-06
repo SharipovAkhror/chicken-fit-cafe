@@ -73,10 +73,10 @@ export function DeltaChip({ pct, what = 'чем вчера к этому вре�
 function Ring({ pct }: { pct: number }) {
   const r = 22, c = 2 * Math.PI * r
   return (
-    <svg className="ring" viewBox="0 0 56 56" aria-hidden>
-      <circle cx="28" cy="28" r={r} className="ring-bg" />
-      <circle cx="28" cy="28" r={r} className="ring-fg" strokeDasharray={`${(c * Math.min(100, pct)) / 100} ${c}`} transform="rotate(-90 28 28)" />
-      <text x="28" y="33" textAnchor="middle" className="ring-text">{pct}%</text>
+    <svg className="occ-ring" viewBox="0 0 56 56" aria-hidden>
+      <circle cx="28" cy="28" r={r} className="occ-ring-bg" />
+      <circle cx="28" cy="28" r={r} className="occ-ring-fg" strokeDasharray={`${(c * Math.min(100, pct)) / 100} ${c}`} transform="rotate(-90 28 28)" />
+      <text x="28" y="33" textAnchor="middle" className="occ-ring-text">{pct}%</text>
     </svg>
   )
 }

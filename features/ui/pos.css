@@ -412,10 +412,10 @@
 .pos .kpi-hero > * { position: relative; z-index: 1; } .pos .kpi-hero > .spark { position: absolute; z-index: 0; }
 .pos .spark-area { fill: rgba(255, 255, 255, .14); }
 .pos .spark-line { fill: none; stroke: rgba(255, 248, 242, .85); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.pos .ring { width: 64px; height: 64px; flex-shrink: 0; }
-.pos .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 7; }
-.pos .ring-fg { fill: none; stroke: var(--brand); stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray var(--t-slow) var(--ease-out); }
-.pos .ring-text { font-size: 13px; font-weight: 800; fill: var(--text); }
+.pos .occ-ring { width: 64px; height: 64px; flex-shrink: 0; }
+.pos .occ-ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 7; }
+.pos .occ-ring-fg { fill: none; stroke: var(--brand); stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray var(--t-slow) var(--ease-out); }
+.pos .occ-ring-text { font-size: 13px; font-weight: 800; fill: var(--text); }
 .pos .split { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2); margin-top: 6px; gap: 2px; }
 .pos .split i { background: var(--ok); transition: width var(--t-slow) var(--ease-out); }
 .pos .split b { background: var(--info); transition: width var(--t-slow) var(--ease-out); }
