@@ -424,8 +424,8 @@
 .pos .split-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .pos .split-legend span:first-child svg { color: var(--ok); }
 .pos .split-legend span:last-child svg { color: var(--info); }
-@media (max-width: 1700px) { .pos .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; } .pos .kpi-hero { grid-column: span 1; } .pos .kpi-hero .kpi-value, .pos .kpi-value { font-size: 26px; } .pos .kpi-value-sm { font-size: 21px; } .pos .kpi { padding: 12px 14px; } .pos .kpi-head { font-size: 12px; } }
-@media (max-width: 1100px) { .pos .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .pos .kpi-hero { grid-column: span 3; } }
+@media (max-width: 1700px) { .pos .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .pos .kpi-hero { grid-column: span 1; } .pos .kpi-hero .kpi-value { font-size: 32px; } .pos .kpi { padding: 12px 16px; } }
+@media (max-width: 1100px) { .pos .kpi-hero .kpi-value { font-size: 26px; } .pos .kpi-value { font-size: 24px; } }
 @media (max-width: 600px) {
   .pos .kpis { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 12px; margin: 0 -12px; padding: 2px 12px 6px; }
   .pos .kpi { flex: 0 0 72%; scroll-snap-align: start; min-height: 120px; }
