@@ -423,17 +423,23 @@
     -webkit-text-fill-color: #ffffff !important;
   }
 
-  /* 80mm Standard Width (Exact 72mm active printable area for 576 dots / 203 DPI) */
+  /*
+   * 80mm: печатная область 72 мм (576 точек / 203 dpi). Обёртка — на всю ширину страницы, чек 72 мм — ПО ЦЕНТРУ:
+   * лист 80 мм → поля 4 мм слева и справа (раньше чек прижимался влево и правый край уезжал за печатную зону);
+   * драйвер с листом 72 мм → чек ровно по ширине. Внутренний отступ 2 мм с каждой стороны: суммы не касаются края.
+   */
   #receipt-print-wrapper.paper-80mm {
-    width: 72mm !important;
-    max-width: 72mm !important;
+    width: 100% !important;
+    max-width: none !important;
   }
 
   #receipt-print-wrapper.paper-80mm .receipt {
     width: 72mm !important;
-    max-width: 72mm !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
     font-size: 11px !important;
-    padding: 2mm 1mm 10mm 1mm !important;
+    padding: 2mm 2mm 10mm 2mm !important;
     line-height: 1.25 !important;
   }
 
@@ -444,16 +450,50 @@
 
   /* 58mm Narrow Width (Exact 48mm active printable area for 384 dots / 203 DPI) */
   #receipt-print-wrapper.paper-58mm {
-    width: 48mm !important;
-    max-width: 48mm !important;
+    width: 100% !important;
+    max-width: none !important;
   }
 
   #receipt-print-wrapper.paper-58mm .receipt {
     width: 48mm !important;
-    max-width: 48mm !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
     font-size: 9.5px !important;
-    padding: 1.5mm 0.5mm 8mm 0.5mm !important;
+    padding: 1.5mm 1mm 8mm 1mm !important;
     line-height: 1.2 !important;
+  }
+
+  /*
+   * Ничего не вылезает за край: строка «слева — справа» переносит правую часть (сумму) на следующую строку целиком,
+   * если обе не помещаются; длинные названия переносятся (даже слово без пробелов); суммы не разрываются.
+   */
+  #receipt-print-wrapper .receipt,
+  #receipt-print-wrapper .receipt * {
+    box-sizing: border-box !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  #receipt-print-wrapper .receipt .justify-between {
+    flex-wrap: wrap !important;
+    column-gap: 1.5mm !important;
+  }
+
+  #receipt-print-wrapper .receipt .justify-between > :last-child:not(:first-child) {
+    margin-left: auto !important;
+    text-align: right !important;
+  }
+
+  #receipt-print-wrapper .receipt .flex > *,
+  #receipt-print-wrapper .receipt .flex-1 {
+    min-width: 0 !important;
+  }
+
+  #receipt-print-wrapper .receipt .whitespace-nowrap,
+  #receipt-print-wrapper .receipt .tabular-nums {
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
   }
 
   #receipt-print-wrapper.paper-58mm .receipt-brand-title {
@@ -528,6 +568,8 @@
 
   /* Thermal Tear-off Cut Spacing */
   .receipt-tear-off {
+    white-space: nowrap !important;
+    overflow: hidden !important;
     margin-top: 5mm !important;
     padding-bottom: 8mm !important;
     border-top: 1px dashed #000000 !important;

@@ -1,7 +1,7 @@
 'use client'
 /** Аварийный экспорт без PIN: снимок старой кассы + локальные данные v2 в JSON-файл. */
 import { useEffect, useState } from 'react'
-import '@/features/ui/v2.css'
+import '@/features/ui/pos.css'
 import { inter } from '@/features/ui/font'
 import { getDb, getDeviceId } from '@/data/local-db'
 import { captureAndStore } from '@/features/rescue/rescue'
@@ -18,7 +18,7 @@ export default function BackupPage() {
     })().catch((e) => setInfo(`Ошибка: ${e.message}`))
   }, [])
   return (
-    <div className={`${inter.variable} v2 min-h-dvh flex items-center justify-center p-4`}>
+    <div className={`${inter.variable} pos min-h-dvh flex items-center justify-center p-4`}>
       <div className="panel p-6 grid gap-4" style={{ maxWidth: 520 }}>
         <h1 className="text-2xl font-bold">Бэкап данных кассы</h1>
         <p className="muted">{info}</p>

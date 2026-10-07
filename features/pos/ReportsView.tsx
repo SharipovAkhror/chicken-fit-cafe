@@ -31,7 +31,7 @@ export function ReportsView() {
   }, [session, from, to])
   const preset = (a: string, b: string) => { setFrom(a); setTo(b) }
   return (
-    <div className="p-4 grid gap-4">
+    <div className="page grid gap-4">
       <div className="flex flex-wrap gap-2 items-center">
         <button className="btn" onClick={() => preset(today(), today())}>Сегодня</button>
         <button className="btn" onClick={() => preset(shift(today(), -1), shift(today(), -1))}>Вчера</button>

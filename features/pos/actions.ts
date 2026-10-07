@@ -1,6 +1,6 @@
 /** Операции кассы: сначала локально (IndexedDB), затем в outbox. Работают без сети. */
 import { uuidv4 } from '@/domain/ids'
-import { computeTotals, type CartItem } from '@/domain/cart'
+import { computeTotals, mergeCarts, type CartItem } from '@/domain/cart'
 import { statusAfterPayment, type Order, type OrderStatus, type OrderType, type PaymentMethod, type Shift } from '@/domain/order'
 import type { LocalDb, MenuItemRow } from '@/data/local-db'
 import { enqueue } from '@/data/outbox'
@@ -45,6 +45,7 @@ export async function sendToKitchen(db: LocalDb, o: Order): Promise<Order> {
 
 /** Оплата закрывает заказ (освобождает стол). Неотправленные кухонные позиции печатаются на кухню вызывающим кодом. */
 export async function pay(db: LocalDb, o: Order, method: PaymentMethod, cashReceived: number | null): Promise<Order> {
+  // возобновлённый заказ: reopenedAt уходит как есть — сервер отклонит оплату, если заказ с тех пор снова изменили (0013)
   return saveOrder(db, {
     ...o,
     paymentStatus: 'paid',
@@ -63,8 +64,25 @@ export async function setStatus(db: LocalDb, o: Order, status: OrderStatus): Pro
   getEngine().kick()
 }
 
-export async function cancelOrder(db: LocalDb, o: Order, reason: string): Promise<void> {
-  await saveOrder(db, { ...o, status: 'cancelled', notes: [o.notes, `Отмена: ${reason}`].filter(Boolean).join('\n') })
+/**
+ * Отмена заказа (0013): локально + мутация order.cancel — сервер пишет аудит (order_events 'cancelled': кто, сумма, причина).
+ * Без PIN (решение владельца); причина необязательна — пустую сервер запишет как «Без причины».
+ * Черновик без номера (не уходил на сервер) просто удаляется.
+ */
+export async function cancelOrder(db: LocalDb, o: Order, reason: string, opts: { mergedInto?: string } = {}): Promise<void> {
+  if (!o.number) { await db.orders.delete(o.id); return }
+  const r = reason.trim().slice(0, 200)
+  await db.orders.put({ ...o, status: 'cancelled', notes: [o.notes, `${opts.mergedInto ? 'Объединён' : 'Отмена'}: ${r || 'Без причины'}`].filter(Boolean).join('\n'), updatedAt: new Date().toISOString(), dirty: false })
+  await enqueue(db, 'order.cancel', o.id, { id: o.id, reason: r, mergedInto: opts.mergedInto ?? null })
+  getEngine().kick()
+}
+
+/** Объединить счёт стола `from` в заказ `into` (#9): позиции переносятся, исходный заказ отменяется с причиной «Объединён…». */
+export async function mergeOrders(db: LocalDb, into: Order, from: Order, fromLabel: string): Promise<Order> {
+  const items = mergeCarts(into.items, from.items)
+  const saved = await saveOrder(db, { ...withTotals(into, items), precheckAt: into.precheckAt ? null : into.precheckAt })
+  await cancelOrder(db, from, `Объединён со счётом №${saved.number} (${fromLabel})`, { mergedInto: saved.id })
+  return saved
 }
 
 export async function openShift(db: LocalDb, cashierName: string, initialCash: number, deviceId: string): Promise<Shift> {
@@ -88,9 +106,9 @@ export async function saveDraftLocal(db: LocalDb, o: Order): Promise<void> {
   await db.orders.put({ ...o, updatedAt: new Date().toISOString(), dirty: true })
 }
 
-/** Счёт (пречек) выдан гостю — локальная отметка для плана зала (как «СЧЁТ» в v1). */
-export async function markPrecheck(db: LocalDb, orderId: string): Promise<void> {
-  await db.kv.put({ key: `precheck:${orderId}`, value: new Date().toISOString() })
+/** «Счёт выдан»: отметка уходит на сервер (orders.precheck_at, 0013) — видна на всех кассах (#12). */
+export async function markPrecheck(db: LocalDb, o: Order): Promise<Order> {
+  return saveOrder(db, { ...o, precheckAt: new Date().toISOString() })
 }
 
 export type MenuItemInput = Omit<MenuItemRow, 'isDeleted' | 'needsReview' | 'sortOrder'>

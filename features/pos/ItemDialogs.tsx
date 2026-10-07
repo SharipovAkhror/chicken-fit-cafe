@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Delete, Minus, Plus, Trash2, Undo2 } from 'lucide-react'
 import { baseName, gramsOf, isPriceOverridden, lineTotal, weighLine, type CartItem } from '@/domain/cart'
+import { NAME_MAX, normalizeName, validateProduct, type ExistingItem } from '@/domain/product-form'
 import { formatUZS } from '@/domain/money'
 import { KIND_LABEL, optionsNote, type ProductKind, type ProductOptions } from '@/domain/product'
 import type { TableRow } from '@/data/local-db'
@@ -196,41 +197,44 @@ export type QuickProduct = { name: string; price: number; categoryId: string; ca
  * Новое блюдо прямо из заказа: название, цена — остальное по умолчанию (категория — открытая, тип — порция,
  * «кг» в названии → на вес, напитки → бар). Галочка «Сохранить в меню» (по умолчанию включена).
  */
-export function QuickProductDialog({ cats, defaultCat, canSave, onClose, onDone }: {
-  cats: { id: string; title: string }[]; defaultCat: string | null; canSave: boolean; onClose: () => void; onDone: (p: QuickProduct) => void
+export function QuickProductDialog({ cats, defaultCat, canSave, existing, onClose, onDone }: {
+  cats: { id: string; title: string }[]; defaultCat: string | null; canSave: boolean; existing: ExistingItem[]; onClose: () => void; onDone: (p: QuickProduct) => void
 }) {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [cat, setCat] = useState(defaultCat ?? cats[0]?.id ?? '')
   const [kindSel, setKind] = useState<ProductKind | null>(null)
   const [save, setSave] = useState(canSave)
+  const [tried, setTried] = useState(false)
   const kind: ProductKind = kindSel ?? (/(^|\s)кг$/i.test(name.trim()) ? 'weighted' : 'portion')
   const bar = /drink|напит|bar/i.test(cat) || /напит|чай|кофе/i.test(cats.find((c) => c.id === cat)?.title ?? '')
-  const ok = name.trim().length >= 2 && Number(price) > 0
+  // дубль названия проверяем, только если блюдо сохраняется в меню; разовая позиция может совпадать
+  const errs = validateProduct({ name, categoryId: cat, price: Number(price || 0), kind }, save ? existing : [])
+  const show = (k: keyof typeof errs) => (tried && errs[k] ? <span className="field-error" role="alert">{errs[k]}</span> : null)
   return (
     <Modal title="Новое блюдо" onClose={onClose} width={480}>
-      <form className="grid gap-3" onSubmit={(e) => {
+      <form className="grid gap-3" noValidate onSubmit={(e) => {
         e.preventDefault()
-        if (ok) onDone({ name: name.trim(), price: Number(price), categoryId: cat, categoryTitle: cats.find((c) => c.id === cat)?.title ?? cat, kind, isKitchen: !bar, saveToMenu: save })
+        setTried(true)
+        if (Object.keys(errs).length) return
+        onDone({ name: normalizeName(name), price: Number(price), categoryId: cat, categoryTitle: cats.find((c) => c.id === cat)?.title ?? cat, kind, isKitchen: !bar, saveToMenu: save })
       }}>
-        <label className="grid gap-1"><span className="text-sm muted">Название</span>
-          <input className="input input-lg" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></label>
-        <label className="grid gap-1"><span className="text-sm muted">{kind === 'weighted' ? 'Цена за 1 кг, сум' : 'Цена, сум'}</span>
-          <input className="input input-lg" inputMode="numeric" value={price ? formatUZS(Number(price)) : ''} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} /></label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="grid gap-1"><span className="text-sm muted">Категория</span>
-            <select className="input" value={cat} onChange={(e) => setCat(e.target.value)}>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-            </select></label>
-          <div className="grid gap-1"><span className="text-sm muted">Тип</span>
-            <div className="seg seg-fill" role="radiogroup" aria-label="Тип">
-              {(['portion', 'weighted', 'with_side'] as ProductKind[]).map((k) => (
-                <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)}>{k === 'with_side' ? 'Гарнир' : KIND_LABEL[k]}</button>
-              ))}
-            </div></div>
-        </div>
-        {canSave && <label className="flex items-center gap-2"><input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} style={{ width: 22, height: 22 }} />Сохранить в меню</label>}
-        <button className="btn btn-lg btn-primary" type="submit" disabled={!ok}>Добавить в заказ</button>
+        <label className="grid gap-1"><span className="field-label">Название</span>
+          <input className="input input-lg" value={name} maxLength={NAME_MAX + 10} aria-invalid={tried && !!errs.name} onChange={(e) => setName(e.target.value)} autoFocus />{show('name')}</label>
+        <label className="grid gap-1"><span className="field-label">{kind === 'weighted' ? 'Цена за 1 кг, сум' : 'Цена, сум'}</span>
+          <input className="input input-lg" inputMode="numeric" aria-invalid={tried && !!errs.price} value={price ? formatUZS(Number(price)) : ''} onChange={(e) => setPrice(e.target.value.replace(/\D/g, '').slice(0, 9))} />{show('price')}</label>
+        <label className="grid gap-1"><span className="field-label">Категория</span>
+          <select className="input" value={cat} onChange={(e) => setCat(e.target.value)}>
+            {cats.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>{show('category')}</label>
+        <div className="grid gap-1"><span className="field-label">Тип</span>
+          <div className="seg seg-fill" role="radiogroup" aria-label="Тип">
+            {(['portion', 'weighted', 'with_side'] as ProductKind[]).map((k) => (
+              <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)}>{k === 'with_side' ? 'С гарниром' : KIND_LABEL[k]}</button>
+            ))}
+          </div></div>
+        {canSave && <label className="flex items-center gap-3" style={{ minHeight: 44 }}><input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} style={{ width: 22, height: 22 }} />Сохранить в меню (фото можно добавить в разделе «Меню»)</label>}
+        <button className="btn btn-lg btn-primary" type="submit">Добавить в заказ</button>
       </form>
     </Modal>
   )
@@ -257,23 +261,24 @@ export function OptionsDialog({ name, opts, onClose, onAdd }: { name: string; op
   )
 }
 
-/** Перенос счёта на свободный стол (v1 «Перенести»). */
-export function TransferDialog({ from, tables, busy, onClose, onPick }: { from: string; tables: TableRow[]; busy: Set<string>; onClose: () => void; onPick: (id: string) => void }) {
+/** Перенос счёта на свободный стол (v1 «Перенести») или объединение с занятым столом (#9). */
+export function TransferDialog({ from, tables, busy, mode = 'move', onClose, onPick }: { from: string; tables: TableRow[]; busy: Set<string>; mode?: 'move' | 'merge'; onClose: () => void; onPick: (id: string) => void }) {
   const zones = [...new Set(tables.map((t) => t.zone))]
+  const label = tables.find((t) => t.id === from)?.label ?? from
   return (
-    <Modal title={`Перенести счёт: ${tables.find((t) => t.id === from)?.label ?? from}`} onClose={onClose}>
+    <Modal title={mode === 'move' ? `Перенести счёт: ${label}` : `Объединить ${label} с…`} onClose={onClose}>
       {zones.map((z) => (
         <div key={z} className="mb-3">
-          <div className="text-sm muted mb-1">{z}</div>
+          <div className="field-label mb-1">{z}</div>
           <div className="grid grid-cols-4 gap-2">
             {tables.filter((t) => t.zone === z).map((t) => {
-              const dis = t.id === from || busy.has(t.id)
-              return <button key={t.id} className="btn btn-lg" disabled={dis} onClick={() => onPick(t.id)} aria-label={`${t.label}${dis ? ', занят' : ''}`}>{t.label.replace('Стол ', '')}</button>
+              const dis = t.id === from || (mode === 'move' ? busy.has(t.id) : !busy.has(t.id))
+              return <button key={t.id} className="btn btn-lg" disabled={dis} onClick={() => onPick(t.id)} aria-label={`${t.label}${busy.has(t.id) ? ', занят' : ''}`}>{t.label.replace('Стол ', '')}</button>
             })}
           </div>
         </div>
       ))}
-      <p className="muted text-sm">Занятые столы недоступны.</p>
+      <p className="muted text-sm">{mode === 'move' ? 'Можно выбрать только свободный стол.' : 'Позиции этого стола добавятся к счёту выбранного стола, этот стол освободится.'}</p>
     </Modal>
   )
 }

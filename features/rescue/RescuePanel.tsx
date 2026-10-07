@@ -9,17 +9,17 @@ export function RescueBanner({ r }: { r: RescueView | null }) {
   if (!r) return null
   if (r.verify?.ok) return null
   if (!r.uploaded && r.uploadError)
-    return <div className="banner banner-danger">Данные старой кассы сохранены на этом устройстве, но ещё не отправлены на сервер. Не очищайте браузер. Раздел «Бэкап» → скачать файл.</div>
+    return <div className="banner banner-danger">Данные старой кассы сохранены на этом устройстве, но ещё не отправлены на сервер. Не очищайте браузер. Раздел «Настройки» → «Данные» → скачать бэкап.</div>
   return <div className="banner banner-info">Перенос данных старой кассы: {r.report ? `${r.report.ordersTotal} заказов, ${r.report.shifts} смен` : 'подготовка'}… Работать можно.</div>
 }
 
-export function BackupView({ r }: { r: RescueView | null }) {
+export function BackupView({ r, embedded = false }: { r: RescueView | null; embedded?: boolean }) {
   const { db } = useRuntime()
   const file = useRef<HTMLInputElement>(null)
   const [msg, setMsg] = useState<string | null>(null)
   return (
-    <div className="p-4 grid gap-4" style={{ maxWidth: 760 }}>
-      <h2 className="text-2xl font-bold">Бэкап и перенос данных</h2>
+    <div className={embedded ? 'grid gap-4 mt-3' : 'p-4 grid gap-4'} style={{ maxWidth: 760 }}>
+      {!embedded && <h2 className="text-2xl font-bold">Бэкап и перенос данных</h2>}
       <div className="grid grid-cols-2 gap-2">
         <button className="btn btn-lg btn-primary" onClick={async () => downloadJson(await buildBackup(db), backupFilename())}>Скачать бэкап (JSON)</button>
         <button className="btn btn-lg" onClick={() => file.current?.click()}>Загрузить бэкап</button>

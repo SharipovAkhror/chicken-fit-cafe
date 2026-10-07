@@ -1,26 +1,41 @@
-# Дизайн-система кассы (v2.3)
+# Дизайн-система кассы (v3, 2026-10)
 
-Всё в одном файле: [`features/ui/v2.css`](../features/ui/v2.css), область `.v2` (подключается в `app/pos`, `app/kds`, `app/backup`).
-Тёмная тема — `.v2[data-theme='dark']`. Гостевое меню использует отдельные бренд-токены `features/ui/brand-tokens.css` (Tailwind).
+Всё в одном файле: [`features/ui/pos.css`](../features/ui/pos.css), область `.pos` (подключается в `app/pos`, `app/kds`, `app/backup`).
+Тёмная тема — `.pos[data-theme='dark']`. Гостевое меню использует отдельные бренд-токены `features/ui/brand-tokens.css` (Tailwind).
+
+## Откуда правила
+Паттерны POS, которые повторяются у Square, Toast, Lightspeed, Poster и iiko, плюс Apple HIG / Material:
+- **план зала с цветом состояния** (свободен · занят · счёт выдан), сумма и время прямо на карточке стола;
+- **сетка меню + постоянно видимый чек справа** (на телефоне — нижняя кнопка «Заказ · N поз. · сумма»);
+- **одно главное действие** на экран — терракотовая кнопка («Оплатить · сумма», «Оплачено», «Сохранить»);
+- крупные цели нажатия (≥ 44–48 px, основные 56–68 px), фото блюд 4:3, крупная цена;
+- деструктивные действия визуально отличаются (красная рамка/заливка) и требуют причины; отмены и возобновления оставляют след;
+- настройки устройства (лента, тема, бэкап) — в отдельном разделе, а не иконками в шапке.
 
 ## Токены
-- Цвета: `--bg --surface --surface-2 --text --muted --border --border-strong`, бренд `--brand` (нетекстовые элементы),
-  `--primary`/`--on-primary` (главная кнопка), `--primary-ink` (текст бренд-цвета), `--accent --success --warning --danger --info`.
-- Форма: `--r-sm 8px`, `--r 12px`, `--r-lg 16px`; тени `--shadow-1/-2/-pop` (вместо рамок).
-- Состояния: `--hover` (4% текста), `--press` (8%); фокус — кольцо бренда.
-- Движение: `--ease-out cubic-bezier(.2,.8,.2,1)`, `--t-fast 120ms`, `--t 180ms`, `--t-slow 240ms`.
-- Шрифт Inter (`app/fonts`), `tabular-nums` для сумм.
+- Цвета бренда: pastry `#FDFCF9` (surface), graphite `#28211D` (текст, навигация `--nav`), terracotta `#C95530` (`--brand`, активный раздел),
+  olive `#667447` (состояние «Счёт выдан», переключатели). Для текста/кнопок — AA-оттенки: `--primary #B34A28`, `--primary-ink #A8452A`, `--accent #5C6940`.
+- Состояния столов: `--busy-bg/--busy-line` (терракота), `--billed-bg/--billed-line` (олива); свободный — нейтральная карточка.
+- Остальное: `--bg --surface --surface-2 --text --muted --border --border-strong --success --warning --danger --info`.
+- Форма: `--r-sm 10px`, `--r 14px`, `--r-lg 20px`; тени `--shadow-1/-2/-pop`.
+- Движение: `--ease-out cubic-bezier(.2,.8,.2,1)`, `--t-fast 120ms`, `--t 180ms`, `--t-slow 240ms`. Шрифт Inter, `tabular-nums` для сумм.
+
+## Оболочка
+- Планшет/ПК (> 900 px): графитовая левая навигация (иконка + подпись), внизу — сотрудник и выход. Сверху контента — заголовок раздела,
+  чип смены («Смена №N · с 09:12» или «Смена не открыта · Открыть») и состояние синхронизации.
+- Телефон (≤ 900 px): нижняя навигация (Столы, Заказы, Меню, Смена, «Ещё» → Кухня, Отчёты, Настройки); синхронизация — значком.
+- Заказ на ≥ 1200 px: категории вертикальным списком слева; уже — чипы с переносом; на телефоне — одна строка с прокруткой.
 
 ## Компоненты (классы)
-`btn` (`btn-primary`, `btn-ghost`, `btn-icon`, `btn-lg`, `btn-danger`), `input`, `seg` (`seg-fill`, `seg-lg`; выбор — `aria-checked/selected/pressed`),
-`cat-chip` (`aria-selected` во вкладках, `aria-pressed` в фильтрах), `pcard` (+ `pcard-media`, `pcard-qty`, `pcard-new`),
-`tcard` (`is-free`/`is-busy`, `data-tone`, `tcard-status`, `dot`), `line`/`line-main` (строки чека), `dialog`/`scrim` (через `Modal` в `features/pos/common.tsx`),
-`numkey`, `pad-field`, `edit-pane`, `menu-pop`, `banner-*`, `app-bar`, `app-rail`.
+`btn` (`btn-primary`, `btn-xl` + `btn-xl-sum`, `btn-lg`, `btn-ghost`, `btn-icon`, `btn-danger`, `btn-danger-solid`), `input` (`aria-invalid`),
+`field-label`, `field-error`, `switch` (`<input role=switch>`), `seg`, `cat-chip`, `cat-rail`/`cat-rail-btn`, `pcard` (`data-in`), `tcard` (`data-state=free|busy|billed`),
+`tables-summary`, `menu-pop` + `menu-backdrop`, `line`/`line-row`/`line-main`/`stepper`, `ticket-*`, `mrow` (строка меню), `photo-field`/`photo-box`,
+`pin-dots`, `page`, `page-head`, `app-rail`, `bottom-nav`, `setting-row`, `banner-*`, `dialog`/`scrim` (через `Modal`).
 
 ## Правила
-- Иконки только `lucide-react`, stroke 1.75 (задано глобально), размеры 14/18/20/22. Без эмодзи и текстовых значков.
-- Один акцент на экран: бренд-цвет — у главного действия; состояния — точкой/тонкой полосой, без заливок.
-- Состояния стола: brand «Открыт», info «На кухне/Готовится», success «Готов/Оплачен», accent «Счёт выдан»; таймер `warning` с 45 мин.
-- Движение: появление строки чека (opacity + 6px, 180 мс), схлопывание удалённой (180 мс), диалог pop 180 / закрытие 140 мс,
-  на ≤600px — нижний лист 240 мс, нажатие `scale(.97–.98)`. `prefers-reduced-motion` → 1 мс, без transform.
-- Touch-цели ≥ 44px (основные кнопки 48–60px). Контраст текста ≥ 4.5:1, нетекстовых элементов ≥ 3:1 (обе темы; расчёт — в комментарии `v2.css`).
+- Иконки только `lucide-react`, stroke 1.75. Без эмодзи.
+- Текст — простой русский: «Оплатить», «Счёт выдан», «Отменить заказ…» (многоточие = будет вопрос/причина).
+- Ошибки форм — под полем, красным, после первой попытки сохранить; кнопка «Сохранить» не прячется.
+- Таймер стола желтеет после 45 мин. Статус кухни показывается в превью стола («На кухне · …»).
+- `prefers-reduced-motion` → анимации 1 мс, без transform. Контраст текста ≥ 4.5:1, нетекстовых элементов ≥ 3:1 (обе темы).
+- Печать (чек, бегунок, пречек) — отдельная разметка `receipt-v1.tsx` + `app/globals.css`, дизайн-система её не трогает.

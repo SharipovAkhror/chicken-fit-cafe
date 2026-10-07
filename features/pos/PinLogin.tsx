@@ -24,17 +24,20 @@ export function PinLogin() {
     else if (pin.length < 8) setPin(pin + k)
   }
   return (
-    <main className="min-h-dvh flex items-center justify-center p-4">
-      <div className="panel w-full" style={{ maxWidth: 380, padding: 24 }}>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h1 className="text-2xl font-bold flex items-center gap-2 whitespace-nowrap"><img src="/logo-mark.svg" alt="" width={36} height={36} style={{ borderRadius: 9 }} />Chicken<span className="brand-mark" style={{ marginLeft: -6 }}>Fit</span></h1>
+    <main className="login">
+      <section className="login-brand" aria-hidden>
+        <img src="/logo-mark.svg" alt="" width={72} height={72} style={{ borderRadius: 18 }} />
+        <div className="login-brand-name">Chicken<span>Fit</span></div>
+        <div className="login-brand-sub">Касса кафе · Самарканд</div>
+      </section>
+      <div className="login-card panel w-full">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <h1 className="text-2xl font-bold">Вход</h1>
           <SyncBadge />
         </div>
-        <p className="muted mb-4">Введите PIN сотрудника</p>
-        <div className="flex justify-center gap-3 mb-4" aria-label={`Введено ${pin.length} цифр`}>
-          {Array.from({ length: Math.max(4, pin.length) }, (_, i) => (
-            <span key={i} style={{ width: 16, height: 16, borderRadius: 8, border: '2px solid var(--border-strong)', background: i < pin.length ? 'var(--text)' : 'transparent' }} />
-          ))}
+        <p className="muted mb-5">Введите PIN сотрудника</p>
+        <div className="pin-dots mb-5" aria-label={`Введено ${pin.length} цифр`}>
+          {Array.from({ length: Math.max(4, pin.length) }, (_, i) => <i key={i} data-on={i < pin.length || undefined} />)}
         </div>
         {err && <div className="banner banner-danger mb-3" role="alert">{err}</div>}
         <div className="grid grid-cols-3 gap-2">

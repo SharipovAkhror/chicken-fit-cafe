@@ -33,6 +33,12 @@ export type Order = {
   updatedAt: string
   source?: 'pos' | 'legacy_rescue'
   dataQuality?: string[]
+  /** «Счёт выдан» (пречек напечатан) — синхронизируется через сервер (0013); null — снять отметку */
+  precheckAt?: string | null
+  /** заказ был возобновлён после оплаты (0013): прежняя оплата сторнирована, сумма и способ — здесь */
+  reopenedAt?: string | null
+  reopenPaidAmount?: number | null
+  reopenPaidMethod?: PaymentMethod | null
   /** локально: есть ли неотправленные изменения */
   dirty?: boolean
 }
@@ -148,3 +154,17 @@ export function localShiftSummary(shift: Shift, orders: Order[]): ShiftSummary {
     top_items: [...items.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 10),
   }
 }
+
+/** Состояние стола для плана зала (как в iiko/Toast): свободен · занят · счёт выдан. */
+export type TableState = 'free' | 'busy' | 'billed'
+export function tableStateOf(orders: Order[]): TableState {
+  const open = orders.filter(isActive)
+  if (!open.length) return 'free'
+  return open.some((o) => o.precheckAt) ? 'billed' : 'busy'
+}
+
+
+/** Возобновлённый заказ: ранее принятая сумма (касса просит только разницу). */
+export const prepaidOf = (o: Order): number => (o.reopenedAt && o.paymentStatus === 'unpaid' ? Math.max(0, o.reopenPaidAmount ?? 0) : 0)
+/** К оплате сейчас: итог минус ранее принятое (может быть < 0 — тогда вернуть гостю). */
+export const amountDue = (o: Order): number => o.total - prepaidOf(o)
