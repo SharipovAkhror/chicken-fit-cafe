@@ -54,9 +54,18 @@ psql "$DATABASE_URL" -c "insert into supabase_migrations.schema_migrations(versi
 | 0008 | `…000800_tables_and_test_staff` | `table.upsert`, `staff.is_test` → `dev_test` | применена |
 | 0009 | `…000900_product_kinds` | `menu_items.kind/options` | применена |
 | 0010 | `…001000_price_override_audit` | аудит ручной цены → `order_events.price_override` | применена 04.10.2026 |
-| 0011 | `20261005000100_data_constraints` | CHECK/NOT NULL под free tier, `app_meta`, `housekeeping()` | **не применена** (ветка `ux/v3`) |
-| 0012 | `20261005000200_menu_photos` | бакет `menu-photos`, талоны, политики Storage, проверки блюда в `_upsert_menu_item` | **не применена** |
-| 0013 | `20261005000300_order_controls` | `order.cancel` (без PIN, причина по желанию), `pos_reopen_order` (без PIN), `precheck_at`, защита от двойной оплаты | **не применена** |
-| 0014 | `20261005000400_public_menu` | `public_menu()` для гостевого меню | **не применена** |
+| 0011 | `20261005000100_data_constraints` | CHECK/NOT NULL под free tier, `app_meta`, `housekeeping()` | применена 07.10.2026 |
+| 0012 | `20261005000200_menu_photos` | бакет `menu-photos`, талоны, политики Storage, проверки блюда в `_upsert_menu_item` | применена 07.10.2026 |
+| 0013 | `20261005000300_order_controls` | `order.cancel` (без PIN, причина по желанию), `pos_reopen_order` (без PIN), `precheck_at`, защита от двойной оплаты | применена 07.10.2026 |
+| 0014 | `20261005000400_public_menu` | `public_menu()` для гостевого меню | применена 07.10.2026 |
 
-0011–0014 применять до мержа `ux/v3` в `main` (старые клиенты совместимы: новые поля необязательны, `precheckAt` без ключа не трогается).
+## История применения в прод
+| Дата (UTC+5) | Миграции | Как | Примечание |
+|---|---|---|---|
+| 04.10.2026 | 0010 | psql (запасной путь) | история выровнена с файлами (`d403800`) |
+| 07.10.2026 23:42 | 0011–0014 | SQL-файл целиком в одной транзакции + строка `schema_migrations(version, name)` = имя файла (запасной путь; Supabase CLI не залогинен) | до мержа PR #14. Перед 0011 проверено: 0 строк нарушают 19 CHECK и `orders.status not null`; все 19 CHECK `VALIDATE` прошли. Старый прод-код (`ceac3c6`) проверен на новой схеме (`/api/keepalive` ok) |
+
+Бэкап перед 0011–0014: схема `backup_20261007` в прод-БД — `create table … as table public.*` для всех 13 таблиц + `schema_migrations`,
+без прав у `anon`/`authenticated` (не видна через API). Контрольные суммы (count + md5 строк) и метрики — в бэкапе вне репозитория.
+Сравнить: `select * from backup_20261007.orders except select <старые колонки> from public.orders`. Удалить после 2 недель стабильной работы
+с согласия владельца: `drop schema backup_20261007 cascade;` (~3 МБ из 500 МБ free tier).
