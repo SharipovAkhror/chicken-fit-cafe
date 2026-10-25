@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { LocalDb } from '@/data/local-db'
 import { ArrowLeft, ArrowRightLeft, Ban, CheckCircle2, ChefHat, Clock3, Flame, HandPlatter, Minus, MoreHorizontal, Plus, PlusCircle, Printer, ReceiptText, RotateCcw, Search, ShoppingBasket, StickyNote, X } from 'lucide-react'
 import { addItem, baseName, cartCount, gramsOf, isPriceOverridden, lineTotal, setQty, updateLine } from '@/domain/cart'
 import { PAYMENT_LABEL, TYPE_LABEL, amountDue, displayStatus, isActive, isClosed, prepaidOf, type Order, type PaymentMethod } from '@/domain/order'
@@ -31,6 +32,28 @@ const shortNote = (name: string, notes?: string, mix?: boolean) => {
   if (!notes || !mix) return notes
   const t = notes.split(', ').map((p) => p.replace(/\s\d+%/g, '').replace(/\s*\(\d+\s?г\)/g, '').trim()).filter((p) => p && !name.includes(p)).join(', ')
   return t || undefined
+}
+
+/** Таймеры отправки черновиков (вне React: id заказа -> таймер). */
+const draftTimers = new Map<string, { t: ReturnType<typeof setTimeout>; onNumber: (n: string) => void }>()
+async function pushDraft(db: LocalDb, id: string, onNumber?: (n: string) => void) {
+  draftTimers.delete(id)
+  const stored = await db.orders.get(id)
+  if (!stored?.dirty || stored.paymentStatus === 'paid' || stored.status === 'cancelled') return // уже сохранён явным действием
+  if (!stored.items.length && !stored.number) return
+  const saved = await saveOrder(db, stored)
+  onNumber?.(saved.number)
+}
+function scheduleDraftPush(db: LocalDb, id: string, onNumber: (n: string) => void) {
+  const prev = draftTimers.get(id)
+  if (prev) clearTimeout(prev.t)
+  draftTimers.set(id, { t: setTimeout(() => void pushDraft(db, id, onNumber), 1500), onNumber })
+}
+function flushDraftPush(db: LocalDb, id: string) {
+  const prev = draftTimers.get(id)
+  if (!prev) return
+  clearTimeout(prev.t)
+  void pushDraft(db, id)
 }
 
 export function OrderView({ initial, onBack, compact, wide = false }: { initial: Order; onBack: (notice?: string) => void; compact: boolean; wide?: boolean }) {
@@ -72,8 +95,12 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
     // позиции изменились после выданного счёта — отметка «Счёт выдан» снимается (на сервере тоже, precheckAt: null)
     if (o.precheckAt && o.items !== order.items) o = { ...o, precheckAt: null }
     setOrder(o)
-    if (o.items.length > 0 || o.number) void saveDraftLocal(db, o)
+    if (o.items.length > 0 || o.number) { void saveDraftLocal(db, o).then(() => scheduleDraftPush(db, o.id, (n) => setOrder((p) => (p.id === o.id && !p.number ? { ...p, number: n } : p)))) }
   }
+  // Мультиустройство: правки чека уходят на сервер через 1.5 с (раньше — только при «На кухню»/оплате,
+  // и другие телефоны не видели занятый стол/новые позиции). Явные действия (кухня, оплата) сохраняют сразу.
+  const orderId = order.id
+  useEffect(() => () => flushDraftPush(db, orderId), [db, orderId])
   const flash = (m: string) => toast(m, 'info')
   const add = (it: Parameters<typeof addItem>[1]) => {
     update(withTotals(order, addItem(order.items, it)))
