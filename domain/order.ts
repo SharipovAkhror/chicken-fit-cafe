@@ -29,6 +29,12 @@ export type Order = {
   cashierName?: string | null
   notes?: string | null
   deviceId?: string
+  /** С сервера (0015): кто и с какого устройства создал / последним изменил */
+  createdByName?: string | null
+  createdDeviceLabel?: string | null
+  lastEditedByName?: string | null
+  lastEditedDeviceLabel?: string | null
+  lastEditedAt?: string | null
   createdAt: string
   updatedAt: string
   source?: 'pos' | 'legacy_rescue'

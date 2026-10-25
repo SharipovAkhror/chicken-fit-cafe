@@ -7,6 +7,7 @@ import { BackupView } from '@/features/rescue/RescuePanel'
 import type { RescueView } from '@/features/rescue/useRescueImport'
 import type { Paper } from './receipt-v1'
 import { TablesAdmin } from './TablesAdmin'
+import { DeviceNameSection, PinAdminSection } from './StaffSettings'
 import { SyncBadge } from './common'
 
 const ROLE: Record<string, string> = { admin: 'Администратор', cashier: 'Кассир', kitchen: 'Кухня' }
@@ -53,6 +54,8 @@ export function SettingsView({ paper, setPaper, rescue }: { paper: Paper; setPap
           <TablesAdmin />
         </section>
       )}
+      <DeviceNameSection />
+      {isAdmin && <PinAdminSection />}
       <section className="panel p-4" aria-labelledby="s-data">
         <h2 id="s-data" className="section-title">Данные и бэкап</h2>
         <BackupView r={rescue} embedded />

@@ -58,6 +58,7 @@ psql "$DATABASE_URL" -c "insert into supabase_migrations.schema_migrations(versi
 | 0012 | `20261005000200_menu_photos` | бакет `menu-photos`, талоны, политики Storage, проверки блюда в `_upsert_menu_item` | применена 07.10.2026 |
 | 0013 | `20261005000300_order_controls` | `order.cancel` (без PIN, причина по желанию), `pos_reopen_order` (без PIN), `precheck_at`, защита от двойной оплаты | применена 07.10.2026 |
 | 0014 | `20261005000400_public_menu` | `public_menu()` для гостевого меню | применена 07.10.2026 |
+| 0015 | `20261025000100_pins_devices` | смена PIN админом (`pos_admin_staff`, `pos_admin_set_pin`), общий лимит входа, `pos_devices` + отметка «кто/устройство» на заказах | применена 25.10.2026 |
 
 ## История применения в прод
 | Дата (UTC+5) | Миграции | Как | Примечание |
