@@ -16,6 +16,7 @@ import { HistoryView } from './HistoryView'
 import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
+import { UpdateBanner } from './UpdateBanner'
 import { Toaster, toast } from './toast'
 import type { Paper } from './receipt-v1'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -156,6 +157,7 @@ function PosApp() {
           {!current && (
             <div className="notices empty:hidden">
               <RescueBanner r={rescue} />
+              <UpdateBanner />
             </div>
           )}
           {current ? (

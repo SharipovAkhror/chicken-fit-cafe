@@ -604,3 +604,6 @@
   .pos .mrow { padding-right: 10px; }
   .pos .mrow-edit { padding: 8px; }
 }
+/* Баннер обновления: в ленте уведомлений над экраном, ничего не перекрывает */
+.pos .update-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pos .update-banner > span { flex: 1; min-width: 200px; }
