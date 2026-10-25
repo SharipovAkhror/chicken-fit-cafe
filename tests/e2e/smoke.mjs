@@ -403,12 +403,12 @@ async function run() {
       await f.getByLabel('Категория').selectOption({ label: 'Салаты' })
       await f.getByLabel('Цена, сум').fill('27000')
       await f.getByText('Дополнительно').click()
-      await f.getByLabel('Или ссылка на фото').fill('/logo-mark.svg')
+      // поле «ссылка на фото» убрано (фото — камера/галерея)
       await page.screenshot({ path: `${OUT}/pos-1366-14-menu-add.png` })
       await f.getByRole('button', { name: 'Сохранить' }).click()
       await page.waitForTimeout(1200)
       const added = (st.payloads || []).find((x) => x.kind === 'menu.upsert' && x.payload.nameRu === 'Тестовый салат')
-      check('новое блюдо: menu.upsert с категорией, ценой и фото', !!added && added.payload.price === 27000 && added.payload.categoryId === 'salads' && added.payload.imageUrl === '/logo-mark.svg' && /^custom-/.test(added.payload.id) && added.payload.kind === 'portion')
+      check('новое блюдо: menu.upsert с категорией и ценой', !!added && added.payload.price === 27000 && added.payload.categoryId === 'salads' && /^custom-/.test(added.payload.id) && added.payload.kind === 'portion')
       await page.getByRole('button', { name: 'Изменить Тестовый салат' }).click()
       await page.getByRole('dialog').getByLabel('Название').fill('Салат дня')
       // фото с «камеры/галереи»: JPEG 1.5 МБ → WebP ≤ 800 px, ≤ 150 КБ → Storage по талону
@@ -538,7 +538,7 @@ async function run() {
     await page.nav('Меню')
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/tab-1180-05-menu-cashier.png` })
-    check('кассир: в меню только переключатели «В продаже», без «Добавить блюдо»', await page.getByRole('button', { name: 'Добавить блюдо' }).count() === 0 && await page.getByRole('switch').count() > 10)
+    check('кассир: может добавлять/править блюда, но без «Удалить»', await page.getByRole('button', { name: 'Добавить блюдо' }).count() === 1 && await page.getByRole('switch').count() > 10 && await page.getByRole('button', { name: /^Удалить/ }).count() === 0)
     await ctx.close()
   }
   await browser.close()

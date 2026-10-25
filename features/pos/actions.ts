@@ -20,7 +20,11 @@ export function newOrder(p: { type: OrderType; tableId?: string | null; cashierN
 export async function nextOrderNumber(db: LocalDb): Promise<string> {
   const day = new Date(Date.now() + 5 * 3600_000).toISOString().slice(0, 10)
   const key = `orderSeq:${day}`
-  const cur = ((await db.kv.get(key))?.value as number | undefined) ?? 0
+  const seq = ((await db.kv.get(key))?.value as number | undefined) ?? 0
+  // несколько телефонов: продолжаем с максимального номера за сегодня среди всех заказов (в т.ч. с других устройств)
+  const since = new Date(Date.parse(`${day}T00:00:00+05:00`)).toISOString()
+  const today = await db.orders.where('createdAt').aboveOrEqual(since).toArray().catch(() => [] as Order[])
+  const cur = Math.max(seq, ...today.map((o) => Number(o.number) || 0).filter((n) => n < 100000))
   await db.kv.put({ key, value: cur + 1 })
   return String(cur + 1).padStart(3, '0')
 }

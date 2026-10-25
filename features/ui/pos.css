@@ -595,3 +595,12 @@
 .pos .ticket-suggest-row svg { color: var(--brand); flex-shrink: 0; }
 .pos .ticket-suggest-row span { flex: 1; min-width: 0; }
 .pos .ticket-suggest-row small { color: var(--muted); font-weight: 600; }
+
+/* hotfix: меню на телефоне — «Сохранить/Отмена» всегда видны, кнопка «Добавить» во всю ширину */
+.pos .item-form .form-actions { position: sticky; bottom: calc(-1 * var(--dlg-pad)); z-index: 2; background: var(--surface); margin: 0 calc(-1 * var(--dlg-pad)); padding: 12px var(--dlg-pad) calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+@media (max-width: 600px) {
+  .pos .menu-add { width: 100%; justify-content: center; min-height: 52px; }
+  .pos .item-form .photo-box { max-height: 200px; }
+  .pos .mrow { padding-right: 10px; }
+  .pos .mrow-edit { padding: 8px; }
+}

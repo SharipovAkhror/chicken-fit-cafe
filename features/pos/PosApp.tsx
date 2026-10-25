@@ -163,7 +163,7 @@ function PosApp() {
           ) : tab === 'tables' ? (
             <TablesView orders={orders} onOpenTable={openTable} onOpenOrder={setCurrent}
               onNew={(type) => setCurrent(newOrder({ type, cashierName: session!.staff.name, shiftId: shift?.id, deviceId: deviceId! }))} />
-          ) : tab === 'history' ? <HistoryView onOpen={setCurrent} /> : tab === 'menu' ? <MenuAdminView isAdmin={isAdmin} /> : tab === 'kitchen' ? <KitchenView />
+          ) : tab === 'history' ? <HistoryView onOpen={setCurrent} /> : tab === 'menu' ? <MenuAdminView isAdmin={isAdmin} canEdit={isAdmin || role === 'cashier'} /> : tab === 'kitchen' ? <KitchenView />
             : tab === 'shift' ? <ShiftView /> : tab === 'reports' ? <ReportsView /> : <SettingsView paper={paper} setPaper={setPaper} rescue={rescue} />}
         </main>
         {compact && !current && (
