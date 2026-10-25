@@ -581,5 +581,44 @@
   @page {
     margin: 0;
   }
+
+  /*
+   * Длинные чеки печатаются целиком. Раньше чек был position:absolute поверх невидимого (visibility:hidden), но
+   * занимающего место интерфейса кассы (.shell высотой 100dvh). Safari/WebKit (iPhone/iPad) и Firefox не переносят
+   * абсолютно позиционированный блок на следующие страницы — всё, что ниже первой страницы, обрезалось.
+   * Теперь при печати интерфейс убирается из потока (display:none), предки чека — обычный поток без ограничений высоты,
+   * а сам чек — position:static. Ширина 72/48 мм и метрики шрифта не меняются.
+   * Если браузер не знает :has(), эти правила игнорируются целиком и остаётся прежнее поведение.
+   */
+  body *:not(:has(#receipt-print-wrapper, .print-qr-target)):not(#receipt-print-wrapper):not(#receipt-print-wrapper *):not(.print-qr-target):not(.print-qr-target *) {
+    display: none !important;
+  }
+
+  body *:has(#receipt-print-wrapper) {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    transform: none !important;
+  }
+
+  body:has(#receipt-print-wrapper .receipt) #receipt-print-wrapper {
+    position: static !important;
+  }
+
+  #receipt-print-wrapper,
+  #receipt-print-wrapper .receipt-container,
+  #receipt-print-wrapper .receipt {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
 }
 
