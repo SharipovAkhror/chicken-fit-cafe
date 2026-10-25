@@ -31,12 +31,13 @@ export function UpdateBanner() {
     document.addEventListener('visibilitychange', onVis)
     return () => { alive = false; clearInterval(t); document.removeEventListener('visibilitychange', onVis) }
   }, [])
+  const showReload = ready || notice?.kind === 'ready'
   const key = ready ? 'ready' : notice?.text ?? ''
   if (!key || hidden === key) return null
   return (
     <div className="update-banner banner banner-info" role="status">
       <span>{ready ? 'Обновление готово. Когда будет пауза — обновите страницу.' : notice!.text}</span>
-      {ready && <button className="btn" onClick={() => location.reload()}><RefreshCw size={16} aria-hidden />Обновить</button>}
+      {showReload && <button className="btn" onClick={() => location.reload()}><RefreshCw size={16} aria-hidden />Обновить</button>}
       <button className="btn btn-ghost" aria-label="Скрыть" onClick={() => setHidden(key)}><X size={16} /></button>
     </div>
   )

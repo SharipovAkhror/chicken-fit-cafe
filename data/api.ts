@@ -51,7 +51,7 @@ function sb(): SupabaseClient {
   return client
 }
 
-async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { data, error, status } = await sb().rpc(fn, args)
   if (error) {
     const msg = error.message || String(error)

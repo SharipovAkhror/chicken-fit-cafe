@@ -292,6 +292,7 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
           <span key={order.total} className="ticket-total-wrap"><Money v={order.total} className="ticket-total" /></span>
         </div>
         {prepaid > 0 && !locked && <div className="flex justify-between text-sm"><span className="muted">Ранее оплачено</span><span>{formatUZS(prepaid)} · {due >= 0 ? `к доплате ${formatUZS(due)}` : `вернуть ${formatUZS(-due)}`}</span></div>}
+        <OrderAuthorship order={order} />
         {!locked ? (
           <>
             <div className="grid grid-cols-2 gap-2">
@@ -430,4 +431,20 @@ function LineList({ children, ...rest }: React.ComponentProps<'ul'>) {
   const [ready, setReady] = useState(false)
   useEffect(() => { const t = requestAnimationFrame(() => setReady(true)); return () => cancelAnimationFrame(t) }, [])
   return <ul {...rest} data-ready={ready || undefined}>{children}</ul>
+}
+
+/** Кто и с какого устройства создал / последним изменил заказ (с сервера, миграция 0015). */
+function OrderAuthorship({ order }: { order: Order }) {
+  const who = (name?: string | null, dev?: string | null) => [name, dev && dev !== name ? dev : null].filter(Boolean).join(' · ')
+  const created = who(order.createdByName ?? order.cashierName, order.createdDeviceLabel)
+  const edited = who(order.lastEditedByName, order.lastEditedDeviceLabel)
+  const t = order.lastEditedAt ? new Date(order.lastEditedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' }) : ''
+  if (!created && !edited) return null
+  return (
+    <div className="order-authorship muted text-sm" aria-label="Кто работал с заказом">
+      {created && <div>Создал: {created}</div>}
+      {edited && edited !== created && <div>Изменил: {edited}{t && ` в ${t}`}</div>}
+      {edited && edited === created && t && <div>Последнее изменение в {t}</div>}
+    </div>
+  )
 }

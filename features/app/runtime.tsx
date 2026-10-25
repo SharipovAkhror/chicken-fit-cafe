@@ -5,6 +5,7 @@ import { getDb, getDeviceId, type LocalDb } from '@/data/local-db'
 import { supabaseApi, supabaseConfigured, type Api } from '@/data/api'
 import { SyncEngine, type SyncState } from '@/data/sync'
 import { loadSession, saveSession, type Session } from '@/data/session'
+import { defaultDeviceLabel, setDeviceLabel, storeDeviceLabel, storedDeviceLabel } from '@/data/staff-admin'
 
 let engine: SyncEngine | null = null
 export function getEngine(): SyncEngine {
@@ -61,6 +62,9 @@ export function RuntimeProvider({ children }: { children: ReactNode }) {
       const s: Session = { token: r.token, expiresAt: r.expires_at, staff: r.staff }
       await saveSession(db, s)
       setSession(s)
+      // название устройства для отметки «кто/откуда» на заказах; без миграции 0015 тихо не сработает
+      const label = storedDeviceLabel() ?? defaultDeviceLabel(r.staff.name)
+      setDeviceLabel(r.token, label).then((x) => { if ('ok' in x) storeDeviceLabel(label) }).catch(() => {})
       void getEngine().sync()
       return null
     } catch (e) {
