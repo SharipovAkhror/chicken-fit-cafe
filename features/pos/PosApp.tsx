@@ -17,6 +17,7 @@ import { MenuAdminView } from './MenuAdminView'
 import { SyncBadge } from './common'
 import { PrintArea } from './print'
 import { UpdateBanner } from './UpdateBanner'
+import { RoleTip } from './RoleTip'
 import { Toaster, toast } from './toast'
 import type { Paper } from './receipt-v1'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -98,6 +99,10 @@ function PosApp() {
   const compact = useMedia('(max-width: 900px)')
   const wide = useMedia('(min-width: 1200px)')
   const isAdmin = role === 'admin'
+  // После входа: кассир/админ без открытой смены сразу попадают на «Открыть смену» (кухне смена не нужна)
+  const needsShift = role !== 'kitchen' && shift === null
+  const [gated, setGated] = useState(false)
+  if (needsShift && !gated) { setGated(true); setTab('shift'); setCurrent(null) } // один раз за вход, без эффекта
 
   const openTable = (tableId: string) => {
     // открытый (неоплаченный) заказ стола; оплаченные закрыты — стол свободен для нового заказа
@@ -158,6 +163,10 @@ function PosApp() {
             <div className="notices empty:hidden">
               <RescueBanner r={rescue} />
               <UpdateBanner />
+              {needsShift && tab !== 'shift' && (
+                <div className="banner banner-warn flex items-center gap-2"><span className="flex-1">Смена не открыта — заказы не попадут в отчёт смены.</span><button className="btn btn-primary" onClick={() => go('shift')}>Открыть смену</button></div>
+              )}
+              <RoleTip role={role} />
             </div>
           )}
           {current ? (

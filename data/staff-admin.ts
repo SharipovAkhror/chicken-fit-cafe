@@ -8,7 +8,10 @@ export const setDeviceLabel = (token: string, label: string) =>
   rpc<{ ok: true; label: string } | Err>('pos_set_device_label', { p_token: token, p_label: label })
 export const adminStaff = (token: string) => rpc<{ staff: StaffRow[] } | Err>('pos_admin_staff', { p_token: token })
 export const adminSetPin = (token: string, staffId: string, pin: string) =>
-  rpc<{ ok: true } | Err>('pos_admin_set_pin', { p_token: token, p_staff_id: staffId, p_new_pin: pin })
+  rpc<{ ok: true; sessions_revoked?: number } | Err>('pos_admin_set_pin', { p_token: token, p_staff_id: staffId, p_new_pin: pin })
+/** Миграция 0016: завершить все сеансы сотрудника на всех устройствах (кроме текущего сеанса админа). */
+export const adminLogoutEverywhere = (token: string, staffId: string) =>
+  rpc<{ ok: true; sessions_revoked: number } | Err>('pos_admin_logout_everywhere', { p_token: token, p_staff_id: staffId })
 
 const KEY = 'pos:deviceLabel'
 export function storedDeviceLabel(): string | null {
