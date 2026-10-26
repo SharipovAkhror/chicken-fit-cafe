@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { KeyRound, Smartphone } from 'lucide-react'
 import { useRuntime } from '@/features/app/runtime'
-import { PIN_ERR, adminSetPin, adminStaff, defaultDeviceLabel, setDeviceLabel, storeDeviceLabel, storedDeviceLabel, type StaffRow } from '@/data/staff-admin'
+import { PIN_ERR, adminLogoutEverywhere, adminSetPin, adminStaff, defaultDeviceLabel, setDeviceLabel, storeDeviceLabel, storedDeviceLabel, type StaffRow } from '@/data/staff-admin'
 
 const ROLE: Record<string, string> = { admin: 'Администратор', cashier: 'Кассир', kitchen: 'Кухня' }
 
@@ -60,11 +60,19 @@ export function PinAdminSection() {
     try {
       const r = await adminSetPin(token, id, pin)
       if ('ok' in r) {
-        setMsg('PIN изменён. Старый PIN больше не действует.')
+        setMsg(`PIN изменён. Старый PIN больше не действует${r.sessions_revoked ? `, сеансов завершено: ${r.sessions_revoked}` : ''}.`)
         setEditing(null)
         setStaff((s) => s?.map((x) => (x.id === id ? { ...x, pin_changed_at: new Date().toISOString() } : x)) ?? s)
       } else setMsg(PIN_ERR[r.error] ?? r.error)
     } catch { setMsg('Нет связи с сервером') } finally { setBusy(false); setPin(''); setPin2('') }
+  }
+  const logoutAll = async (id: string, name: string) => {
+    if (!token || !confirm(`Выйти из кассы у «${name}» на всех устройствах?`)) return
+    setBusy(true)
+    try {
+      const r = await adminLogoutEverywhere(token, id)
+      setMsg('ok' in r ? `Сеансов завершено: ${r.sessions_revoked}` : (PIN_ERR[r.error] ?? r.error))
+    } catch { setMsg('Нет связи с сервером или обновление ещё не установлено') } finally { setBusy(false) }
   }
   return (
     <section className="panel p-4 grid gap-3" aria-labelledby="s-pins">
@@ -75,7 +83,8 @@ export function PinAdminSection() {
         <div key={s.id} className="grid gap-2">
           <div className="setting-row">
             <span><b>{s.name}</b><span className="muted text-sm block">{ROLE[s.role] ?? s.role}{s.pin_changed_at ? ` · PIN изменён ${new Date(s.pin_changed_at).toLocaleDateString('ru-RU')}` : ''}</span></span>
-            <button className="btn" onClick={() => { setEditing(editing === s.id ? null : s.id); setPin(''); setPin2(''); setMsg(null) }}>{editing === s.id ? 'Отмена' : 'Сменить PIN'}</button>
+            <span className="flex gap-2"><button className="btn" onClick={() => { setEditing(editing === s.id ? null : s.id); setPin(''); setPin2(''); setMsg(null) }}>{editing === s.id ? 'Отмена' : 'Сменить PIN'}</button>
+            <button className="btn" disabled={busy} onClick={() => void logoutAll(s.id, s.name)}>Выйти везде</button></span>
           </div>
           {editing === s.id && (
             <form className="grid gap-2 sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); void submit(s.id) }}>
@@ -86,7 +95,7 @@ export function PinAdminSection() {
           )}
         </div>
       ))}
-      <p className="muted text-sm">PIN хранится на сервере только в виде хеша. Сотрудник с новым PIN войдёт при следующем входе; текущие сеансы не прерываются.</p>
+      <p className="muted text-sm">PIN хранится на сервере только в виде хеша. Сотрудник с новым PIN войдёт при следующем входе; при смене PIN все его сеансы на других устройствах завершаются.</p>
     </section>
   )
 }

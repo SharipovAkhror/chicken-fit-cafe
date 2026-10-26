@@ -24,7 +24,9 @@ do $$ declare a jsonb; c jsonb; r jsonb; o uuid := gen_random_uuid(); row record
   r := public.pos_admin_set_pin(a->>'token', '00000000-0000-0000-0000-0000000015c1', '730264');
   if r->>'ok' <> 'true' then raise exception 'FAIL: set pin %', r; end if;
   if public.pos_login('564738', 'dev-x')->>'error' <> 'invalid_pin' then raise exception 'FAIL: old pin still works'; end if;
-  if public.pos_login('730264', 'dev-cash-15')->>'token' is null then raise exception 'FAIL: new pin'; end if;
+  -- с 0016 смена PIN закрывает старые сеансы: входим заново новым PIN
+  c := public.pos_login('730264', 'dev-cash-15');
+  if c->>'token' is null then raise exception 'FAIL: new pin'; end if;
 
   -- устройство + отметка на заказе
   if public.pos_set_device_label(c->>'token', '  iPhone Кассир 15 ')->>'label' <> 'iPhone Кассир 15' then raise exception 'FAIL: label'; end if;
