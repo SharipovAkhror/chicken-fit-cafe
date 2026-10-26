@@ -132,7 +132,11 @@ async function run() {
     await page.getByText('Неверный PIN').waitFor()
     for (const d of '12345678') await page.getByRole('button', { name: d, exact: true }).click()
     await page.getByRole('button', { name: 'Войти' }).click()
-    await page.getByText('Столы').first().waitFor()
+    // open-shift gate (PR #19): без открытой смены после входа — экран «Открыть смену»; столы доступны через навигацию
+    await page.getByRole('button', { name: 'Открыть смену' }).waitFor()
+    if (vp.tag === 'pos-1366') check('без открытой смены вход ведёт на «Открыть смену»', true)
+    await page.nav('Столы')
+    await page.getByRole('button', { name: /^Стол 1,/ }).waitFor()
     await page.waitForTimeout(2500)
     await page.screenshot({ path: `${OUT}/${vp.tag}-02-tables.png` })
     if (vp.tag === 'pos-1366') {
@@ -489,6 +493,8 @@ async function run() {
     await page.screenshot({ path: `${OUT}/pos-1366-12-pin-dark.png` })
     for (const d of '12345678') await page.getByRole('button', { name: d, exact: true }).click()
     await page.getByRole('button', { name: 'Войти' }).click()
+    await page.getByRole('button', { name: 'Открыть смену' }).waitFor() // open-shift gate
+    await page.nav('Столы')
     await page.getByRole('button', { name: /^Стол 1,/ }).waitFor()
     await page.waitForTimeout(800)
     await page.screenshot({ path: `${OUT}/pos-1366-18-tables-dark.png` })
@@ -518,6 +524,8 @@ async function run() {
     await page.screenshot({ path: `${OUT}/tab-1180-01-pin.png` })
     for (const d of '1234') await page.getByRole('button', { name: d, exact: true }).click()
     await page.getByRole('button', { name: 'Войти' }).click()
+    await page.getByRole('button', { name: 'Открыть смену' }).waitFor() // open-shift gate
+    await page.nav('Столы')
     await page.getByRole('button', { name: /^Стол 1,/ }).waitFor()
     await page.waitForTimeout(1500)
     await page.screenshot({ path: `${OUT}/tab-1180-02-tables.png` })
