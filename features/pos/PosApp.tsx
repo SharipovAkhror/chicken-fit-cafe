@@ -25,6 +25,10 @@ import { newOrder } from './actions'
 import { inter } from '@/features/ui/font'
 import { useActiveOrders, useOpenShift } from './useData'
 
+/** С какого часа (Ташкент) показывать напоминание «Пора закрыть смену». Можно поменять здесь. */
+export const CLOSING_REMINDER_HOUR = 22
+const tashkentHour = () => Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Tashkent', hour: '2-digit', hour12: false }))
+
 type Tab = 'tables' | 'history' | 'kitchen' | 'menu' | 'shift' | 'reports' | 'settings'
 
 export function PosRoot({ kitchenOnly = false }: { kitchenOnly?: boolean }) {
@@ -164,7 +168,10 @@ function PosApp() {
               <RescueBanner r={rescue} />
               <UpdateBanner />
               {needsShift && tab !== 'shift' && (
-                <div className="banner banner-warn flex items-center gap-2"><span className="flex-1">Смена не открыта — заказы не попадут в отчёт смены.</span><button className="btn btn-primary" onClick={() => go('shift')}>Открыть смену</button></div>
+                <div className="banner banner-warn flex items-center gap-2"><span className="flex-1">Сначала откройте смену — одно нажатие.</span><button className="btn btn-primary" onClick={() => go('shift')}>Открыть смену</button></div>
+              )}
+              {role !== 'kitchen' && shift && tashkentHour() >= CLOSING_REMINDER_HOUR && tab !== 'shift' && (
+                <div className="banner banner-warn flex items-center gap-2" role="status"><span className="flex-1">Пора закрыть смену</span><button className="btn btn-primary" onClick={() => go('shift')}>К смене</button></div>
               )}
               <RoleTip role={role} />
             </div>
