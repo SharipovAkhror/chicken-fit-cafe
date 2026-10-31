@@ -25,6 +25,17 @@ export type CartItem = {
   unit?: string
 }
 
+/** Защита от опечаток (заказ №062: 999 999 999 г). Разумные пределы одной позиции. */
+export const MAX_GRAMS = 20_000 // 20 кг
+export const MAX_QTY = 500 // штук в одной строке
+export const MAX_LINE_TOTAL = 50_000_000 // сум за строку
+const clampInt = (n: number, max: number) => Math.min(max, Math.max(0, Math.round(Number.isFinite(n) ? n : 0)))
+export const clampGrams = (g: number) => clampInt(g, MAX_GRAMS)
+export const clampQty = (q: number) => clampInt(q, MAX_QTY)
+/** Строка в разумных пределах (вес, количество, сумма). */
+export const isSaneLine = (i: Pick<CartItem, 'qty' | 'price' | 'weightKg'>): boolean =>
+  i.qty > 0 && i.qty <= MAX_QTY && (i.weightKg ?? 0) * 1000 <= MAX_GRAMS && i.price >= 0 && i.price * i.qty <= MAX_LINE_TOTAL
+
 const NON_KITCHEN_HINTS = ['напит', 'drink', 'чай', 'tea', 'кофе', 'coffee', 'cola', 'кола', 'вода', 'water', 'компот', 'compote', 'сок', 'juice', 'fanta', 'sprite', 'pepsi']
 
 export function isKitchenItem(item: { id?: string; name?: string; category?: string; isKitchen?: boolean }): boolean {
@@ -36,11 +47,11 @@ export function isKitchenItem(item: { id?: string; name?: string; category?: str
 }
 
 export function addItem(cart: CartItem[], item: Omit<CartItem, 'qty' | 'originalPrice'> & { qty?: number; originalPrice?: number }): CartItem[] {
-  const addQty = item.qty && item.qty > 0 ? item.qty : 1
+  const addQty = item.qty && item.qty > 0 ? clampQty(item.qty) : 1
   // позиции с индивидуальными параметрами (микс, вес, комментарий) не склеиваем
   const mergeable = !item.garnishMix && !item.weightKg && !item.notes
   const idx = mergeable ? cart.findIndex((c) => c.id === item.id && !c.garnishMix && !c.weightKg && !c.notes) : -1
-  if (idx >= 0) return cart.map((c, i) => (i === idx ? { ...c, qty: c.qty + addQty } : c))
+  if (idx >= 0) return cart.map((c, i) => (i === idx ? { ...c, qty: clampQty(c.qty + addQty) } : c))
   return [
     ...cart,
     {
@@ -54,7 +65,7 @@ export function addItem(cart: CartItem[], item: Omit<CartItem, 'qty' | 'original
 
 export function setQty(cart: CartItem[], index: number, qty: number): CartItem[] {
   if (qty <= 0) return cart.filter((_, i) => i !== index)
-  return cart.map((c, i) => (i === index ? { ...c, qty } : c))
+  return cart.map((c, i) => (i === index ? { ...c, qty: clampQty(qty) } : c))
 }
 
 export function updateLine(cart: CartItem[], index: number, updates: Partial<CartItem>): CartItem[] {
@@ -93,11 +104,11 @@ export const isPriceOverridden = (item: CartItem): boolean => roundUZS(item.pric
 export function weighLine(item: CartItem, change: { grams?: number; sum?: number; pricePerKg?: number }): CartItem {
   const listPpk = item.listPricePerKg ?? item.pricePerKg ?? item.price
   const ppk = Math.max(0, change.pricePerKg ?? item.pricePerKg ?? listPpk)
-  let grams = change.grams ?? gramsOf(item)
+  let grams = clampGrams(change.grams ?? gramsOf(item))
   let price: number
   if (change.sum !== undefined) {
-    price = roundUZS(change.sum)
-    grams = ppk > 0 ? Math.round((price * 1000) / ppk) : 0
+    grams = ppk > 0 ? clampGrams((roundUZS(change.sum) * 1000) / ppk) : 0
+    price = grams === MAX_GRAMS ? roundUZS((grams * ppk) / 1000) : roundUZS(change.sum)
   } else price = roundUZS((grams * ppk) / 1000)
   const originalPrice = ppk === listPpk ? price : roundUZS((grams * listPpk) / 1000)
   return { ...item, qty: 1, weightKg: grams / 1000, pricePerKg: ppk, listPricePerKg: listPpk, price, originalPrice, name: `${baseName(item)} ${grams} г` }

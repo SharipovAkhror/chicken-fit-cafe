@@ -81,6 +81,22 @@ export async function cancelOrder(db: LocalDb, o: Order, reason: string, opts: {
   getEngine().kick()
 }
 
+/**
+ * Заказ, который так и не дошёл до сервера (сервер отклоняет — например, абсурдная сумма №062),
+ * нельзя ни возобновить, ни отменить онлайн. Удаляем его с этой кассы вместе с очередью отправки.
+ * Если сервер всё же знает заказ — следующая синхронизация вернёт его, и сработает обычная отмена.
+ */
+export async function discardUnsyncedOrder(db: LocalDb, orderId: string): Promise<void> {
+  await db.outbox.where('entityId').equals(orderId).delete()
+  await db.orders.delete(orderId)
+  getEngine().kick()
+}
+
+/** Есть ли у заказа неотправленные изменения (значит, сервер мог его ещё не видеть). */
+export async function hasUnsynced(db: LocalDb, orderId: string): Promise<boolean> {
+  return (await db.outbox.where('entityId').equals(orderId).count()) > 0
+}
+
 /** Объединить счёт стола `from` в заказ `into` (#9): позиции переносятся, исходный заказ отменяется с причиной «Объединён…». */
 export async function mergeOrders(db: LocalDb, into: Order, from: Order, fromLabel: string): Promise<Order> {
   const items = mergeCarts(into.items, from.items)

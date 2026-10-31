@@ -420,7 +420,7 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
         <CancelOrderDialog order={order} onClose={() => setDialog(null)} onDone={() => { setDialog(null); onBack(order.number ? `Заказ №${order.number} отменён` : undefined) }} />
       )}
       {dialog === 'reopen' && (
-        <ReopenOrderDialog order={order} onClose={() => setDialog(null)} onReopened={(o) => { setDialog(null); setOrder(o); flash('Заказ возобновлён — можно менять позиции') }} />
+        <ReopenOrderDialog order={order} onClose={() => setDialog(null)} onReopened={(o) => { setDialog(null); setOrder(o); flash('Заказ возобновлён — можно менять позиции') }} onDiscarded={() => { setDialog(null); onBack(`Заказ №${order.number} удалён`) }} />
       )}
     </div>
   )

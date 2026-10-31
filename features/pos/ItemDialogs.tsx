@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Delete, Minus, Plus, Trash2, Undo2 } from 'lucide-react'
-import { baseName, gramsOf, isPriceOverridden, lineTotal, weighLine, type CartItem } from '@/domain/cart'
+import { MAX_GRAMS, MAX_QTY, baseName, gramsOf, isPriceOverridden, lineTotal, weighLine, type CartItem } from '@/domain/cart'
 import { NAME_MAX, normalizeName, validateProduct, type ExistingItem } from '@/domain/product-form'
 import { formatUZS } from '@/domain/money'
 import { KIND_LABEL, optionsNote, type ProductKind, type ProductOptions } from '@/domain/product'
@@ -96,9 +96,11 @@ export function WeightAdd({ name, pricePerKg, opts, onClose, onAdd }: {
   const [v, setV] = useState({ grams: '', sum: '' })
   const [variant, setVariant] = useState<string | null>(opts.variants?.[0] ?? null)
   const [extras, setExtras] = useState<string[]>([])
-  const grams = active === 'grams' ? Number(v.grams || 0) : Math.round((Number(v.sum || 0) * 1000) / pricePerKg)
-  const price = active === 'grams' ? Math.round((grams * pricePerKg) / 1000) : Number(v.sum || 0)
-  const add = () => { if (grams > 0) onAdd({ grams, price, note: optionsNote(variant, extras), variant }) }
+  const rawGrams = active === 'grams' ? Number(v.grams || 0) : Math.round((Number(v.sum || 0) * 1000) / pricePerKg)
+  const tooMuch = rawGrams > MAX_GRAMS
+  const grams = tooMuch ? 0 : rawGrams
+  const price = active === 'grams' ? Math.round((grams * pricePerKg) / 1000) : tooMuch ? 0 : Number(v.sum || 0)
+  const add = () => { if (grams > 0 && !tooMuch) onAdd({ grams, price, note: optionsNote(variant, extras), variant }) }
   const fields: PadField[] = [
     { key: 'grams', label: 'Вес', value: active === 'grams' ? v.grams : grams ? String(grams) : '', suffix: 'г' },
     { key: 'sum', label: 'Сумма', value: active === 'sum' ? v.sum : price ? String(price) : '', suffix: 'сум' },
@@ -118,7 +120,7 @@ export function WeightAdd({ name, pricePerKg, opts, onClose, onAdd }: {
         </div>
       </div>
       <button className="btn btn-lg btn-primary w-full mt-3" disabled={grams <= 0} onClick={add}>
-        {grams > 0 ? `Добавить · ${formatUZS(price)} сум` : 'Введите вес'}
+        {tooMuch ? `Слишком много — максимум ${MAX_GRAMS / 1000} кг` : grams > 0 ? `Добавить · ${formatUZS(price)} сум` : 'Введите вес'}
       </button>
     </Modal>
   )
@@ -141,6 +143,8 @@ export function LinePanel({ line, onChange, onRemove, onClose }: { line: CartIte
     setTxt(val)
     const n = Number(val || 0)
     if (n <= 0) return
+    // опечатки вроде 999999999: держим в пределах (20 кг / 500 шт)
+    if ((k === 'grams' && n > MAX_GRAMS) || (k === 'qty' && n > MAX_QTY)) { setTxt(String(k === 'grams' ? MAX_GRAMS : MAX_QTY)); return input(k, String(k === 'grams' ? MAX_GRAMS : MAX_QTY)) }
     if (weighted) {
       const next = weighLine(line, k === 'grams' ? { grams: n } : k === 'sum' ? { sum: n } : { pricePerKg: n })
       if (gramsOf(next) > 0) onChange(next) // вес не может стать 0 — ждём следующую цифру

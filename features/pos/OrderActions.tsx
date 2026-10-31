@@ -5,15 +5,15 @@
  *  — возобновление оплаченного: только онлайн и в открытую смену заказа. Сервер сторнирует оплату (reopen_paid_*),
  *    при повторной оплате касса берёт только разницу — двойной оплаты не будет.
  */
-import { useState } from 'react'
-import { AlertTriangle, Ban, Loader2, RotateCcw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AlertTriangle, Ban, Loader2, RotateCcw, Trash2 } from 'lucide-react'
 import { useRuntime } from '@/features/app/runtime'
 import type { Order } from '@/domain/order'
 import { formatUZS } from '@/domain/money'
 import { reopenOrderOnline } from '@/data/online'
 import { orderFromRow } from '@/data/mappers'
 import { Modal } from './common'
-import { cancelOrder } from './actions'
+import { cancelOrder, discardUnsyncedOrder, hasUnsynced } from './actions'
 
 const CANCEL_REASONS = ['Гость ушёл', 'Ошибка кассира', 'Нет продукта', 'Тестовый заказ']
 const REOPEN_REASONS = ['Добавить позиции', 'Ошибка в оплате', 'Не тот способ оплаты']
@@ -61,16 +61,19 @@ export function CancelOrderDialog({ order, initialReason = '', onClose, onDone }
   )
 }
 
-export function ReopenOrderDialog({ order, onClose, onReopened }: { order: Order; onClose: () => void; onReopened: (o: Order) => void }) {
+export function ReopenOrderDialog({ order, onClose, onReopened, onDiscarded }: { order: Order; onClose: () => void; onReopened: (o: Order) => void; onDiscarded?: () => void }) {
   const { db, session } = useRuntime()
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [unsynced, setUnsynced] = useState(false)
+  useEffect(() => { void hasUnsynced(db, order.id).then(setUnsynced) }, [db, order.id])
+  const discard = async () => { setBusy(true); await discardUnsyncedOrder(db, order.id); (onDiscarded ?? onClose)() }
   const run = async () => {
     setErr(null); setBusy(true)
     try {
       const r = await reopenOrderOnline(session!.token, order.id, reason)
-      if ('error' in r) { setErr(REOPEN_ERR[r.error] ?? r.error); return }
+      if ('error' in r) { if (r.error === 'not_found') setUnsynced(true); setErr(REOPEN_ERR[r.error] ?? r.error); return }
       const o = orderFromRow(r.order)
       await db.orders.put({ ...o, dirty: false })
       onReopened(o)
@@ -85,6 +88,12 @@ export function ReopenOrderDialog({ order, onClose, onReopened }: { order: Order
         </Warn>
         <Reasons list={REOPEN_REASONS} value={reason} onChange={setReason} />
         {err && <p className="field-error" role="alert">{err}</p>}
+        {unsynced && (
+          <div className="grid gap-2">
+            <span className="text-sm muted">Заказ не дошёл до сервера — его можно просто удалить с этой кассы.</span>
+            <button className="btn btn-lg btn-danger-solid" disabled={busy} onClick={() => void discard()}><Trash2 size={20} aria-hidden />Удалить заказ №{order.number}</button>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <button className="btn btn-lg" onClick={onClose}>Оставить как есть</button>
           <button className="btn btn-lg btn-danger-solid" disabled={busy} onClick={() => void run()}>{busy ? <Loader2 className="spin" size={20} aria-hidden /> : <RotateCcw size={20} aria-hidden />}Да, возобновить</button>
