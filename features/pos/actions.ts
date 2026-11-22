@@ -1,7 +1,7 @@
 /** Операции кассы: сначала локально (IndexedDB), затем в outbox. Работают без сети. */
 import { uuidv4 } from '@/domain/ids'
 import { computeTotals, mergeCarts, type CartItem } from '@/domain/cart'
-import { statusAfterPayment, type Order, type OrderStatus, type OrderType, type PaymentMethod, type Shift } from '@/domain/order'
+import { isActive, statusAfterPayment, type Order, type OrderStatus, type OrderType, type PaymentMethod, type Shift } from '@/domain/order'
 import type { LocalDb, MenuItemRow } from '@/data/local-db'
 import { enqueue } from '@/data/outbox'
 import { orderToPayload, shiftToPayload } from '@/data/mappers'
@@ -34,11 +34,28 @@ export function withTotals(o: Order, items: CartItem[], discountPercent = o.disc
   return { ...o, items, discountPercent, ...t }
 }
 
-export async function saveOrder(db: LocalDb, o: Order, extra: Record<string, unknown> = {}): Promise<Order> {
-  const next: Order = { ...o, number: o.number || (await nextOrderNumber(db)), updatedAt: new Date().toISOString(), dirty: false }
+async function stageOrder(db: LocalDb, o: Order, extra: Record<string, unknown> = {}): Promise<Order> {
+  const stored = await db.orders.get(o.id)
+  const next: Order = { ...o, number: stored?.number || o.number || (await nextOrderNumber(db)), updatedAt: new Date().toISOString(), dirty: false }
   await db.orders.put(next)
   await enqueue(db, 'order.upsert', next.id, orderToPayload(next, extra))
+  return next
+}
+
+export async function saveOrder(db: LocalDb, o: Order, extra: Record<string, unknown> = {}): Promise<Order> {
+  const next = await db.transaction('rw', db.orders, db.outbox, db.kv, () => stageOrder(db, o, extra))
   getEngine().kick()
+  return next
+}
+
+/** Read and send the current draft under the same lock as payment. */
+export async function pushOrderDraft(db: LocalDb, id: string): Promise<Order | undefined> {
+  const next = await db.transaction('rw', db.orders, db.outbox, db.kv, async () => {
+    const draft = await db.orders.get(id)
+    if (!draft?.dirty || !isActive(draft) || (!draft.items.length && !draft.number)) return
+    return stageOrder(db, draft)
+  })
+  if (next) getEngine().kick()
   return next
 }
 
@@ -49,16 +66,23 @@ export async function sendToKitchen(db: LocalDb, o: Order): Promise<Order> {
 
 /** Оплата закрывает заказ (освобождает стол). Неотправленные кухонные позиции печатаются на кухню вызывающим кодом. */
 export async function pay(db: LocalDb, o: Order, method: PaymentMethod, cashReceived: number | null): Promise<Order> {
-  // возобновлённый заказ: reopenedAt уходит как есть — сервер отклонит оплату, если заказ с тех пор снова изменили (0013)
-  return saveOrder(db, {
-    ...o,
-    paymentStatus: 'paid',
-    paymentMethod: method,
-    paidAt: new Date().toISOString(),
-    cashReceived: method === 'cash' ? cashReceived : null,
-    changeAmount: method === 'cash' && cashReceived ? Math.max(0, cashReceived - o.total) : null,
-    status: statusAfterPayment(o),
+  const next = await db.transaction('rw', db.orders, db.outbox, db.kv, async () => {
+    const stored = await db.orders.get(o.id)
+    if (!isActive(o) || (stored && (!isActive(stored) || (stored.reopenedAt ?? null) !== (o.reopenedAt ?? null)))) {
+      throw new Error('Заказ уже изменён. Откройте его заново.')
+    }
+    return stageOrder(db, {
+      ...o,
+      paymentStatus: 'paid',
+      paymentMethod: method,
+      paidAt: new Date().toISOString(),
+      cashReceived: method === 'cash' ? cashReceived : null,
+      changeAmount: method === 'cash' && cashReceived ? Math.max(0, cashReceived - o.total) : null,
+      status: statusAfterPayment(o),
+    })
   })
+  getEngine().kick()
+  return next
 }
 
 export async function setStatus(db: LocalDb, o: Order, status: OrderStatus): Promise<void> {
@@ -107,23 +131,31 @@ export async function mergeOrders(db: LocalDb, into: Order, from: Order, fromLab
 
 export async function openShift(db: LocalDb, cashierName: string, initialCash: number, deviceId: string): Promise<Shift> {
   const s: Shift = { id: uuidv4(), cashierName, openedAt: new Date().toISOString(), initialCash, status: 'open', source: 'pos', dirty: true }
-  await db.shifts.put(s)
-  await enqueue(db, 'shift.upsert', s.id, { ...shiftToPayload(s), deviceId })
+  await db.transaction('rw', db.shifts, db.outbox, async () => {
+    await db.shifts.put(s)
+    await enqueue(db, 'shift.upsert', s.id, { ...shiftToPayload(s), deviceId })
+  })
   getEngine().kick()
   return s
 }
 
 export async function closeShift(db: LocalDb, s: Shift, countedCash: number, notes: string): Promise<Shift> {
   const next: Shift = { ...s, closedAt: new Date().toISOString(), countedCash, status: 'closed', notes, dirty: true }
-  await db.shifts.put(next)
-  await enqueue(db, 'shift.upsert', s.id, shiftToPayload(next))
+  await db.transaction('rw', db.shifts, db.outbox, async () => {
+    await db.shifts.put(next)
+    await enqueue(db, 'shift.upsert', s.id, shiftToPayload(next))
+  })
   getEngine().kick(50)
   return next
 }
 
 /** Черновик (корзина) — только локально, без отправки; pull его не перезапишет (dirty). */
 export async function saveDraftLocal(db: LocalDb, o: Order): Promise<void> {
-  await db.orders.put({ ...o, updatedAt: new Date().toISOString(), dirty: true })
+  await db.transaction('rw', db.orders, async () => {
+    const stored = await db.orders.get(o.id)
+    if (stored && (!isActive(stored) || (stored.reopenedAt ?? null) !== (o.reopenedAt ?? null))) return
+    await db.orders.put({ ...o, number: stored?.number || o.number, updatedAt: new Date().toISOString(), dirty: true })
+  })
 }
 
 /** «Счёт выдан»: отметка уходит на сервер (orders.precheck_at, 0013) — видна на всех кассах (#12). */

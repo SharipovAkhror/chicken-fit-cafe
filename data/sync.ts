@@ -22,8 +22,8 @@ export type SyncState = {
 }
 
 export async function applyPull(db: LocalDb, data: Awaited<ReturnType<Api['pull']>>): Promise<void> {
-  const pending = await pendingEntityIds(db)
   await db.transaction('rw', [db.orders, db.shifts, db.menu, db.categories, db.diningTables, db.outbox], async () => {
+    const pending = await pendingEntityIds(db)
     for (const r of data.orders) {
       if (pending.has(String(r.id))) continue
       const local = await db.orders.get(String(r.id))

@@ -39,12 +39,12 @@ export function OrderSlipV1({ mode, order: o, paper, tableLabel, shiftNumber }: 
   const is58mm = paper === '58mm'
   const tableNumber = o.tableId ? (tableLabel ?? o.tableId).replace(/^Стол\s*/i, '') : ''
   const orderTypeLabel = o.type === 'dine_in' ? `В ЗАЛЕ ${tableNumber ? `(СТОЛ №${tableNumber})` : ''}` : o.type === 'delivery' ? 'ДОСТАВКА' : 'С СОБОЙ'
-  const { dateOnly, timeOnly } = parts(mode === 'guest' ? o.paidAt ?? new Date().toISOString() : new Date().toISOString())
+  const { dateOnly, timeOnly } = parts(mode === 'guest' ? o.paidAt ?? o.createdAt : new Date().toISOString())
   const orderNumber = `#${o.number}`
   const items = aggregate(o.items)
   const kitchenItems = aggregate(o.items.filter((i) => i.isKitchen))
   const kitchenCount = o.items.filter((i) => i.isKitchen).reduce((s, i) => s + (i.weightKg ? 1 : i.qty), 0)
-  const paymentMethod = o.paymentMethod ?? 'cash'
+  const paymentMethod = mode === 'guest' ? o.paymentMethod : null
 
   if (mode === 'kitchen') return (
     <div id="kitchen-ticket-print-area" className="receipt-container kitchen-receipt-print">
@@ -93,11 +93,11 @@ export function OrderSlipV1({ mode, order: o, paper, tableLabel, shiftNumber }: 
         </div>
         <div className="py-1 border-b border-black text-[10px] space-y-0.5">
           <div className={`${is58mm ? 'text-[10.5px]' : 'text-[12px]'} font-black text-center tracking-wide uppercase py-0.5 border-y border-dashed border-black my-0.5`}>
-            {mode === 'precheck' ? 'ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ (ПРЕЧЕК)' : 'КАССОВЫЙ ЧЕК ПРОДАЖИ'}
+            {mode === 'precheck' ? 'ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ (ПРЕЧЕК)' : 'ЧЕК CHICKENFIT (НЕФИСКАЛЬНЫЙ)'}
           </div>
           <div className="flex justify-between font-extrabold"><span>ЗАКАЗ: {orderNumber}</span><span>{orderTypeLabel}</span></div>
           <div className="flex justify-between font-bold"><span>ДАТА: {dateOnly}</span><span>ВРЕМЯ: {timeOnly}</span></div>
-          <div className="flex justify-between font-bold"><span>КАССИР: {o.cashierName || 'Главный кассир'}</span><span>СМЕНА: №{shiftNumber ?? 1}</span></div>
+          <div className="flex justify-between font-bold"><span>КАССИР: {o.cashierName || 'Главный кассир'}</span><span>СМЕНА: {shiftNumber ? `№${shiftNumber}` : '—'}</span></div>
           {o.type === 'delivery' && (
             <div className="border-t border-black border-dotted pt-1 mt-1 font-bold">
               {o.customerPhone && <div><span>КЛИЕНТ:</span> {o.customerPhone}</div>}
@@ -138,7 +138,7 @@ export function OrderSlipV1({ mode, order: o, paper, tableLabel, shiftNumber }: 
           </div>
           <div className="flex justify-between text-[10px] font-bold pt-0.5 border-t border-black border-dotted">
             <span>Вид оплаты:</span>
-            <span>{paymentMethod === 'cash' ? 'НАЛИЧНЫЕ' : 'БЕЗНАЛИЧНЫЕ (CLICK/PAYME)'}</span>
+            <span>{paymentMethod === 'cash' ? 'НАЛИЧНЫЕ' : paymentMethod === 'click_payme' ? 'БЕЗНАЛИЧНЫЕ (CLICK/PAYME)' : '—'}</span>
           </div>
           {paymentMethod === 'cash' && !!o.cashReceived && o.cashReceived > 0 && (
             <div className="flex justify-between text-[10px] font-bold"><span>Получено от гостя:</span><span className="tabular-nums">{receiptPrice(o.cashReceived)} сум</span></div>

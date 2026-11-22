@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRuntime } from '@/features/app/runtime'
 import type { Order, PaymentMethod } from '@/domain/order'
@@ -8,7 +8,7 @@ import { Banknote, Check, ChefHat, Printer, Smartphone } from 'lucide-react'
 import { Modal, Money, Numpad } from './common'
 
 export function PaymentDialog({ order, prepaid = 0, onClose, onPaid, onDiscount }: {
-  order: Order; prepaid?: number; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => void; onDiscount?: (percent: number) => void
+  order: Order; prepaid?: number; onClose: () => void; onPaid: (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => Promise<void>; onDiscount?: (percent: number) => void
 }) {
   const { db } = useRuntime()
   const [method, setMethod] = useState<PaymentMethod>('cash')
@@ -20,6 +20,9 @@ export function PaymentDialog({ order, prepaid = 0, onClose, onPaid, onDiscount 
   const hasKitchen = order.items.some((i) => i.isKitchen)
   const toggle = (k: 'receipt' | 'kitchen', v: boolean) => { setSel((s) => ({ ...s, [k]: v })); void db.kv.put({ key: k === 'receipt' ? 'pref:printReceipt' : 'pref:printKitchen', value: v }) }
   const [cash, setCash] = useState('')
+  const submitting = useRef(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const received = Number(cash || 0)
   // возобновлённый заказ: ранее принятое уже в кассе — просим только разницу (или возвращаем излишек)
   const due = order.total - prepaid
@@ -28,8 +31,21 @@ export function PaymentDialog({ order, prepaid = 0, onClose, onPaid, onDiscount 
   const presets = [toPay, Math.ceil(toPay / 10000) * 10000, Math.ceil(toPay / 50000) * 50000, Math.ceil(toPay / 100000) * 100000]
     .filter((v, i, a) => v > 0 && a.indexOf(v) === i).slice(0, 4)
   const ok = toPay === 0 || method === 'click_payme' || cash === '' || received >= toPay
+  const confirm = async () => {
+    if (submitting.current || !ok) return
+    submitting.current = true
+    setBusy(true)
+    setError(null)
+    try {
+      await onPaid(method, method === 'cash' && cash ? received : null, { receipt, kitchen: hasKitchen && kitchen })
+    } catch {
+      submitting.current = false
+      setBusy(false)
+      setError('Не удалось сохранить оплату в кассе. Проверьте заказ перед повторным подтверждением.')
+    }
+  }
   return (
-    <Modal title={`Оплата · заказ №${order.number || 'новый'}`} onClose={onClose} width={560}>
+    <Modal title={`Оплата · заказ №${order.number || 'новый'}`} onClose={() => { if (!submitting.current) onClose() }} width={560}>
       <div className="pay-due mb-3">
         <span className="muted">{prepaid ? 'К доплате' : 'К оплате'}{order.discountAmount > 0 ? ` (скидка −${formatUZS(order.discountAmount)})` : ''}</span>
         <Money v={toPay} className="pay-due-sum" />
@@ -82,7 +98,8 @@ export function PaymentDialog({ order, prepaid = 0, onClose, onPaid, onDiscount 
           </label>
         )}
       </div>
-      <button className="btn btn-lg btn-primary w-full mt-2" disabled={!ok} onClick={() => onPaid(method, method === 'cash' && cash ? received : null, { receipt, kitchen: hasKitchen && kitchen })}>
+      {error && <p role="alert" className="banner banner-danger mt-2">{error}</p>}
+      <button className="btn btn-lg btn-primary w-full mt-2" disabled={!ok || busy} onClick={() => void confirm()}>
         <Check size={20} aria-hidden />Оплачено
       </button>
       <p className="muted text-sm mt-2 text-center">Заказ закроется, стол освободится</p>

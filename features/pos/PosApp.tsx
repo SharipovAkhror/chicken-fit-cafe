@@ -184,7 +184,7 @@ function PosApp() {
           </div>
         )}
       </div>
-      <PrintArea paper={paper} shiftNumber={shift?.number} />
+      <PrintArea paper={paper} />
       <Toaster />
     </div>
   )
