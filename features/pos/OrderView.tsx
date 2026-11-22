@@ -11,7 +11,7 @@ import type { MenuItemRow } from '@/data/local-db'
 import { useRuntime } from '@/features/app/runtime'
 import { Modal, Money } from './common'
 import { PaymentDialog } from './PaymentDialog'
-import { markPrecheck, pay, saveDraftLocal, saveMenuItem, saveOrder, sendToKitchen, withTotals } from './actions'
+import { markPrecheck, pay, pushOrderDraft, saveDraftLocal, saveMenuItem, saveOrder, sendToKitchen, withTotals } from './actions'
 import { printJob } from './print'
 import { useActiveOrders, useMenu, useTables } from './useData'
 import { GarnishDialog } from './GarnishDialog'
@@ -38,11 +38,8 @@ const shortNote = (name: string, notes?: string, mix?: boolean) => {
 const draftTimers = new Map<string, { t: ReturnType<typeof setTimeout>; onNumber: (n: string) => void }>()
 async function pushDraft(db: LocalDb, id: string, onNumber?: (n: string) => void) {
   draftTimers.delete(id)
-  const stored = await db.orders.get(id)
-  if (!stored?.dirty || stored.paymentStatus === 'paid' || stored.status === 'cancelled') return // уже сохранён явным действием
-  if (!stored.items.length && !stored.number) return
-  const saved = await saveOrder(db, stored)
-  onNumber?.(saved.number)
+  const saved = await pushOrderDraft(db, id)
+  if (saved) onNumber?.(saved.number)
 }
 function scheduleDraftPush(db: LocalDb, id: string, onNumber: (n: string) => void) {
   const prev = draftTimers.get(id)
@@ -156,7 +153,6 @@ export function OrderView({ initial, onBack, compact, wide = false }: { initial:
     const saved = await markPrecheck(db, order)
     setOrder(saved)
     printJob({ kind: 'precheck', order: saved, tableLabel })
-    flash('Счёт напечатан')
   }
   const onPaid = async (m: PaymentMethod, cash: number | null, print: { receipt: boolean; kitchen: boolean }) => {
     // возобновлённый: «получено» — это доплата; в заказ пишем полную сумму (ранее принятое + сейчас), сдача не меняется

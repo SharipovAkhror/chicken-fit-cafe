@@ -22,7 +22,7 @@ describe('чек v1', () => {
   it('гостевой чек: шапка, время по Самарканду, агрегация одинаковых позиций, вес, оплата и сдача', () => {
     const h = html('guest')
     expect(h).toContain('guest-receipt-print')
-    expect(h).toContain('КАССОВЫЙ ЧЕК ПРОДАЖИ')
+    expect(h).toContain('ЧЕК CHICKENFIT (НЕФИСКАЛЬНЫЙ)')
     expect(h).toContain('В ЗАЛЕ (СТОЛ №3)')
     expect(h).toContain('ВРЕМЯ: 15:05:53')
     expect(h).toContain('СМЕНА: №2')
@@ -32,7 +32,9 @@ describe('чек v1', () => {
     expect(h).not.toContain('<svg')
   })
   it('пречек помечен как предварительный счёт', () => {
-    expect(html('precheck')).toContain('ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ (ПРЕЧЕК)')
+    const h = html('precheck')
+    expect(h).toContain('ПРЕДВАРИТЕЛЬНЫЙ СЧЁТ (ПРЕЧЕК)')
+    expect(h).not.toContain('НАЛИЧНЫЕ')
   })
   it('бегунок: только кухонные позиции, без цен', () => {
     const h = html('kitchen')

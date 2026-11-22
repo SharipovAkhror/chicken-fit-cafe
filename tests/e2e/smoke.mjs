@@ -276,7 +276,7 @@ async function run() {
     if (vp.tag === 'pos-1366') {
       const prints = await page.evaluate(() => window.__prints)
       const payPrints = prints.slice(printsBeforePay)
-      check('при оплате по умолчанию печатается только чек гостю (без бегунка)', payPrints.length === 1 && payPrints[0].includes('data-kind="receipt"') && payPrints[0].includes('КАССОВЫЙ ЧЕК ПРОДАЖИ'))
+      check('при оплате по умолчанию печатается только чек гостю (без бегунка)', payPrints.length === 1 && payPrints[0].includes('data-kind="receipt"') && payPrints[0].includes('ЧЕК CHICKENFIT (НЕФИСКАЛЬНЫЙ)'))
       check('бегунок печатается только по кнопке «Кухня»', prints.length === 2 && prints[0].includes('data-kind="kitchen"') && prints[0].includes('ЗАКАЗ НА КУХНЮ'))
       check('чек в разметке v1: лента 80 мм (paper-80mm), без QR', prints[1].includes('paper-80mm') && !prints[1].includes('<svg'))
       const css = await page.evaluate(() => [...document.styleSheets].map((ss) => { try { return [...ss.cssRules].map((r) => r.cssText).join('\n') } catch { return '' } }).join('\n'))
@@ -382,7 +382,15 @@ async function run() {
     await page.nav('Заказы')
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/${vp.tag}-10-history.png` })
-    if (vp.tag === 'pos-1366') check('оплаченные заказы в истории со статусом «Закрыт»', await page.getByRole('button', { name: /Печать чека/ }).count() >= 2 && await page.getByRole('cell', { name: 'Закрыт' }).count() >= 2)
+    if (vp.tag === 'pos-1366') {
+      const reprint = page.getByRole('button', { name: /Печать чека/ })
+      check('оплаченные заказы в истории со статусом «Закрыт»', await reprint.count() >= 2 && await page.getByRole('cell', { name: 'Закрыт' }).count() >= 2)
+      const before = await page.evaluate(() => window.__prints.length)
+      await reprint.first().click()
+      await page.waitForFunction((count) => window.__prints.length > count, before)
+      const html = await page.evaluate(() => window.__prints.at(-1))
+      check('повторная печать из истории открывает нефискальный чек', html.includes('data-kind="receipt"') && html.includes('ЧЕК CHICKENFIT (НЕФИСКАЛЬНЫЙ)'))
+    }
     await page.nav('Меню')
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${OUT}/${vp.tag}-11-menu-admin.png` })

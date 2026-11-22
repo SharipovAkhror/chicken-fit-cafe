@@ -7,7 +7,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 vi.mock('@/features/app/runtime', () => ({ getEngine: () => ({ kick() {} }) }))
 import { LocalDb } from '@/data/local-db'
-import { pay, sendToKitchen, newOrder } from '@/features/pos/actions'
+import { pay, pushOrderDraft, saveDraftLocal, sendToKitchen, newOrder } from '@/features/pos/actions'
 import { displayStatus, isActive, isClosed, isKitchenVisible, statusAfterPayment, type Order } from '@/domain/order'
 
 const kitchenItem = { id: 'combo', name: 'Супер Комбо Chicken', price: 45000, originalPrice: 45000, qty: 1, isKitchen: true }
@@ -56,6 +56,29 @@ describe('pay() в IndexedDB + outbox', () => {
     const q = await db.outbox.toArray()
     expect(q.at(-1)!.payload).toMatchObject({ id: o.id, status: 'completed', paymentStatus: 'paid', paymentMethod: 'cash' })
   })
+  it('откатывает оплату и номер заказа при сбое записи в очередь', async () => {
+    const order = base()
+    await saveDraftLocal(db, order)
+    db.outbox.hook('creating', () => { throw new Error('outbox write failed') })
+
+    await expect(pay(db, order, 'cash', null)).rejects.toThrow('outbox write failed')
+    expect(await db.orders.get(order.id)).toMatchObject({ paymentStatus: 'unpaid', number: '', dirty: true })
+    expect(await db.outbox.count()).toBe(0)
+    expect(await db.kv.count()).toBe(0)
+  })
+
+  it('при двух подтверждениях сохраняет одну оплату и не отправляет запоздалый черновик', async () => {
+    const order = base()
+    await saveDraftLocal(db, order)
+    const results = await Promise.allSettled([pay(db, order, 'cash', null), pay(db, order, 'cash', null)])
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected'])
+
+    await saveDraftLocal(db, order)
+    await expect(pushOrderDraft(db, order.id)).resolves.toBeUndefined()
+    expect(await db.outbox.count()).toBe(1)
+    expect(await db.orders.get(order.id)).toMatchObject({ paymentStatus: 'paid' })
+  })
+
   it('«Кухня» → оплата тоже закрывает', async () => {
     const sent = await sendToKitchen(db, base())
     expect(isActive(sent)).toBe(true)

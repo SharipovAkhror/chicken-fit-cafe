@@ -23,12 +23,24 @@ export function ReportsView() {
   const { session } = useRuntime()
   const [from, setFrom] = useState(today())
   const [to, setTo] = useState(today())
-  const [data, setData] = useState<Sales | null>(null)
-  const [err, setErr] = useState<string | null>(null)
+  const [result, setResult] = useState<{
+    from: string; to: string; session: typeof session; data?: Sales; error?: string
+  } | null>(null)
+  const validRange = !!from && !!to && from <= to
+  const current = result && result.from === from && result.to === to && result.session === session ? result : null
+  const data = current?.data
+  const err = validRange ? current?.error : 'Укажите корректный период'
   useEffect(() => {
-    if (!session) return
-    api.reportSales(session.token, from, to).then((d) => { setErr(null); setData(d as unknown as Sales) }).catch((e) => setErr(navigator.onLine ? e.message : 'Отчёты доступны только при наличии интернета'))
-  }, [session, from, to])
+    if (!session || !validRange) return
+    let active = true
+    const request = { session, from, to }
+    api.reportSales(session.token, from, to).then((d) => {
+      if (active) setResult({ ...request, data: d as unknown as Sales })
+    }).catch((e: Error) => {
+      if (active) setResult({ ...request, error: navigator.onLine ? e.message : 'Отчёты доступны только при наличии интернета' })
+    })
+    return () => { active = false }
+  }, [session, from, to, validRange])
   const preset = (a: string, b: string) => { setFrom(a); setTo(b) }
   return (
     <div className="page grid gap-4">
@@ -40,7 +52,8 @@ export function ReportsView() {
         <input type="date" className="input" style={{ width: 170 }} value={from} onChange={(e) => setFrom(e.target.value)} aria-label="С" />
         <input type="date" className="input" style={{ width: 170 }} value={to} onChange={(e) => setTo(e.target.value)} aria-label="По" />
       </div>
-      {err && <div className="banner banner-danger">{err}</div>}
+      {err && <div role="alert" className="banner banner-danger">{err}</div>}
+      {session && validRange && !current && <p role="status" className="muted">Загрузка отчёта…</p>}
       {data && (
         <>
           {data.quality.earliest_any_day && from < data.quality.earliest_any_day && (
